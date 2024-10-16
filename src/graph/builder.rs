@@ -1,5 +1,27 @@
 use petgraph;
 
+
+pub fn build_dependency_flowchat(
+    header_sources: &std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+    source_headers: &std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+) -> String {
+    let mut mermaid_code = String::from("flowchart TD;\n");
+
+    for (header, sources) in header_sources {
+        for source in sources {
+            mermaid_code.push_str(&format!("    {} --> {};\n", header, source));
+        }
+    }
+
+    for (source, headers) in source_headers {
+        for header in headers {
+            mermaid_code.push_str(&format!("    {} --> {};\n", source, header));
+        }
+    }
+
+    mermaid_code
+}
+
 pub fn build_dependency_graph(
     header_sources: &std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
     source_headers: &std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
