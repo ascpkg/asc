@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--clang-lib-dir=\"D:/Program Files/LLVM/bin\"",
+                "--source=\"test_c_cpp_bin/src/main.cpp\""
+            ]
+        },
+        {
             "type": "lldb",
             "request": "launch",
             "name": "Debug executable 'source_dependency_tree'",
