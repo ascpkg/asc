@@ -1,5 +1,7 @@
 use bindgen;
 
+use tracing;
+
 #[derive(Debug, Clone)]
 pub struct MyParseCallbacks {
     source_dir: String,
@@ -23,13 +25,13 @@ impl MyParseCallbacks {
 
 impl bindgen::callbacks::ParseCallbacks for MyParseCallbacks {
     fn header_file(&self, filename: &str) {
-        println!("\n{filename}");
+        tracing::error!("{}", filename);
     }
 
     fn include_file(&self, filename: &str) {
         if filename.starts_with(&self.source_dir) {
             let path = filename.replace(r"\", "/");
-            println!("    {path}");
+            tracing::error!("    {}", path);
 
             self.headers.borrow_mut().push(path);
         }
@@ -41,7 +43,7 @@ impl bindgen::callbacks::ParseCallbacks for MyParseCallbacks {
     ) -> Option<String> {
         match item_info.kind {
             bindgen::callbacks::ItemKind::Function => {
-                // println!("        function: {}", item_info.name);
+                // tracing::error!("        function: {}", item_info.name);
 
                 self.functions.borrow_mut().push(item_info.name.to_string());
             }
