@@ -21,7 +21,7 @@
             },
             "args": [
                 "--source-dir=test_c_cpp_bin/src",
-                "--source-main-entry=main.cpp",
+                "--entry-point-source=main.cpp",
                 "--project=test"
             ],
             "cwd": "${workspaceFolder}"

@@ -26,23 +26,26 @@ fn main() {
     let markdown_mermaid_flowchart =
         graph::gen::gen_dependency_flowchat(&options.source_dir, &source_mappings);
     tracing::error!("{markdown_mermaid_flowchart}");
-    std::fs::write("README.md", markdown_mermaid_flowchart.as_bytes()).unwrap();
+    std::fs::write(
+        format!("{}.md", options.project),
+        markdown_mermaid_flowchart.as_bytes(),
+    )
+    .unwrap();
 
-    tracing::error!("generate CMakeLists.txt");
     let project_dir = std::path::Path::new(&options.source_dir)
         .parent()
         .unwrap()
         .to_str()
         .unwrap();
+
+    tracing::error!("generate CMakeLists.txt");
     let txt = cmake::lists::gen(&options, &source_mappings, &project_dir);
     std::fs::write(format!("{}/CMakeLists.txt", &project_dir,), txt.as_bytes()).unwrap();
 
-    // run cmake generate
     tracing::error!("cmake generate project");
     let build_dir = format!("{}/build", &project_dir);
     cmake::project::gen(&build_dir, &project_dir);
 
-    // run cmake build
     tracing::error!("cmake build");
     cmake::build::compile(&build_dir);
 }

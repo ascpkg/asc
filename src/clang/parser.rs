@@ -21,19 +21,19 @@ pub struct SourceMappings {
 
 impl SourceMappings {
     pub fn parse(options: &util::cli::CommandLines) -> SourceMappings {
-        let mut valid_source_mappings = Self::parse_from_main_entry(
+        let mut ref_source_mappings = Self::parse_from_entry_point(
             &options.source_dir,
-            format!("{}/{}", &options.source_dir, &options.source_main_entry),
+            format!("{}/{}", &options.source_dir, &options.entry_point_source),
             &options.include_dirs,
         );
 
-        let tmp_source_mappings = Self::parse_sources(&options.source_dir, &options.include_dirs);
-        for (header, sources) in &mut valid_source_mappings.header_inclued_by_sources {
-            if tmp_source_mappings
+        let all_source_mappings = Self::parse_all_sources(&options.source_dir, &options.include_dirs);
+        for (header, sources) in &mut ref_source_mappings.header_inclued_by_sources {
+            if all_source_mappings
                 .header_inclued_by_sources
                 .contains_key(header)
             {
-                for source in tmp_source_mappings
+                for source in all_source_mappings
                     .header_inclued_by_sources
                     .get(header)
                     .unwrap()
@@ -43,10 +43,10 @@ impl SourceMappings {
             }
         }
 
-        return valid_source_mappings;
+        return ref_source_mappings;
     }
 
-    pub fn parse_sources(source_dir: &String, include_dirs: &Vec<String>) -> SourceMappings {
+    fn parse_all_sources(source_dir: &String, include_dirs: &Vec<String>) -> SourceMappings {
         let mut mappings = SourceMappings {
             header_inclued_by_sources: std::collections::BTreeMap::<
                 String,
@@ -131,7 +131,7 @@ impl SourceMappings {
         return mappings;
     }
 
-    fn parse_from_main_entry(
+    fn parse_from_entry_point(
         source_dir: &String,
         source_file: String,
         include_dirs: &Vec<String>,

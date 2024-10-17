@@ -8,7 +8,7 @@ pub struct CommandLines {
     #[clap(long)]
     pub source_dir: String,
     #[clap(long)]
-    pub source_main_entry: String,
+    pub entry_point_source: String,
     #[clap(long, default_value = "", value_delimiter(','))]
     pub include_dirs: Vec<String>,
 }
@@ -21,4 +21,6 @@ impl CommandLines {
             *include = include.replace(r"\", "/");
         }
     }
+
+    pub fn format(&mut self) {}
 }
