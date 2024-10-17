@@ -1,6 +1,4 @@
-#include "a/mod.hpp"
-#include "b/mod.hpp"
-#include "c/mod.hpp"
+#include "wrapping.hpp"
 
 #include <stdint.h>
 
