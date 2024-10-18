@@ -11,6 +11,7 @@ pub mod graph;
 pub mod util;
 
 fn main() {
+    // init stdout tracing log
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .with_line_number(true)
@@ -20,38 +21,56 @@ fn main() {
         ))
         .init();
 
+    // parse command lines
     tracing::warn!("parse command lines");
     let mut options = util::cli::CommandLines::parse();
     options.normalize();
     tracing::info!("{:#?}", options);
 
-    tracing::warn!("scan source dependences with clang ir");
-    let source_mappings = clang::parser::SourceMappings::scan(&options);
+    // scan source dependences with clang ir
+    if options.action_type == util::cli::ActionType::Scan
+        || options.action_type == util::cli::ActionType::All
+    {
+        tracing::warn!("scan source dependences with clang ir");
+        let source_mappings = clang::parser::SourceMappings::scan(&options);
 
-    tracing::warn!("output mermaid flowchat of source dependences");
-    let mermaid_flowchart =
-        graph::flowchart::gen(&options.source_dir, &source_mappings);
-    tracing::info!("\n{mermaid_flowchart}");
-    std::fs::write(
-        format!("{}.md", options.project),
-        format!("```mermaid\n{}\n```", mermaid_flowchart).as_bytes(),
-    )
-    .unwrap();
-
-    let project_dir = std::path::Path::new(&options.source_dir)
-        .parent()
-        .unwrap()
-        .to_str()
+        tracing::warn!("output mermaid flowchat of source dependences");
+        let mermaid_flowchart = graph::flowchart::gen(&options.source_dir, &source_mappings);
+        tracing::info!("\n{mermaid_flowchart}");
+        std::fs::write(
+            format!("{}.md", options.project),
+            format!("```mermaid\n{}\n```", mermaid_flowchart).as_bytes(),
+        )
         .unwrap();
 
-    tracing::warn!("output CMakeLists.txt");
-    let txt = cmake::lists::gen(&options, &source_mappings, &project_dir);
-    std::fs::write(format!("{}/CMakeLists.txt", &project_dir,), txt.as_bytes()).unwrap();
+        tracing::warn!("output CMakeLists.txt");
+        let txt = cmake::lists::gen(
+            &options,
+            &source_mappings,
+            &options.project_dir,
+            &options.cmake_target_type,
+            &options.cmake_lib_type,
+        );
+        std::fs::write(
+            format!("{}/CMakeLists.txt", &options.project_dir,),
+            txt.as_bytes(),
+        )
+        .unwrap();
+    }
 
-    tracing::warn!("generate a build system with cmake");
-    let build_dir = format!("{}/build", &project_dir);
-    cmake::project::gen(&build_dir, &project_dir);
+    // output CMakeLists.txt
+    if options.action_type == util::cli::ActionType::Configure
+        || options.action_type == util::cli::ActionType::All
+    {
+        tracing::warn!("generate a build system with cmake");
+        cmake::project::gen(&options.build_dir, &options.project_dir);
+    }
 
-    tracing::warn!("build with cmake");
-    cmake::build::compile(&build_dir);
+    // build with cmake
+    if options.action_type == util::cli::ActionType::Build
+        || options.action_type == util::cli::ActionType::All
+    {
+        tracing::warn!("build with cmake");
+        cmake::build::compile(&options.build_dir, &options.cmake_config);
+    }
 }

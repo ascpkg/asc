@@ -4,7 +4,9 @@ use crate::util;
 pub fn gen(
     options: &util::cli::CommandLines,
     source_mappings: &clang::parser::SourceMappings,
-    project_dir: &str,
+    project_dir: &String,
+    target_type: &util::cli::CMakeTargetType,
+    lib_type: &util::cli::CMakeLibType,
 ) -> String {
     let project_dir_length = project_dir.len() + 1;
 
@@ -128,13 +130,24 @@ pub fn gen(
     }
     txt.push_str("\n\n");
 
-    // generate executable
-    txt.push_str(r#"# generate executable"#);
-    txt.push_str("\n");
-    txt.push_str(r#"add_executable("#);
+    if target_type == &util::cli::CMakeTargetType::Executable {
+        // generate executable
+        txt.push_str(&format!(r#"# generate executable"#));
+        txt.push_str("\n");
+        txt.push_str(r#"add_executable("#);
+    } else {
+        // generate library
+        txt.push_str(&format!(r#"# generate library"#));
+        txt.push_str("\n");
+        txt.push_str(r#"add_library("#);
+    }
     txt.push_str("\n");
     txt.push_str(r#"    ${PROJECT_NAME}"#);
     txt.push_str("\n");
+    if lib_type == &util::cli::CMakeLibType::Shared {
+        txt.push_str(r#"    SHARED"#);
+        txt.push_str("\n");
+    }
     for classify in group_sources.keys() {
         txt.push_str(r#"    ${"#);
         txt.push_str(classify);
