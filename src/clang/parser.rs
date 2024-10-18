@@ -1,40 +1,45 @@
-use super::callback;
+use clang_sys;
 
 use crate::util;
+
+type StringSet = std::collections::BTreeSet<String>;
+type StringMapSet = std::collections::BTreeMap<String, std::collections::BTreeSet<String>>;
+type RcRefCellStringMapSet = std::rc::Rc<std::cell::RefCell<StringMapSet>>;
 
 #[derive(Debug, Clone)]
 pub struct SourceMappings {
     // header - sources
-    pub header_inclued_by_sources:
-        std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+    pub header_inclued_by_sources: StringMapSet,
     // source - headers
-    pub source_include_headers:
-        std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
-    // header - headers
-    pub header_include_headers:
-        std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
-    // header - functions
-    pub functions_in_header: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
-    // source - functions
-    pub functions_in_source: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+    pub source_include_headers: StringMapSet,
 }
 
 impl SourceMappings {
-    pub fn parse(options: &util::cli::CommandLines) -> SourceMappings {
-        let mut ref_source_mappings = Self::parse_from_entry_point(
-            &options.source_dir,
-            format!("{}/{}", &options.source_dir, &options.entry_point_source),
-            &options.include_dirs,
-        );
+    pub fn scan(options: &util::cli::CommandLines) -> SourceMappings {
+        let mut parsed_files = std::collections::BTreeSet::new();
 
-        let all_source_mappings = Self::parse_all_sources(&options.source_dir, &options.include_dirs);
-        for (header, sources) in &mut ref_source_mappings.header_inclued_by_sources {
-            if all_source_mappings
-                .header_inclued_by_sources
+        let (source_to_headers_from_entry_point, header_to_sources_from_entry_point) =
+            Self::get_includes_from_entry_point(
+                &mut parsed_files,
+                &options.source_dir,
+                format!("{}/{}", &options.source_dir, &options.entry_point_source),
+                &options.include_dirs,
+            );
+
+        let (_source_to_headers_from_source_files, header_to_sources_from_sources_files) =
+            Self::get_includes_from_source_files(
+                &mut parsed_files,
+                &options.source_dir,
+                &options.include_dirs,
+            );
+
+        for (header, sources) in header_to_sources_from_entry_point.borrow_mut().iter_mut() {
+            if header_to_sources_from_sources_files
+                .borrow()
                 .contains_key(header)
             {
-                for source in all_source_mappings
-                    .header_inclued_by_sources
+                for source in header_to_sources_from_sources_files
+                    .borrow()
                     .get(header)
                     .unwrap()
                 {
@@ -43,235 +48,219 @@ impl SourceMappings {
             }
         }
 
-        return ref_source_mappings;
-    }
-
-    fn parse_all_sources(source_dir: &String, include_dirs: &Vec<String>) -> SourceMappings {
-        let mut mappings = SourceMappings {
-            header_inclued_by_sources: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            source_include_headers: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            header_include_headers: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            functions_in_header: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            functions_in_source: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-        };
-
-        // record parsed files
-        let mut parsed = std::collections::HashSet::<String>::new();
-
-        for source_file in util::fs::find_source_files(source_dir) {
-            // skip parsed
-            if parsed.contains(&source_file) {
-                continue;
-            }
-
-            // parse source file
-            let headers = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
-            let functions = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
-            let callbacks = callback::MyParseCallbacks::new(
-                source_dir.clone(),
-                headers.clone(),
-                functions.clone(),
-            );
-
-            let mut builder = bindgen::Builder::default().header(source_file.clone());
-            for include_dir in include_dirs {
-                if !include_dir.is_empty() {
-                    builder = builder.clang_arg("-I").clang_arg(include_dir);
+        for (header, sources) in source_to_headers_from_entry_point.borrow_mut().iter_mut() {
+            if header_to_sources_from_sources_files
+                .borrow()
+                .contains_key(header)
+            {
+                for source in header_to_sources_from_sources_files
+                    .borrow()
+                    .get(header)
+                    .unwrap()
+                {
+                    sources.insert(source.clone());
                 }
-            }
-
-            builder
-                .parse_callbacks(Box::new(callbacks))
-                .ignore_functions()
-                .ignore_methods()
-                .generate()
-                .expect("Unable to generate source dependency tree");
-
-            parsed.insert(source_file.clone());
-
-            // map source to headers
-            if !mappings.source_include_headers.contains_key(&source_file) {
-                mappings
-                    .source_include_headers
-                    .insert(source_file.clone(), std::collections::BTreeSet::new());
-            }
-            let headers_set = mappings
-                .source_include_headers
-                .get_mut(&source_file)
-                .unwrap();
-            for header in headers.borrow().iter() {
-                headers_set.insert(header.clone());
-
-                // map header to sources
-                if !mappings.header_inclued_by_sources.contains_key(header) {
-                    mappings
-                        .header_inclued_by_sources
-                        .insert(header.clone(), std::collections::BTreeSet::new());
-                }
-                let sources_set = mappings.header_inclued_by_sources.get_mut(header).unwrap();
-                sources_set.insert(source_file.clone());
             }
         }
 
-        return mappings;
+        return SourceMappings {
+            header_inclued_by_sources: header_to_sources_from_entry_point.borrow().clone(),
+            source_include_headers: source_to_headers_from_entry_point.borrow().clone(),
+        };
     }
 
-    fn parse_from_entry_point(
+    fn get_includes_from_source_files(
+        parsed_files: &mut StringSet,
+        source_dir: &String,
+        include_dirs: &Vec<String>,
+    ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
+        let source_to_headers =
+            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
+        let header_to_sources =
+            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
+
+        for source_file in util::fs::find_source_files(source_dir) {
+            Self::get_include_files_in_source_dir(
+                parsed_files,
+                &source_file,
+                source_dir,
+                source_to_headers.clone(),
+                header_to_sources.clone(),
+                include_dirs,
+            );
+        }
+
+        return (source_to_headers, header_to_sources);
+    }
+
+    fn get_includes_from_entry_point(
+        parsed_files: &mut StringSet,
         source_dir: &String,
         source_file: String,
         include_dirs: &Vec<String>,
-    ) -> SourceMappings {
-        let mut mappings = SourceMappings {
-            header_inclued_by_sources: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            source_include_headers: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            header_include_headers: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            functions_in_header: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-            functions_in_source: std::collections::BTreeMap::<
-                String,
-                std::collections::BTreeSet<String>,
-            >::new(),
-        };
+    ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
+        let source_to_headers =
+            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
+        let header_to_sources =
+            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
 
-        // record parsed files
-        let mut parsed = std::collections::HashSet::<String>::new();
+        Self::get_include_files_in_source_dir(
+            parsed_files,
+            &source_file,
+            source_dir,
+            source_to_headers.clone(),
+            header_to_sources.clone(),
+            include_dirs,
+        );
 
-        // parse source file
-        let headers = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
-        let functions = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
-        let callbacks =
-            callback::MyParseCallbacks::new(source_dir.clone(), headers.clone(), functions.clone());
+        return (source_to_headers, header_to_sources);
+    }
 
-        let mut builder = bindgen::Builder::default().header(source_file.clone());
-        for include_dir in include_dirs {
-            if !include_dir.is_empty() {
-                builder = builder.clang_arg("-I").clang_arg(include_dir);
-            }
+    fn get_include_files_in_source_dir(
+        parsed_files: &mut StringSet,
+        source_file: &String,
+        source_dir: &String,
+        source_include_headers: RcRefCellStringMapSet,
+        header_inclued_by_sources: RcRefCellStringMapSet,
+        include_dirs: &Vec<String>,
+    ) {
+        // skip parsed
+        if parsed_files.contains(source_file) {
+            return;
         }
+        parsed_files.insert(source_file.clone());
 
-        builder
-            .parse_callbacks(Box::new(callbacks))
-            .ignore_functions()
-            .ignore_methods()
-            .generate()
-            .expect("Unable to generate source dependency tree");
-
-        parsed.insert(source_file.clone());
-
-        // map source to headers
-        if !mappings.source_include_headers.contains_key(&source_file) {
-            mappings
-                .source_include_headers
+        if !source_include_headers.borrow().contains_key(source_file) {
+            // new headers' container for map source to headers
+            source_include_headers
+                .borrow_mut()
                 .insert(source_file.clone(), std::collections::BTreeSet::new());
         }
-        let headers_set = mappings
-            .source_include_headers
-            .get_mut(&source_file)
-            .unwrap();
-        for header in headers.borrow().iter() {
-            headers_set.insert(header.clone());
 
-            // map header to sources
-            if !mappings.header_inclued_by_sources.contains_key(header) {
-                mappings
-                    .header_inclued_by_sources
-                    .insert(header.clone(), std::collections::BTreeSet::new());
-            }
-            let sources_set = mappings.header_inclued_by_sources.get_mut(header).unwrap();
-            sources_set.insert(source_file.clone());
-        }
-
-        // map source to functions
-        if !mappings.functions_in_source.contains_key(&source_file) {
-            mappings
-                .functions_in_source
-                .insert(source_file.clone(), std::collections::BTreeSet::new());
-        }
-        let functions_set = mappings.functions_in_source.get_mut(&source_file).unwrap();
-        for function in functions.borrow().iter() {
-            functions_set.insert(function.clone());
-        }
-
-        // parse header
-        for header in headers.borrow().iter() {
-            // skip parsed
-            if parsed.contains(&header.clone()) {
+        for include in Self::get_include_files(source_file, source_dir) {
+            // skip third-party
+            if !include.starts_with(source_dir) {
                 continue;
             }
 
-            let inner_headers = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
-            let inner_functions = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
-            let inner_callbacks = callback::MyParseCallbacks::new(
-                source_dir.clone(),
-                inner_headers.clone(),
-                inner_functions.clone(),
+            // map source to headers
+            source_include_headers
+                .borrow_mut()
+                .get_mut(source_file)
+                .unwrap()
+                .insert(include.clone());
+
+            let header_inclued_by_sources_cloned = header_inclued_by_sources.clone();
+            if !header_inclued_by_sources_cloned.borrow().contains_key(&include) {
+                // new headers' container for map header to sources
+                header_inclued_by_sources_cloned.borrow_mut()
+                    .insert(include.clone(), std::collections::BTreeSet::new());
+            }
+            // map header to sources
+            header_inclued_by_sources_cloned.borrow_mut().get_mut(&include).unwrap().insert(source_file.clone());
+
+            // recurse
+            Self::get_include_files_in_source_dir(
+                parsed_files,
+                &include,
+                source_dir,
+                source_include_headers.clone(),
+                header_inclued_by_sources.clone(),
+                include_dirs,
             );
+        }
+    }
 
-            let mut inner_builder = bindgen::Builder::default().header(header.clone());
-            for include_dir in include_dirs {
-                if !include_dir.is_empty() {
-                    inner_builder = inner_builder.clang_arg("-I").clang_arg(include_dir);
-                }
-            }
+    fn get_include_files(source: &String, source_dir: &String) -> StringSet {
+        let mut include_files = std::collections::BTreeSet::<String>::new();
 
-            inner_builder
-                .parse_callbacks(Box::new(inner_callbacks))
-                .ignore_functions()
-                .ignore_methods()
-                .generate()
-                .expect("Unable to generate source dependency tree");
+        // create an index
+        let index = unsafe { clang_sys::clang_createIndex(0, 0) };
 
-            parsed.insert(header.clone());
+        // parse the translation unit
+        let translation_unit = unsafe {
+            clang_sys::clang_parseTranslationUnit(
+                index,
+                Self::string_to_cstr(source).as_ptr(),
+                std::ptr::null_mut(),
+                0,
+                std::ptr::null_mut(),
+                0,
+                clang_sys::CXTranslationUnit_DetailedPreprocessingRecord
+                    | clang_sys::CXTranslationUnit_SkipFunctionBodies
+                    | clang_sys::CXTranslationUnit_SingleFileParse
+                    | clang_sys::CXTranslationUnit_KeepGoing,
+            )
+        };
+        if translation_unit.is_null() {
+            tracing::info!("clang_sys::clang_parseTranslationUnit error");
+            unsafe { clang_sys::clang_disposeIndex(index) };
+            return include_files;
+        }
 
-            // map header to headers
-            if !mappings.header_include_headers.contains_key(header) {
-                mappings
-                    .header_include_headers
-                    .insert(header.clone(), std::collections::BTreeSet::new());
-            }
-            let headers_set = mappings.header_include_headers.get_mut(header).unwrap();
-            for header in inner_headers.borrow().iter() {
-                headers_set.insert(header.clone());
-            }
+        // get the cursor for the translation unit
+        let cursor = unsafe { clang_sys::clang_getTranslationUnitCursor(translation_unit) };
 
-            // map header to functions
-            if !mappings.functions_in_header.contains_key(header) {
-                mappings
-                    .functions_in_header
-                    .insert(header.clone(), std::collections::BTreeSet::new());
-            }
-            let functions_set = mappings.functions_in_header.get_mut(header).unwrap();
-            for function in inner_functions.borrow().iter() {
-                functions_set.insert(function.clone());
+        // visit the AST
+        unsafe {
+            clang_sys::clang_visitChildren(
+                cursor,
+                get_include_files,
+                &mut include_files as *mut _ as *mut std::ffi::c_void,
+            );
+        }
+
+        // clean up
+        unsafe {
+            clang_sys::clang_disposeTranslationUnit(translation_unit);
+            clang_sys::clang_disposeIndex(index);
+        }
+
+        let prefix_length = source_dir.len() + 1;
+        tracing::info!("{}", source.clone().split_off(prefix_length));
+        for include in &include_files {
+            if include.starts_with(source_dir) {
+                tracing::info!("    {}", include.clone().split_off(prefix_length));
             }
         }
 
-        return mappings;
+        return include_files;
     }
+
+    fn string_to_cstr(rust_str: &String) -> std::ffi::CString {
+        std::ffi::CString::new(rust_str.as_str()).unwrap()
+    }
+}
+
+fn cxstring_to_string(cx_str: clang_sys::CXString) -> String {
+    if cx_str.data.is_null() {
+        return String::new();
+    }
+
+    let c_str =
+        unsafe { std::ffi::CStr::from_ptr(clang_sys::clang_getCString(cx_str) as *const _) };
+    let rust_str = c_str.to_string_lossy().into_owned();
+
+    unsafe { clang_sys::clang_disposeString(cx_str) };
+
+    return rust_str;
+}
+
+extern "C" fn get_include_files(
+    cursor: clang_sys::CXCursor,
+    _parent: clang_sys::CXCursor,
+    client_data: clang_sys::CXClientData,
+) -> clang_sys::CXChildVisitResult {
+    if unsafe { clang_sys::clang_getCursorKind(cursor) } == clang_sys::CXCursor_InclusionDirective {
+        let include_file = unsafe { clang_sys::clang_getIncludedFile(cursor) };
+        if !include_file.is_null() {
+            let include_file_name = unsafe { clang_sys::clang_getFileName(include_file) };
+            let path = cxstring_to_string(include_file_name).replace(r"\", "/");
+
+            let include_paths =
+                unsafe { &mut *(client_data as *mut std::collections::BTreeSet<String>) };
+            include_paths.insert(path);
+        }
+    }
+    clang_sys::CXChildVisit_Recurse
 }

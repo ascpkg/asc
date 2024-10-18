@@ -14,12 +14,20 @@ pub struct CommandLines {
 }
 
 impl CommandLines {
-    pub fn replace(&mut self) {
+    pub fn normalize(&mut self) {
+        if !std::path::Path::new(&self.source_dir).is_absolute() {
+            self.source_dir = format!(
+                "{}/{}",
+                std::env::current_dir().unwrap().to_str().unwrap(),
+                self.source_dir
+            );
+        }
         self.source_dir = self.source_dir.replace(r"\", "/");
 
         for include in self.include_dirs.iter_mut() {
             *include = include.replace(r"\", "/");
         }
+        self.include_dirs.retain(|s| !s.is_empty());
     }
 
     pub fn format(&mut self) {}

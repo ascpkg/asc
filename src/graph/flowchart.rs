@@ -1,12 +1,12 @@
 use crate::clang;
 
-pub fn gen_dependency_flowchat(
+pub fn gen(
     source_dir: &String,
     source_mappings: &clang::parser::SourceMappings,
 ) -> String {
     let prefix_length = source_dir.len() + 1;
 
-    let mut mermaid_code = String::from("\n```mermaid\nflowchart LR;\n");
+    let mut mermaid_code = String::from("flowchart LR;\n");
     for (header, sources) in &source_mappings.header_inclued_by_sources {
         for source in sources {
             mermaid_code.push_str(&format!(
@@ -16,7 +16,6 @@ pub fn gen_dependency_flowchat(
             ));
         }
     }
-    mermaid_code.push_str("```\n");
 
     return mermaid_code;
 }

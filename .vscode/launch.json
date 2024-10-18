@@ -13,28 +13,28 @@
             "justMyCode": false,
             "args": [
                 "--clang-lib-dir=\"D:/Program Files/LLVM/bin\"",
-                "--source=\"test_c_cpp_bin/src/main.cpp\""
+                "--source=\"test_c_cpp/src/main.cpp\""
             ]
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'source_dependency_tree'",
+            "name": "Debug executable 'auto_build_source_tree'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=source_dependency_tree",
-                    "--package=source_dependency_tree"
+                    "--bin=auto_build_source_tree",
+                    "--package=auto_build_source_tree"
                 ],
                 "filter": {
-                    "name": "source_dependency_tree",
+                    "name": "auto_build_source_tree",
                     "kind": "bin"
                 }
             },
             "args": [
-                "--source-dir=test_c_cpp_bin/src",
+                "--source-dir=test_c_cpp/src",
                 "--entry-point-source=main.cpp",
-                "--project=test"
+                "--project=test_c_cpp"
             ],
             "cwd": "${workspaceFolder}"
         },

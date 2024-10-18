@@ -1,7 +1,9 @@
 use clap::Parser;
 
+use time::{macros::format_description, UtcOffset};
+
 use tracing;
-use tracing_subscriber;
+use tracing_subscriber::{self, fmt::time::OffsetTime};
 
 pub mod clang;
 pub mod cmake;
@@ -10,25 +12,29 @@ pub mod util;
 
 fn main() {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::ERROR)
+        .with_max_level(tracing::Level::INFO)
         .with_line_number(true)
+        .with_timer(OffsetTime::new(
+            UtcOffset::from_hms(8, 0, 0).unwrap(),
+            format_description!("[year]-[month]-[day] [hour]:[minute]:[second].[subsecond]"),
+        ))
         .init();
 
-    tracing::error!("parse command line options");
+    tracing::warn!("parse command lines");
     let mut options = util::cli::CommandLines::parse();
-    options.replace();
-    tracing::error!("{:#?}", options);
+    options.normalize();
+    tracing::info!("{:#?}", options);
 
-    tracing::error!("generate source dependences");
-    let source_mappings = clang::SourceMappings::parse(&options);
+    tracing::warn!("scan source dependences with clang ir");
+    let source_mappings = clang::parser::SourceMappings::scan(&options);
 
-    tracing::error!("generate markdown mermaid flowchat");
-    let markdown_mermaid_flowchart =
-        graph::gen::gen_dependency_flowchat(&options.source_dir, &source_mappings);
-    tracing::error!("{markdown_mermaid_flowchart}");
+    tracing::warn!("output mermaid flowchat of source dependences");
+    let mermaid_flowchart =
+        graph::flowchart::gen(&options.source_dir, &source_mappings);
+    tracing::info!("{mermaid_flowchart}");
     std::fs::write(
         format!("{}.md", options.project),
-        markdown_mermaid_flowchart.as_bytes(),
+        format!("```mermaid\n{}\n```", mermaid_flowchart).as_bytes(),
     )
     .unwrap();
 
@@ -38,14 +44,14 @@ fn main() {
         .to_str()
         .unwrap();
 
-    tracing::error!("generate CMakeLists.txt");
+    tracing::warn!("output CMakeLists.txt");
     let txt = cmake::lists::gen(&options, &source_mappings, &project_dir);
     std::fs::write(format!("{}/CMakeLists.txt", &project_dir,), txt.as_bytes()).unwrap();
 
-    tracing::error!("cmake generate project");
+    tracing::warn!("generate a build system with cmake");
     let build_dir = format!("{}/build", &project_dir);
     cmake::project::gen(&build_dir, &project_dir);
 
-    tracing::error!("cmake build");
+    tracing::warn!("build with cmake");
     cmake::build::compile(&build_dir);
 }

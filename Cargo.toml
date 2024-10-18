@@ -1,11 +1,12 @@
 [package]
-name = "source_dependency_tree"
-version = "0.1.0"
+name = "auto_build_source_tree"
+version = "2024.10.18"
 edition = "2021"
 
 [dependencies]
-bindgen = { version = "0.70.1" }
+clang-sys = { version = "1.8.1", features = ["clang_18_0"] }
 clap = { version = "4.5.20", features = ["derive"] }
+time = { version = "0.3.36", features = ["formatting", "macros"] }
 tracing = { version = "0.1.40" }
-tracing-subscriber = { version = "0.3.18" }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "time", "local-time", "json"] }
 walkdir = { version = "2.5.0" }

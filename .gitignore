@@ -20,8 +20,5 @@ Cargo.lock
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-test_c_cpp_bin/build
-test_c_cpp_bin/CMakeLists.txt
-
-test_c_cpp_lib/build
-test_c_cpp_lib/CMakeLists.txt
+test_c_cpp/build
+test_c_cpp/CMakeLists.txt

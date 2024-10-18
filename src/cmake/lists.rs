@@ -20,7 +20,7 @@ pub fn gen(
     txt.push_str(&format!(r#"project ({} C CXX)"#, &options.project));
     txt.push_str("\n\n");
 
-    txt.push_str(r#"# config msvc"#);
+    txt.push_str(r#"# configure msvc"#);
     txt.push_str("\n");
     txt.push_str(r#"if(MSVC)"#);
     txt.push_str("\n");
@@ -117,10 +117,8 @@ pub fn gen(
         txt.push_str(r#"    PRIVATE"#);
         txt.push_str("\n");
         for dir in &options.include_dirs {
-            if !dir.is_empty() {
-                txt.push_str(&format!(r#"    "{}""#, dir));
-                txt.push_str("\n");
-            }
+            txt.push_str(&format!(r#"    "{}""#, dir));
+            txt.push_str("\n");
         }
         txt.push_str(r#"    ${CMAKE_CURRENT_BINARY_DIR}"#);
         txt.push_str("\n");
