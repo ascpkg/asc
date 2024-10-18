@@ -31,7 +31,7 @@ fn main() {
     tracing::warn!("output mermaid flowchat of source dependences");
     let mermaid_flowchart =
         graph::flowchart::gen(&options.source_dir, &source_mappings);
-    tracing::info!("{mermaid_flowchart}");
+    tracing::info!("\n{mermaid_flowchart}");
     std::fs::write(
         format!("{}.md", options.project),
         format!("```mermaid\n{}\n```", mermaid_flowchart).as_bytes(),

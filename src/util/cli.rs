@@ -11,6 +11,9 @@ pub struct CommandLines {
     pub entry_point_source: String,
     #[clap(long, default_value = "", value_delimiter(','))]
     pub include_dirs: Vec<String>,
+    
+    #[clap(long, default_value = "3.20")]
+    pub cmake_minimum_version: String,
 }
 
 impl CommandLines {

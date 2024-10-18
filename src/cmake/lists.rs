@@ -10,16 +10,22 @@ pub fn gen(
 
     let mut txt = String::new();
 
-    txt.push_str(r#"# cmake version"#);
+    // set cmake version required
+    txt.push_str(r#"# set cmake version required"#);
     txt.push_str("\n");
-    txt.push_str(r#"cmake_minimum_required(VERSION 3.20)"#);
+    txt.push_str(&format!(
+        r#"cmake_minimum_required(VERSION {})"#,
+        &options.cmake_minimum_version
+    ));
     txt.push_str("\n\n");
 
-    txt.push_str(r#"# project name"#);
+    // set project name
+    txt.push_str(r#"# set project name"#);
     txt.push_str("\n");
     txt.push_str(&format!(r#"project ({} C CXX)"#, &options.project));
     txt.push_str("\n\n");
 
+    // configure msvc
     txt.push_str(r#"# configure msvc"#);
     txt.push_str("\n");
     txt.push_str(r#"if(MSVC)"#);
@@ -53,60 +59,91 @@ pub fn gen(
     txt.push_str(r#"endif(MSVC)"#);
     txt.push_str("\n\n");
 
-    let mut compile_sources = std::collections::BTreeSet::<String>::new();
-
-    txt.push_str(r#"# headers"#);
-    txt.push_str("\n");
-    txt.push_str(r#"FILE(GLOB_RECURSE HEADER_FILES"#);
+    // group headers and source by dir name
+    let mut group_sources =
+        std::collections::BTreeMap::<String, std::collections::BTreeSet<String>>::new();
+    let mut classify_to_dir = std::collections::HashMap::<String, String>::new();
     for (header, sources) in &source_mappings.header_inclued_by_sources {
-        txt.push_str("\n");
-        txt.push_str(&format!(
-            r#"    "{}""#,
-            header.clone().split_off(project_dir_length)
-        ));
+        {
+            // group header
+            let relative_path: String = header.clone().split_off(project_dir_length);
+            let dir = std::path::Path::new(&relative_path)
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            let classify = dir.replace("/", "_");
+            classify_to_dir.insert(classify.clone(), dir.to_string());
+            group_sources
+                .entry(classify.to_string())
+                .or_default()
+                .insert(relative_path);
+        }
 
-        for src in sources {
-            compile_sources.insert(src.clone());
+        {
+            for src in sources {
+                // group source
+                let relative_path = src.clone().split_off(project_dir_length);
+                let dir = std::path::Path::new(&relative_path)
+                    .parent()
+                    .unwrap()
+                    .to_str()
+                    .unwrap();
+                let classify = dir.replace("/", "_");
+                classify_to_dir.insert(classify.clone(), dir.to_string());
+                group_sources
+                    .entry(classify.to_string())
+                    .or_default()
+                    .insert(relative_path);
+            }
         }
     }
-    txt.push_str("\n");
-    txt.push_str(r#")"#);
-    txt.push_str("\n\n");
 
-    txt.push_str(r#"# sources"#);
+    // glob headers and sources
+    txt.push_str(r#"# glob headers and sources"#);
     txt.push_str("\n");
-    txt.push_str(r#"FILE(GLOB_RECURSE SOURCES_FILES"#);
-    for source in &compile_sources {
+    for (classify, sources) in &group_sources {
+        txt.push_str(r#"FILE(GLOB_RECURSE"#);
         txt.push_str("\n");
-        txt.push_str(&format!(
-            r#"    "{}""#,
-            source.clone().split_off(project_dir_length)
-        ));
+        txt.push_str(&format!(r#"    {}"#, classify));
+        txt.push_str("\n");
+        for src in sources {
+            txt.push_str(&format!(r#"    "{}""#, src));
+            txt.push_str("\n");
+        }
+        txt.push_str(r#")"#);
+        txt.push_str("\n\n");
     }
+
+    // group headers and sources
+    txt.push_str(r#"# group headers and sources"#);
     txt.push_str("\n");
-    txt.push_str(r#")"#);
+    for classify in group_sources.keys() {
+        txt.push_str(r#"SOURCE_GROUP(""#);
+        txt.push_str(classify_to_dir.get(classify).unwrap());
+        txt.push_str(r#"" FILES ${"#);
+        txt.push_str(&classify);
+        txt.push_str(r#"})"#);
+        txt.push_str("\n");
+    }
     txt.push_str("\n\n");
 
-    txt.push_str(r#"# group"#);
-    txt.push_str("\n");
-    txt.push_str(r#"SOURCE_GROUP("headers" FILES ${HEADER_FILES})"#);
-    txt.push_str("\n");
-    txt.push_str(r#"SOURCE_GROUP("sources" FILES ${SOURCES_FILES})"#);
-    txt.push_str("\n\n");
-
+    // generate executable
     txt.push_str(r#"# generate executable"#);
     txt.push_str("\n");
     txt.push_str(r#"add_executable("#);
     txt.push_str("\n");
     txt.push_str(r#"    ${PROJECT_NAME}"#);
     txt.push_str("\n");
-    txt.push_str(r#"    ${HEADER_FILES}"#);
-    txt.push_str("\n");
-    txt.push_str(r#"    ${SOURCES_FILES}"#);
-    txt.push_str("\n");
+    for classify in group_sources.keys() {
+        txt.push_str(r#"    ${"#);
+        txt.push_str(classify);
+        txt.push_str("}\n");
+    }
     txt.push_str(r#")"#);
     txt.push_str("\n\n");
 
+    // set include paths
     if !options.include_dirs.is_empty() {
         txt.push_str(r#"# set include paths"#);
         txt.push_str("\n");
@@ -126,6 +163,7 @@ pub fn gen(
         txt.push_str("\n\n");
     }
 
+    // link libraries
     txt.push_str(r#"# link libraries"#);
     txt.push_str("\n");
     txt.push_str(r#"#target_link_libraries("#);
@@ -139,6 +177,7 @@ pub fn gen(
     txt.push_str(r#"#)"#);
     txt.push_str("\n\n");
 
+    // add executable directory to deps search paths
     txt.push_str(r#"# add executable directory to deps search paths"#);
     txt.push_str("\n");
     txt.push_str(r#"set(CMAKE_SKIP_BUILD_RPATH FALSE) "#);
@@ -150,5 +189,5 @@ pub fn gen(
     txt.push_str(r#"set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)"#);
     txt.push_str("\n\n");
 
-    txt
+    return txt;
 }

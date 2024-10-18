@@ -130,13 +130,6 @@ impl SourceMappings {
         }
         parsed_files.insert(source_file.clone());
 
-        if !source_include_headers.borrow().contains_key(source_file) {
-            // new headers' container for map source to headers
-            source_include_headers
-                .borrow_mut()
-                .insert(source_file.clone(), std::collections::BTreeSet::new());
-        }
-
         for include in visitor::get_include_files(source_file, source_dir) {
             // skip third-party
             if !include.starts_with(source_dir) {
@@ -146,18 +139,17 @@ impl SourceMappings {
             // map source to headers
             source_include_headers
                 .borrow_mut()
-                .get_mut(source_file)
-                .unwrap()
+                .entry(source_file.clone())
+                .or_insert_with(std::collections::BTreeSet::new)
                 .insert(include.clone());
 
-            let header_inclued_by_sources_cloned = header_inclued_by_sources.clone();
-            if !header_inclued_by_sources_cloned.borrow().contains_key(&include) {
-                // new headers' container for map header to sources
-                header_inclued_by_sources_cloned.borrow_mut()
-                    .insert(include.clone(), std::collections::BTreeSet::new());
-            }
             // map header to sources
-            header_inclued_by_sources_cloned.borrow_mut().get_mut(&include).unwrap().insert(source_file.clone());
+            let header_inclued_by_sources_cloned = header_inclued_by_sources.clone();
+            header_inclued_by_sources_cloned
+                .borrow_mut()
+                .entry(include.clone())
+                .or_insert_with(std::collections::BTreeSet::new)
+                .insert(source_file.clone());
 
             // recurse
             Self::get_include_files_in_source_dir(
@@ -170,7 +162,4 @@ impl SourceMappings {
             );
         }
     }
-
-
 }
-
