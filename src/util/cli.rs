@@ -7,6 +7,7 @@ pub enum ActionType {
     Scan = 1,
     Configure = 2,
     Build = 3,
+    Install = 4,
 }
 
 #[derive(Clone, Debug, PartialEq, ValueEnum)]

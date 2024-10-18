@@ -1,6 +1,8 @@
 #pragma once
 
-class CA
+#include "../export.h"
+
+class TEST_C_CPP_API CA
 {
 public:
     CA();

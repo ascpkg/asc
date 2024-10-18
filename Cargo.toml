@@ -6,6 +6,9 @@ edition = "2021"
 [dependencies]
 clang-sys = { version = "1.8.1", features = ["clang_18_0"] }
 clap = { version = "4.5.20", features = ["derive"] }
+handlebars = { version = "6.1.0" }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = { version = "1.0.129" }
 time = { version = "0.3.36", features = ["formatting", "macros"] }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "time", "local-time", "json"] }

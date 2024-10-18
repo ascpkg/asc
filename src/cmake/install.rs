@@ -2,7 +2,7 @@ use crate::util;
 
 pub fn run(options: &util::cli::CommandLines) {
     let args = vec![
-        "--build",
+        "--install",
         &options.build_dir,
         "--config",
         if options.cmake_config == util::cli::CMakeConfigType::Debug {

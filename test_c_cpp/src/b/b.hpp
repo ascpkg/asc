@@ -1,6 +1,8 @@
 #pragma once
 
-class CB
+#include "../export.h"
+
+class TEST_C_CPP_API CB
 {
 public:
     CB();

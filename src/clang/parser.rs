@@ -9,7 +9,7 @@ type RcRefCellStringMapSet = std::rc::Rc<std::cell::RefCell<StringMapSet>>;
 #[derive(Debug, Clone)]
 pub struct SourceMappings {
     // header - sources
-    pub header_inclued_by_sources: StringMapSet,
+    pub header_include_by_sources: StringMapSet,
     // source - headers
     pub source_include_headers: StringMapSet,
 }
@@ -64,7 +64,7 @@ impl SourceMappings {
         }
 
         return SourceMappings {
-            header_inclued_by_sources: header_to_sources_from_entry_point.borrow().clone(),
+            header_include_by_sources: header_to_sources_from_entry_point.borrow().clone(),
             source_include_headers: source_to_headers_from_entry_point.borrow().clone(),
         };
     }
@@ -121,7 +121,7 @@ impl SourceMappings {
         source_file: &String,
         source_dir: &String,
         source_include_headers: RcRefCellStringMapSet,
-        header_inclued_by_sources: RcRefCellStringMapSet,
+        header_include_by_sources: RcRefCellStringMapSet,
         include_dirs: &Vec<String>,
     ) {
         // skip parsed
@@ -144,8 +144,8 @@ impl SourceMappings {
                 .insert(include.clone());
 
             // map header to sources
-            let header_inclued_by_sources_cloned = header_inclued_by_sources.clone();
-            header_inclued_by_sources_cloned
+            let header_include_by_sources_cloned = header_include_by_sources.clone();
+            header_include_by_sources_cloned
                 .borrow_mut()
                 .entry(include.clone())
                 .or_insert_with(std::collections::BTreeSet::new)
@@ -157,7 +157,7 @@ impl SourceMappings {
                 &include,
                 source_dir,
                 source_include_headers.clone(),
-                header_inclued_by_sources.clone(),
+                header_include_by_sources.clone(),
                 include_dirs,
             );
         }

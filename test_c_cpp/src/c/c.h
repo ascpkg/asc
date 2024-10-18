@@ -1,10 +1,12 @@
 #pragma once
 
+#include "../export.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-char *fc(int i);
+char TEST_C_CPP_API *fc(int i);
 
 #ifdef __cplusplus
 }

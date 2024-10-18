@@ -27,35 +27,19 @@ fn main() {
     options.normalize();
     tracing::info!("{:#?}", options);
 
-    // scan source dependences with clang ir
+    // scan source dependencies with clang ir
     if options.action_type == util::cli::ActionType::Scan
         || options.action_type == util::cli::ActionType::All
     {
-        tracing::warn!("scan source dependences with clang ir");
+        tracing::warn!("scan source dependencies with clang ir");
         let source_mappings = clang::parser::SourceMappings::scan(&options);
 
-        tracing::warn!("output mermaid flowchat of source dependences");
-        let mermaid_flowchart = graph::flowchart::gen(&options.source_dir, &source_mappings);
+        tracing::warn!("output flow chart {}", graph::flowchart::path(&options));
+        let mermaid_flowchart = graph::flowchart::gen(&options, &source_mappings);
         tracing::info!("\n{mermaid_flowchart}");
-        std::fs::write(
-            format!("{}.md", options.project),
-            format!("```mermaid\n{}\n```", mermaid_flowchart).as_bytes(),
-        )
-        .unwrap();
 
-        tracing::warn!("output CMakeLists.txt");
-        let txt = cmake::lists::gen(
-            &options,
-            &source_mappings,
-            &options.project_dir,
-            &options.cmake_target_type,
-            &options.cmake_lib_type,
-        );
-        std::fs::write(
-            format!("{}/CMakeLists.txt", &options.project_dir,),
-            txt.as_bytes(),
-        )
-        .unwrap();
+        tracing::warn!("output {}", cmake::lists::path(&options));
+        cmake::lists::gen(&options, &source_mappings);
     }
 
     // output CMakeLists.txt
@@ -63,7 +47,7 @@ fn main() {
         || options.action_type == util::cli::ActionType::All
     {
         tracing::warn!("generate a build system with cmake");
-        cmake::project::gen(&options.build_dir, &options.project_dir);
+        cmake::project::gen(&options);
     }
 
     // build with cmake
@@ -71,6 +55,14 @@ fn main() {
         || options.action_type == util::cli::ActionType::All
     {
         tracing::warn!("build with cmake");
-        cmake::build::compile(&options.build_dir, &options.cmake_config);
+        cmake::build::run(&options);
+    }
+
+    // install with cmake
+    if options.action_type == util::cli::ActionType::Install
+        || options.action_type == util::cli::ActionType::All
+    {
+        tracing::warn!("install with cmake");
+        cmake::install::run(&options);
     }
 }

@@ -1,6 +1,6 @@
 # Auto build source tree
-- scan source dependences with clang ir
-- output mermaid flowchat of source dependences
+- scan source dependencies with clang ir
+- output mermaid flowchat of source dependencies
 
   for example: [test_c_cpp](./test_c_cpp.md)
 
@@ -58,7 +58,7 @@ Options:
     cmake_lib_type: Static,
     cmake_config: Debug,
 }
-2024-10-18 17:57:24.1593385  WARN auto_build_source_tree: 34: scan source dependences with clang ir
+2024-10-18 17:57:24.1593385  WARN auto_build_source_tree: 34: scan source dependencies with clang ir
 2024-10-18 17:57:24.1770021  INFO auto_build_source_tree::clang::visitor: 51: main.cpp
 2024-10-18 17:57:24.177632  INFO auto_build_source_tree::clang::visitor: 54:     wrapping.hpp
 2024-10-18 17:57:24.1886352  INFO auto_build_source_tree::clang::visitor: 51: wrapping.hpp
@@ -103,7 +103,7 @@ Options:
 2024-10-18 17:57:24.4125912  INFO auto_build_source_tree::clang::visitor: 51: d/mod.hpp
 2024-10-18 17:57:24.4130126  INFO auto_build_source_tree::clang::visitor: 54:     d/d.h
 2024-10-18 17:57:24.4134394  INFO auto_build_source_tree::clang::visitor: 54:     d/d.hpp
-2024-10-18 17:57:24.4138511  WARN auto_build_source_tree: 37: output mermaid flowchat of source dependences
+2024-10-18 17:57:24.4138511  WARN auto_build_source_tree: 37: output mermaid flowchat of source dependencies
 2024-10-18 17:57:24.4141827  INFO auto_build_source_tree: 39:
 flowchart LR;
     a/a.c ---> a/a.h;

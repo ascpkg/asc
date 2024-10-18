@@ -1,6 +1,8 @@
 #pragma once
 
-class CC
+#include "../export.h"
+
+class TEST_C_CPP_API CC
 {
 public:
     CC();
