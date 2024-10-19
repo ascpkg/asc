@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../export.h"
+#include "export.h"
 
 class TEST_C_CPP_API CC
 {

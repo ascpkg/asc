@@ -23,4 +23,5 @@ Cargo.lock
 test_c_cpp/build
 test_c_cpp/target
 test_c_cpp/*.cmake.in
+test_c_cpp/version.h.in
 test_c_cpp/CMakeLists.txt

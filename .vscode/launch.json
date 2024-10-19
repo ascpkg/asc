@@ -19,22 +19,24 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'auto_build_source_tree'",
+            "name": "Debug executable 'asb'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=auto_build_source_tree",
-                    "--package=auto_build_source_tree"
+                    "--bin=asb",
+                    "--package=asb"
                 ],
                 "filter": {
-                    "name": "auto_build_source_tree",
+                    "name": "asb",
                     "kind": "bin"
                 }
             },
             "args": [
                 "--source-dir=test_c_cpp/src",
                 "--entry-point-source=main.cpp",
-                "--project=test_c_cpp"
+                "--action-type=all",
+                "--cmake-target-type=library",
+                "--cmake-lib-type=shared"
             ],
             "cwd": "${workspaceFolder}"
         },

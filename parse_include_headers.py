@@ -24,7 +24,7 @@ default_parser_options = (
     CXTranslationUnit_DetailedPreprocessingRecord |  # needed for preprocessing parsing
     CXTranslationUnit_SkipFunctionBodies |  # for faster parsing
     CXTranslationUnit_SingleFileParse |  # don't parse include files recursively
-    # CXTranslationUnit_RetainExcludedConditionalBlocks |  # keep includes inside ifdef blocks
+    CXTranslationUnit_RetainExcludedConditionalBlocks |  # keep includes inside ifdef blocks
     CXTranslationUnit_KeepGoing  # don't stop on errors
 )
 

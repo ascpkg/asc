@@ -1,6 +1,8 @@
+#include "version.h"
 #include "wrapping.hpp"
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include <string>
 
@@ -18,6 +20,8 @@
 
 int main(int argc, char **argv)
 {
+    printf("%s\n", TEST_C_CPP_VERSION_STRING);
+
     fa();
     CA().a();
     CA().a(0);

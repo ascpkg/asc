@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../export.h"
+#include "export.h"
 
 #ifdef __cplusplus
 extern "C" {
