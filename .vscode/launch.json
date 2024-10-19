@@ -12,8 +12,8 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": [
-                "--clang-lib-dir=\"D:/Program Files/LLVM/bin\"",
-                "--source=\"test_c_cpp/src/main.cpp\""
+                "--clang-lib-dir=C:/Program Files/LLVM/bin",
+                "--source=test_c_cpp/src/a/a.h"
             ]
         },
         {

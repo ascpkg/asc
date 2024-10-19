@@ -1,9 +1,23 @@
+use crate::util;
+
 use clang_sys;
 
 type StringSet = std::collections::BTreeSet<String>;
 
-pub fn get_include_files(source: &String, source_dir: &String) -> StringSet {
+pub fn get_include_files(source: &String, options: &util::cli::CommandLines) -> StringSet {
     let mut include_files = std::collections::BTreeSet::<String>::new();
+
+    // set include search paths
+    let mut rs_args: Vec<String> = options
+        .include_dirs
+        .iter()
+        .map(|s| format!("-I{}", s))
+        .collect();
+    rs_args.push(format!("-I{}", options.source_dir));
+    let c_args: Vec<*const std::ffi::c_char> = rs_args
+        .iter()
+        .map(|s| s.as_ptr() as *const std::ffi::c_char)
+        .collect();
 
     // create an index
     let index = unsafe { clang_sys::clang_createIndex(0, 0) };
@@ -13,8 +27,8 @@ pub fn get_include_files(source: &String, source_dir: &String) -> StringSet {
         clang_sys::clang_parseTranslationUnit(
             index,
             string_to_cstr(source).as_ptr(),
-            std::ptr::null_mut(),
-            0,
+            c_args.as_ptr(),
+            rs_args.len() as i32,
             std::ptr::null_mut(),
             0,
             clang_sys::CXTranslationUnit_DetailedPreprocessingRecord
@@ -47,10 +61,10 @@ pub fn get_include_files(source: &String, source_dir: &String) -> StringSet {
         clang_sys::clang_disposeIndex(index);
     }
 
-    let prefix_length = source_dir.len() + 1;
+    let prefix_length = options.source_dir.len() + 1;
     tracing::info!("{}", source.clone().split_off(prefix_length));
     for include in &include_files {
-        if include.starts_with(source_dir) {
+        if include.starts_with(&options.source_dir) {
             tracing::info!("    {}", include.clone().split_off(prefix_length));
         }
     }

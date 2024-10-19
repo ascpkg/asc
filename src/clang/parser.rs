@@ -20,17 +20,15 @@ impl SourceMappings {
 
         let (source_to_headers_from_entry_point, header_to_sources_from_entry_point) =
             Self::get_includes_from_entry_point(
+                &options,
                 &mut parsed_files,
-                &options.source_dir,
                 format!("{}/{}", &options.source_dir, &options.entry_point_source),
-                &options.include_dirs,
             );
 
         let (_source_to_headers_from_source_files, header_to_sources_from_sources_files) =
             Self::get_includes_from_source_files(
+                &options,
                 &mut parsed_files,
-                &options.source_dir,
-                &options.include_dirs,
             );
 
         for (header, sources) in header_to_sources_from_entry_point.borrow_mut().iter_mut() {
@@ -70,23 +68,21 @@ impl SourceMappings {
     }
 
     fn get_includes_from_source_files(
+        options: &util::cli::CommandLines,
         parsed_files: &mut StringSet,
-        source_dir: &String,
-        include_dirs: &Vec<String>,
     ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
         let source_to_headers =
             std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
         let header_to_sources =
             std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
 
-        for source_file in util::fs::find_source_files(source_dir) {
+        for source_file in util::fs::find_source_files(&options.source_dir) {
             Self::get_include_files_in_source_dir(
+                options,
                 parsed_files,
                 &source_file,
-                source_dir,
                 source_to_headers.clone(),
                 header_to_sources.clone(),
-                include_dirs,
             );
         }
 
@@ -94,10 +90,9 @@ impl SourceMappings {
     }
 
     fn get_includes_from_entry_point(
+        options: &util::cli::CommandLines,
         parsed_files: &mut StringSet,
-        source_dir: &String,
         source_file: String,
-        include_dirs: &Vec<String>,
     ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
         let source_to_headers =
             std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
@@ -105,24 +100,22 @@ impl SourceMappings {
             std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
 
         Self::get_include_files_in_source_dir(
+            options,
             parsed_files,
             &source_file,
-            source_dir,
             source_to_headers.clone(),
             header_to_sources.clone(),
-            include_dirs,
         );
 
         return (source_to_headers, header_to_sources);
     }
 
     fn get_include_files_in_source_dir(
+        options: &util::cli::CommandLines,
         parsed_files: &mut StringSet,
         source_file: &String,
-        source_dir: &String,
         source_include_headers: RcRefCellStringMapSet,
         header_include_by_sources: RcRefCellStringMapSet,
-        include_dirs: &Vec<String>,
     ) {
         // skip parsed
         if parsed_files.contains(source_file) {
@@ -130,9 +123,9 @@ impl SourceMappings {
         }
         parsed_files.insert(source_file.clone());
 
-        for include in visitor::get_include_files(source_file, source_dir) {
+        for include in visitor::get_include_files(source_file, &options) {
             // skip third-party
-            if !include.starts_with(source_dir) {
+            if !include.starts_with(&options.source_dir) {
                 continue;
             }
 
@@ -153,12 +146,11 @@ impl SourceMappings {
 
             // recurse
             Self::get_include_files_in_source_dir(
+                options,
                 parsed_files,
                 &include,
-                source_dir,
                 source_include_headers.clone(),
                 header_include_by_sources.clone(),
-                include_dirs,
             );
         }
     }

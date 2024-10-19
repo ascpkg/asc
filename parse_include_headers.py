@@ -58,13 +58,6 @@ def parse_cli_args() -> cli_args:
     )
 
     arg_parser.add_argument(
-        '--args', 
-        type=tuple,
-        default=None,
-        help=f'set clang parser args'
-    )
-
-    arg_parser.add_argument(
         '--options', 
         type=tuple,
         default=default_parser_options,
@@ -76,11 +69,11 @@ def parse_cli_args() -> cli_args:
     if not args.clang_lib_dir or not os.path.exists(args.clang_lib_dir) or not args.source or not os.path.exists(args.source):
         arg_parser.print_help()
         return None
-
+    
     return cli_args(
         clang_lib_dir=args.clang_lib_dir,
         source=args.source,
-        args=args.args,
+        args=[f'-I{os.path.dirname(args.source)}'],
         options=args.options
     )
 
@@ -108,7 +101,7 @@ def get_included_file(node):
         return None
 
 
-def parse_headers(source: str, args: tuple, options: tuple):
+def parse_headers(source: str, args: list, options: tuple):
     index = Index.create()
     tu = index.parse(source, args=args, options=options)
     for node in tu.cursor.get_children():
