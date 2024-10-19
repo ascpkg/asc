@@ -124,11 +124,6 @@ impl SourceMappings {
         parsed_files.insert(source_file.clone());
 
         for include in visitor::get_include_files(source_file, &options) {
-            // skip third-party
-            if !include.starts_with(&options.source_dir) {
-                continue;
-            }
-
             // map source to headers
             source_include_headers
                 .borrow_mut()

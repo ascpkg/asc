@@ -242,7 +242,6 @@ struct CMakeListsData {
 
 pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::SourceMappings) {
     // group sources by dir name
-    let project_dir_length = options.project_dir.len() + 1;
     let mut group_sources =
         std::collections::BTreeMap::<String, std::collections::BTreeSet<String>>::new();
     let mut classify_to_dir = std::collections::HashMap::<String, String>::new();
@@ -255,18 +254,19 @@ pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::S
                 .to_str()
                 .unwrap()
                 .to_string();
-            let src_prefix_length = std::path::Path::new(&options.source_dir)
-                .parent()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .len()
-                + 1;
-            let dst_prefix_length = options.source_dir.len() + 1;
 
-            let src = header.clone().split_off(src_prefix_length);
-            let dst = if dst_prefix_length < header_locate_dir.len() {
-                header_locate_dir.clone().split_off(dst_prefix_length)
+            // prepare install headers's src and dst
+            let src = if header.starts_with(&options.source_dir) {
+                util::fs::remove_prefix(header, &options.project_dir, &options.build_dir)
+            } else {
+                format!(
+                    "${{CMAKE_CURRENT_BINARY_DIR}}/{}",
+                    util::fs::remove_prefix(header, &options.source_dir, &options.build_dir)
+                )
+            };
+
+            let dst = if header_locate_dir.starts_with(&options.source_dir) {
+                util::fs::remove_prefix(&header_locate_dir, &options.source_dir, &options.build_dir)
             } else {
                 String::new()
             };
@@ -275,7 +275,8 @@ pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::S
 
         {
             // group header
-            let relative_path: String = header.clone().split_off(project_dir_length);
+            let relative_path: String =
+                util::fs::remove_prefix(header, &options.project_dir, &options.build_dir);
             let dir = std::path::Path::new(&relative_path)
                 .parent()
                 .unwrap()
@@ -292,7 +293,8 @@ pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::S
         {
             for src in sources {
                 // group source
-                let relative_path = src.clone().split_off(project_dir_length);
+                let relative_path: String =
+                    util::fs::remove_prefix(src, &options.project_dir, &options.build_dir);
                 let dir = std::path::Path::new(&relative_path)
                     .parent()
                     .unwrap()

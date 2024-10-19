@@ -31,6 +31,11 @@ fn main() {
     if options.action_type == util::cli::ActionType::Scan
         || options.action_type == util::cli::ActionType::All
     {
+        // write empty files
+        std::fs::create_dir(&options.build_dir).unwrap_or(());
+        std::fs::write(format!("{}/config.h", &options.build_dir), b"").unwrap_or(());
+        std::fs::write(format!("{}/version.h", &options.build_dir), b"").unwrap_or(());
+
         tracing::warn!("scan source dependencies with clang ir");
         let source_mappings = clang::parser::SourceMappings::scan(&options);
 

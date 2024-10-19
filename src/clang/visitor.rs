@@ -14,6 +14,7 @@ pub fn get_include_files(source: &String, options: &util::cli::CommandLines) -> 
         .map(|s| format!("-I{}", s))
         .collect();
     rs_args.push(format!("-I{}", options.source_dir));
+    rs_args.push(format!("-I{}", options.build_dir));
     let c_args: Vec<*const std::ffi::c_char> = rs_args
         .iter()
         .map(|s| s.as_ptr() as *const std::ffi::c_char)
@@ -61,13 +62,22 @@ pub fn get_include_files(source: &String, options: &util::cli::CommandLines) -> 
         clang_sys::clang_disposeIndex(index);
     }
 
-    let prefix_length = options.source_dir.len() + 1;
-    tracing::info!("{}", source.clone().split_off(prefix_length));
+    tracing::info!(
+        "{}",
+        util::fs::remove_prefix(source, &options.source_dir, &options.build_dir)
+    );
     for include in &include_files {
-        if include.starts_with(&options.source_dir) {
-            tracing::info!("    {}", include.clone().split_off(prefix_length));
+        if include.starts_with(&options.source_dir) || include.starts_with(&options.build_dir) {
+            tracing::info!(
+                "    {}",
+                util::fs::remove_prefix(include, &options.source_dir, &options.build_dir)
+            );
         }
     }
+
+    // skip third-party
+    include_files
+        .retain(|s| s.starts_with(&options.source_dir) || s.starts_with(&options.build_dir));
 
     return include_files;
 }
