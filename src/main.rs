@@ -23,13 +23,13 @@ fn main() {
 
     // parse command lines
     tracing::warn!("parse command lines");
-    let mut options = util::cli::CommandLines::parse();
+    let mut options = util::cli::Options::parse();
     options.normalize();
     tracing::info!("{:#?}", options);
 
     // scan source dependencies with clang ir
-    if options.action_type == util::cli::ActionType::Scan
-        || options.action_type == util::cli::ActionType::All
+    if options.action_type == util::cli::types::ActionType::Scan
+        || options.action_type == util::cli::types::ActionType::All
     {
         // write empty files
         std::fs::create_dir(&options.build_dir).unwrap_or(());
@@ -43,29 +43,29 @@ fn main() {
         let mermaid_flowchart = graph::flowchart::gen(&options, &source_mappings);
         tracing::info!("\n{mermaid_flowchart}");
 
-        tracing::warn!("output {}", cmake::lists::cmake_lists_path(&options));
+        tracing::warn!("output {}", cmake::path::cmake_lists_path(&options));
         cmake::lists::gen(&options, &source_mappings);
     }
 
     // output CMakeLists.txt
-    if options.action_type == util::cli::ActionType::Configure
-        || options.action_type == util::cli::ActionType::All
+    if options.action_type == util::cli::types::ActionType::Configure
+        || options.action_type == util::cli::types::ActionType::All
     {
         tracing::warn!("generate a build system with cmake");
         cmake::project::gen(&options);
     }
 
     // build with cmake
-    if options.action_type == util::cli::ActionType::Build
-        || options.action_type == util::cli::ActionType::All
+    if options.action_type == util::cli::types::ActionType::Build
+        || options.action_type == util::cli::types::ActionType::All
     {
         tracing::warn!("build with cmake");
         cmake::build::run(&options);
     }
 
     // install with cmake
-    if options.action_type == util::cli::ActionType::Install
-        || options.action_type == util::cli::ActionType::All
+    if options.action_type == util::cli::types::ActionType::Install
+        || options.action_type == util::cli::types::ActionType::All
     {
         tracing::warn!("install with cmake");
         cmake::install::run(&options);

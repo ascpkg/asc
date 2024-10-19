@@ -1,4 +1,4 @@
-# Auto Souce Builder
+# Auto Source Builder
 - scan source dependencies with clang ir
 - output mermaid flow chat of source dependencies
 
@@ -44,9 +44,9 @@ Options:
 
 # Build test_c_cpp example
 ```
-> .\target\debug\asb.exe --source-dir=test_c_cpp/src --entry-point-source=main.cpp --action-type=all --cmake-target-type=library --cmake-lib-type=shared
-2024-10-19 22:48:12.5306943  WARN asb: 25: parse command lines
-2024-10-19 22:48:12.5315333  INFO asb: 28: CommandLines {
+> .\target\debug\asb.exe --source-dir=test_c_cpp/src --entry-point-source=main.cpp --action-type=all --cmake-target-type=library --cmake-lib-type=shared --cmake-config=release
+2024-10-19 23:46:38.0400452  WARN asb: 25: parse command lines
+2024-10-19 23:46:38.0406013  INFO asb: 28: Options {
     action_type: All,
     project: "test_c_cpp",
     project_dir: "D:/sources/FutureOrientedGB/asb/test_c_cpp",
@@ -57,63 +57,64 @@ Options:
     cmake_minimum_version: "3.20",
     cmake_target_type: Library,
     cmake_lib_type: Shared,
-    cmake_config: Debug,
+    cmake_config: Release,
 }
-2024-10-19 22:48:12.5318202  WARN asb: 39: scan source dependencies with clang ir
-2024-10-19 22:48:12.542089  INFO asb::clang::visitor: 65: main.cpp
-2024-10-19 22:48:12.5421721  INFO asb::clang::visitor: 71:     config.h
-2024-10-19 22:48:12.5422074  INFO asb::clang::visitor: 71:     version.h
-2024-10-19 22:48:12.5422409  INFO asb::clang::visitor: 71:     wrapping.hpp
-2024-10-19 22:48:12.5482344  INFO asb::clang::visitor: 65: config.h
-2024-10-19 22:48:12.5538848  INFO asb::clang::visitor: 65: version.h
-2024-10-19 22:48:12.5600149  INFO asb::clang::visitor: 65: wrapping.hpp
-2024-10-19 22:48:12.5600741  INFO asb::clang::visitor: 71:     a/mod.hpp
-2024-10-19 22:48:12.560107  INFO asb::clang::visitor: 71:     b/mod.hpp
-2024-10-19 22:48:12.5601666  INFO asb::clang::visitor: 71:     c/mod.hpp
-2024-10-19 22:48:12.5661424  INFO asb::clang::visitor: 65: a/mod.hpp
-2024-10-19 22:48:12.5662021  INFO asb::clang::visitor: 71:     a/a.h
-2024-10-19 22:48:12.5662523  INFO asb::clang::visitor: 71:     a/a.hpp
-2024-10-19 22:48:12.5722322  INFO asb::clang::visitor: 65: a/a.h
-2024-10-19 22:48:12.5723001  INFO asb::clang::visitor: 71:     export.h
-2024-10-19 22:48:12.5783986  INFO asb::clang::visitor: 65: export.h
-2024-10-19 22:48:12.5843815  INFO asb::clang::visitor: 65: a/a.hpp
-2024-10-19 22:48:12.5908645  INFO asb::clang::visitor: 65: b/mod.hpp
-2024-10-19 22:48:12.5909754  INFO asb::clang::visitor: 71:     b/b.h
-2024-10-19 22:48:12.591025  INFO asb::clang::visitor: 71:     b/b.hpp
-2024-10-19 22:48:12.5972114  INFO asb::clang::visitor: 65: b/b.h
-2024-10-19 22:48:12.603439  INFO asb::clang::visitor: 65: b/b.hpp
-2024-10-19 22:48:12.6099299  INFO asb::clang::visitor: 65: c/mod.hpp
-2024-10-19 22:48:12.610022  INFO asb::clang::visitor: 71:     c/c.h
-2024-10-19 22:48:12.6100743  INFO asb::clang::visitor: 71:     c/c.hpp
-2024-10-19 22:48:12.616439  INFO asb::clang::visitor: 65: c/c.h
-2024-10-19 22:48:12.6165011  INFO asb::clang::visitor: 71:     export.h
-2024-10-19 22:48:12.6227562  INFO asb::clang::visitor: 65: c/c.hpp
-2024-10-19 22:48:12.6291795  INFO asb::clang::visitor: 65: a/a.c
-2024-10-19 22:48:12.6292588  INFO asb::clang::visitor: 71:     a/a.h
-2024-10-19 22:48:12.6381847  INFO asb::clang::visitor: 65: a/a.cpp
-2024-10-19 22:48:12.6383164  INFO asb::clang::visitor: 71:     a/a.hpp
-2024-10-19 22:48:12.6532949  INFO asb::clang::visitor: 65: b/b.c
-2024-10-19 22:48:12.6534047  INFO asb::clang::visitor: 71:     b/b.h
-2024-10-19 22:48:12.6620727  INFO asb::clang::visitor: 65: b/b.cpp
-2024-10-19 22:48:12.6621612  INFO asb::clang::visitor: 71:     b/b.hpp
-2024-10-19 22:48:12.6682808  INFO asb::clang::visitor: 65: c/c.c
-2024-10-19 22:48:12.668341  INFO asb::clang::visitor: 71:     c/c.h
-2024-10-19 22:48:12.6743971  INFO asb::clang::visitor: 65: c/c.cpp
-2024-10-19 22:48:12.6744724  INFO asb::clang::visitor: 71:     c/c.hpp
-2024-10-19 22:48:12.6806194  INFO asb::clang::visitor: 65: d/d.c
-2024-10-19 22:48:12.6806902  INFO asb::clang::visitor: 71:     d/d.h
-2024-10-19 22:48:12.6864934  INFO asb::clang::visitor: 65: d/d.h
-2024-10-19 22:48:12.6865448  INFO asb::clang::visitor: 71:     export.h
-2024-10-19 22:48:12.6927401  INFO asb::clang::visitor: 65: d/d.cc
-2024-10-19 22:48:12.6928257  INFO asb::clang::visitor: 71:     d/d.hpp
-2024-10-19 22:48:12.6992606  INFO asb::clang::visitor: 65: d/d.hpp
-2024-10-19 22:48:12.7051503  INFO asb::clang::visitor: 65: test.cpp
-2024-10-19 22:48:12.7052149  INFO asb::clang::visitor: 71:     d/mod.hpp
-2024-10-19 22:48:12.7117829  INFO asb::clang::visitor: 65: d/mod.hpp
-2024-10-19 22:48:12.7118628  INFO asb::clang::visitor: 71:     d/d.h
-2024-10-19 22:48:12.71193  INFO asb::clang::visitor: 71:     d/d.hpp
-2024-10-19 22:48:12.7120313  WARN asb: 42: output flow chart test_c_cpp.md
-2024-10-19 22:48:12.7121884  INFO asb: 44:
+2024-10-19 23:46:38.0408491  WARN asb: 39: scan source dependencies with clang ir
+2024-10-19 23:46:38.0509476  INFO asb::clang::visitor: 65: main.cpp
+2024-10-19 23:46:38.0510096  INFO asb::clang::visitor: 71:     config.h
+2024-10-19 23:46:38.0510424  INFO asb::clang::visitor: 71:     version.h
+2024-10-19 23:46:38.0510743  INFO asb::clang::visitor: 71:     wrapping.hpp
+2024-10-19 23:46:38.057311  INFO asb::clang::visitor: 65: config.h
+2024-10-19 23:46:38.0629884  INFO asb::clang::visitor: 65: version.h
+2024-10-19 23:46:38.0687801  INFO asb::clang::visitor: 65: wrapping.hpp
+2024-10-19 23:46:38.0688328  INFO asb::clang::visitor: 71:     a/mod.hpp
+2024-10-19 23:46:38.0688661  INFO asb::clang::visitor: 71:     b/mod.hpp
+2024-10-19 23:46:38.0689035  INFO asb::clang::visitor: 71:     c/mod.hpp
+2024-10-19 23:46:38.0749937  INFO asb::clang::visitor: 65: a/mod.hpp
+2024-10-19 23:46:38.0750437  INFO asb::clang::visitor: 71:     a/a.h
+2024-10-19 23:46:38.0750822  INFO asb::clang::visitor: 71:     a/a.hpp
+2024-10-19 23:46:38.080913  INFO asb::clang::visitor: 65: a/a.h
+2024-10-19 23:46:38.0809763  INFO asb::clang::visitor: 71:     export.h
+2024-10-19 23:46:38.0867937  INFO asb::clang::visitor: 65: export.h
+2024-10-19 23:46:38.0927918  INFO asb::clang::visitor: 65: a/a.hpp
+2024-10-19 23:46:38.092844  INFO asb::clang::visitor: 71:     export.h
+2024-10-19 23:46:38.0984851  INFO asb::clang::visitor: 65: b/mod.hpp
+2024-10-19 23:46:38.0985426  INFO asb::clang::visitor: 71:     b/b.h
+2024-10-19 23:46:38.0985807  INFO asb::clang::visitor: 71:     b/b.hpp
+2024-10-19 23:46:38.1046123  INFO asb::clang::visitor: 65: b/b.h
+2024-10-19 23:46:38.1046718  INFO asb::clang::visitor: 71:     export.h
+2024-10-19 23:46:38.1107037  INFO asb::clang::visitor: 65: b/b.hpp
+2024-10-19 23:46:38.1164295  INFO asb::clang::visitor: 65: c/mod.hpp
+2024-10-19 23:46:38.1164849  INFO asb::clang::visitor: 71:     c/c.h
+2024-10-19 23:46:38.1165231  INFO asb::clang::visitor: 71:     c/c.hpp
+2024-10-19 23:46:38.1231419  INFO asb::clang::visitor: 65: c/c.h
+2024-10-19 23:46:38.1232195  INFO asb::clang::visitor: 71:     export.h
+2024-10-19 23:46:38.1292544  INFO asb::clang::visitor: 65: c/c.hpp
+2024-10-19 23:46:38.1360955  INFO asb::clang::visitor: 65: a/a.c
+2024-10-19 23:46:38.1361877  INFO asb::clang::visitor: 71:     a/a.h
+2024-10-19 23:46:38.145592  INFO asb::clang::visitor: 65: a/a.cpp
+2024-10-19 23:46:38.1457023  INFO asb::clang::visitor: 71:     a/a.hpp
+2024-10-19 23:46:38.1528431  INFO asb::clang::visitor: 65: b/b.c
+2024-10-19 23:46:38.1529164  INFO asb::clang::visitor: 71:     b/b.h
+2024-10-19 23:46:38.1591103  INFO asb::clang::visitor: 65: b/b.cpp
+2024-10-19 23:46:38.1591634  INFO asb::clang::visitor: 71:     b/b.hpp
+2024-10-19 23:46:38.1651264  INFO asb::clang::visitor: 65: c/c.c
+2024-10-19 23:46:38.1651816  INFO asb::clang::visitor: 71:     c/c.h
+2024-10-19 23:46:38.1712286  INFO asb::clang::visitor: 65: c/c.cpp
+2024-10-19 23:46:38.1713034  INFO asb::clang::visitor: 71:     c/c.hpp
+2024-10-19 23:46:38.1777866  INFO asb::clang::visitor: 65: d/d.c
+2024-10-19 23:46:38.1778505  INFO asb::clang::visitor: 71:     d/d.h
+2024-10-19 23:46:38.1839745  INFO asb::clang::visitor: 65: d/d.h
+2024-10-19 23:46:38.1905416  INFO asb::clang::visitor: 65: d/d.cc
+2024-10-19 23:46:38.190618  INFO asb::clang::visitor: 71:     d/d.hpp
+2024-10-19 23:46:38.1969483  INFO asb::clang::visitor: 65: d/d.hpp
+2024-10-19 23:46:38.2031687  INFO asb::clang::visitor: 65: test.cpp
+2024-10-19 23:46:38.2032319  INFO asb::clang::visitor: 71:     d/mod.hpp
+2024-10-19 23:46:38.2094048  INFO asb::clang::visitor: 65: d/mod.hpp
+2024-10-19 23:46:38.2094669  INFO asb::clang::visitor: 71:     d/d.h
+2024-10-19 23:46:38.2095119  INFO asb::clang::visitor: 71:     d/d.hpp
+2024-10-19 23:46:38.2096001  WARN asb: 42: output flow chart test_c_cpp.md
+2024-10-19 23:46:38.2097426  INFO asb: 44:
 flowchart LR;
     main.cpp ---> config.h;
     main.cpp ---> version.h;
@@ -133,12 +134,13 @@ flowchart LR;
     c/mod.hpp ---> c/c.hpp;
     wrapping.hpp ---> c/mod.hpp;
     a/a.h ---> export.h;
+    a/a.hpp ---> export.h;
+    b/b.h ---> export.h;
     c/c.h ---> export.h;
-    d/d.h ---> export.h;
     main.cpp ---> wrapping.hpp;
-2024-10-19 22:48:12.712347  WARN asb: 46: output D:/sources/FutureOrientedGB/asb/test_c_cpp/CMakeLists.txt
-2024-10-19 22:48:12.7195249  WARN asb: 54: generate a build system with cmake
-2024-10-19 22:48:12.7196073  INFO asb::cmake::project: 14: command="cmake" args="-S D:/sources/FutureOrientedGB/asb/test_c_cpp -B D:/sources/FutureOrientedGB/asb/test_c_cpp/build -D BUILD_SHARED_LIBS=1"
+2024-10-19 23:46:38.2098558  WARN asb: 46: output D:/sources/FutureOrientedGB/asb/test_c_cpp/CMakeLists.txt
+2024-10-19 23:46:38.2168755  WARN asb: 54: generate a build system with cmake
+2024-10-19 23:46:38.2169406  INFO asb::cmake::project: 14: command="cmake" args="-S D:/sources/FutureOrientedGB/asb/test_c_cpp -B D:/sources/FutureOrientedGB/asb/test_c_cpp/build -D BUILD_SHARED_LIBS=1"
 -- Building for: Visual Studio 17 2022
 -- Selecting Windows SDK version 10.0.22621.0 to target Windows 10.0.22631.
 -- The C compiler identification is MSVC 19.41.34123.0
@@ -159,12 +161,12 @@ flowchart LR;
 -- Looking for gettimeofday - not found
 -- Looking for O_BINARY
 -- Looking for O_BINARY - found
--- Configuring done (3.7s)
+-- Configuring done (3.2s)
 CMake Error: INSTALL(EXPORT) given unknown export "test_c_cpp-targets"
 -- Generating done (0.0s)
 CMake Generate step failed.  Build files cannot be regenerated correctly.
-2024-10-19 22:48:16.4244406  WARN asb: 62: build with cmake
-2024-10-19 22:48:16.4245197  INFO asb::cmake::build: 15: command="cmake" args="--build D:/sources/FutureOrientedGB/asb/test_c_cpp/build --config Debug"
+2024-10-19 23:46:41.4549851  WARN asb: 62: build with cmake
+2024-10-19 23:46:41.4551238  INFO asb::cmake::build: 11: command="cmake" args="--build D:/sources/FutureOrientedGB/asb/test_c_cpp/build --config Release"
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -176,26 +178,26 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
   b.cpp
   c.c
   c.cpp
-LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification [D:\sources\FutureOrientedGB\asb\test_c_cpp\build\test_c_cpp.vcxproj]
-     Creating library D:/sources/FutureOrientedGB/asb/test_c_cpp/build/Debug/test_c_cpp.lib and object D:/sources/FutureOrientedGB/asb/test_c_cpp/build/Debug/test_c_cpp.exp
-  test_c_cpp.vcxproj -> D:\sources\FutureOrientedGB\asb\test_c_cpp\build\Debug\test_c_cpp.dll
+     Creating library D:/sources/FutureOrientedGB/asb/test_c_cpp/build/Release/test_c_cpp.lib and object D:/sources/Fut
+  ureOrientedGB/asb/test_c_cpp/build/Release/test_c_cpp.exp
+  test_c_cpp.vcxproj -> D:\sources\FutureOrientedGB\asb\test_c_cpp\build\Release\test_c_cpp.dll
   Building Custom Rule D:/sources/FutureOrientedGB/asb/test_c_cpp/CMakeLists.txt
-2024-10-19 22:48:17.6467584  WARN asb: 70: install with cmake
-2024-10-19 22:48:17.6468591  INFO asb::cmake::install: 15: command="cmake" args="--install D:/sources/FutureOrientedGB/asb/test_c_cpp/build --config Debug"
--- Installing: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/lib/test_c_cpp.lib
--- Installing: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/bin/test_c_cpp.dll
--- Installing: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/config.h
--- Installing: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/version.h
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/a/a.h
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/a/a.hpp
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/a/mod.hpp
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/b/b.h
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/b/b.hpp
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/b/mod.hpp
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/c/c.h
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/c/c.hpp
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/c/mod.hpp
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/export.h
--- Up-to-date: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/include/test_c_cpp/wrapping.hpp
--- Installing: D:/sources/FutureOrientedGB/asb/test_c_cpp/build/target/test_c_cpp/share/test_c_cpp/test_c_cpp-config.cmake
+2024-10-19 23:46:42.6339611  WARN asb: 70: install with cmake
+2024-10-19 23:46:42.6340349  INFO asb::cmake::install: 11: command="cmake" args="--install D:/sources/FutureOrientedGB/asb/test_c_cpp/build --config Release"
+-- Installing: C:/Program Files (x86)/test_c_cpp/lib/test_c_cpp.lib
+-- Installing: C:/Program Files (x86)/test_c_cpp/bin/test_c_cpp.dll
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/config.h
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/version.h
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/a/a.h
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/a/a.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/a/mod.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/b/b.h
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/b/b.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/b/mod.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/c/c.h
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/c/c.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/c/mod.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/export.h
+-- Installing: C:/Program Files (x86)/test_c_cpp/include/test_c_cpp/wrapping.hpp
+-- Installing: C:/Program Files (x86)/test_c_cpp/share/test_c_cpp/test_c_cpp-config.cmake
 ```

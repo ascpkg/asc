@@ -4,8 +4,8 @@ use handlebars::Handlebars;
 
 use serde::{Deserialize, Serialize};
 
-pub use super::path::*;
-pub use super::template::*;
+pub use super::path;
+pub use super::template;
 use crate::clang;
 use crate::util;
 
@@ -45,15 +45,15 @@ struct CMakeListsData {
     install_headers: Vec<InstallHeader>,
 }
 
-pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::SourceMappings) {
+pub fn gen(options: &util::cli::Options, source_mappings: &clang::parser::SourceMappings) {
     // output default config.in.cm if not exists
-    if std::fs::metadata(config_h_cm_path(options)).is_err() {
-        std::fs::write(config_h_cm_path(options), CONFIG_IN_CM_HBS.as_bytes()).unwrap();
+    if std::fs::metadata(path::config_h_cm_path(options)).is_err() {
+        std::fs::write(path::config_h_cm_path(options), template::CONFIG_IN_CM_HBS.as_bytes()).unwrap();
     }
 
     // output default check.cmake if not exists
-    if std::fs::metadata(check_cmake_path(options)).is_err() {
-        std::fs::write(check_cmake_path(options), CHECK_CMAKE_HBS.as_bytes()).unwrap()
+    if std::fs::metadata(path::check_cmake_path(options)).is_err() {
+        std::fs::write(path::check_cmake_path(options), template::CHECK_CMAKE_HBS.as_bytes()).unwrap()
     }
 
     // group data
@@ -71,10 +71,10 @@ pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::S
     data.build_month = local_date_time_east8.month();
     data.build_day = local_date_time_east8.day();
     data.check_cmake_txt =
-        std::fs::read_to_string(check_cmake_path(options)).unwrap_or(String::new());
-    data.executable = options.cmake_target_type == util::cli::CMakeTargetType::Executable;
-    data.library = options.cmake_target_type == util::cli::CMakeTargetType::Library;
-    data.shared_library = data.library && options.cmake_lib_type == util::cli::CMakeLibType::Shared;
+        std::fs::read_to_string(path::check_cmake_path(options)).unwrap_or(String::new());
+    data.executable = options.cmake_target_type == util::cli::types::CMakeTargetType::Executable;
+    data.library = options.cmake_target_type == util::cli::types::CMakeTargetType::Library;
+    data.shared_library = data.library && options.cmake_lib_type == util::cli::types::CMakeLibraryType::Shared;
     data.include_dirs = options.include_dirs.clone();
     data.link_libraries = false;
     data.link_public_libraries = false;
@@ -100,27 +100,27 @@ pub fn gen(options: &util::cli::CommandLines, source_mappings: &clang::parser::S
     {
         // write project-config.cmake.in
         let reg = Handlebars::new();
-        let text = reg.render_template(&CMAKE_CONFIG_HBS, &data).unwrap();
-        std::fs::write(config_cmake_in_path(options), text.as_bytes()).unwrap();
+        let text = reg.render_template(template::CMAKE_CONFIG_HBS, &data).unwrap();
+        std::fs::write(path::config_cmake_in_path(options), text.as_bytes()).unwrap();
     }
 
     {
         // write version.h.in
         let reg = Handlebars::new();
-        let text = reg.render_template(&VERSION_IN_HBS, &data).unwrap();
-        std::fs::write(version_h_in_path(options), text.as_bytes()).unwrap();
+        let text = reg.render_template(template::VERSION_IN_HBS, &data).unwrap();
+        std::fs::write(path::version_h_in_path(options), text.as_bytes()).unwrap();
     }
 
     {
         // write CMakeLists.txt
         let reg = Handlebars::new();
-        let text = reg.render_template(CMAKE_LISTS_HBS, &data).unwrap();
-        std::fs::write(cmake_lists_path(&options), text.as_bytes()).unwrap();
+        let text = reg.render_template(template::CMAKE_LISTS_HBS, &data).unwrap();
+        std::fs::write(path::cmake_lists_path(&options), text.as_bytes()).unwrap();
     }
 }
 
 fn group_data(
-    options: &util::cli::CommandLines,
+    options: &util::cli::Options,
     source_mappings: &clang::parser::SourceMappings,
 ) -> (
     std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,

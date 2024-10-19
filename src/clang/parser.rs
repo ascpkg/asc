@@ -15,7 +15,7 @@ pub struct SourceMappings {
 }
 
 impl SourceMappings {
-    pub fn scan(options: &util::cli::CommandLines) -> SourceMappings {
+    pub fn scan(options: &util::cli::Options) -> SourceMappings {
         let mut parsed_files = std::collections::BTreeSet::new();
 
         let (source_to_headers_from_entry_point, header_to_sources_from_entry_point) =
@@ -68,7 +68,7 @@ impl SourceMappings {
     }
 
     fn get_includes_from_source_files(
-        options: &util::cli::CommandLines,
+        options: &util::cli::Options,
         parsed_files: &mut StringSet,
     ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
         let source_to_headers =
@@ -90,7 +90,7 @@ impl SourceMappings {
     }
 
     fn get_includes_from_entry_point(
-        options: &util::cli::CommandLines,
+        options: &util::cli::Options,
         parsed_files: &mut StringSet,
         source_file: String,
     ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
@@ -111,7 +111,7 @@ impl SourceMappings {
     }
 
     fn get_include_files_in_source_dir(
-        options: &util::cli::CommandLines,
+        options: &util::cli::Options,
         parsed_files: &mut StringSet,
         source_file: &String,
         source_include_headers: RcRefCellStringMapSet,

@@ -4,7 +4,7 @@ use clang_sys;
 
 type StringSet = std::collections::BTreeSet<String>;
 
-pub fn get_include_files(source: &String, options: &util::cli::CommandLines) -> StringSet {
+pub fn get_include_files(source: &String, options: &util::cli::Options) -> StringSet {
     let mut include_files = std::collections::BTreeSet::<String>::new();
 
     // set include search paths

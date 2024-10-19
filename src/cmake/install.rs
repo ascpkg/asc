@@ -1,15 +1,11 @@
 use crate::util;
 
-pub fn run(options: &util::cli::CommandLines) {
+pub fn run(options: &util::cli::Options) {
     let args = vec![
         "--install",
         &options.build_dir,
         "--config",
-        if options.cmake_config == util::cli::CMakeConfigType::Debug {
-            "Debug"
-        } else {
-            "Release"
-        },
+        options.cmake_config.as_ref(),
     ];
 
     tracing::info!(command = "cmake", args = args.join(" "));
