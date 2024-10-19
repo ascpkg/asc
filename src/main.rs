@@ -43,7 +43,7 @@ fn main() {
         let mermaid_flowchart = graph::flowchart::gen(&options, &source_mappings);
         tracing::info!("\n{mermaid_flowchart}");
 
-        tracing::warn!("output {}", cmake::lists::path(&options));
+        tracing::warn!("output {}", cmake::lists::cmake_lists_path(&options));
         cmake::lists::gen(&options, &source_mappings);
     }
 

@@ -47,7 +47,7 @@ pub struct CommandLines {
     pub project_dir: String,
     #[clap(long, default_value = "", help = "default to project_dir/build")]
     pub build_dir: String,
-    #[clap(long, help = "source_dir must have a src subdir")]
+    #[clap(long, help = "source_dir must have a sub dir named src to store source files")]
     pub source_dir: String,
     #[clap(long)]
     pub entry_point_source: String,

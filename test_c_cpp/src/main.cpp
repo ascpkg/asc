@@ -1,3 +1,4 @@
+#include "config.h"
 #include "version.h"
 #include "wrapping.hpp"
 
@@ -21,6 +22,12 @@
 int main(int argc, char **argv)
 {
     printf("%s\n", TEST_C_CPP_VERSION_STRING);
+
+    #if defined(HAVE_GETTIMEOFDAY)
+    printf("HAVE_GETTIMEOFDAY\n");
+    #else
+    printf("NOT HAVE_GETTIMEOFDAY\n");
+    #endif
 
     fa();
     CA().a();
