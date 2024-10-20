@@ -1,11 +1,13 @@
+use std::collections::{BTreeMap, BTreeSet};
+
 use crate::util;
 
 use clang_sys;
 
-type StringSet = std::collections::BTreeSet<String>;
+type StringSet = BTreeSet<String>;
 
 pub fn get_include_files(source: &String, options: &util::cli::Options) -> StringSet {
-    let mut include_files = std::collections::BTreeSet::<String>::new();
+    let mut include_files = BTreeSet::<String>::new();
 
     // set include search paths
     let mut rs_args: Vec<String> = options
@@ -111,8 +113,7 @@ extern "C" fn visit_inclusion_directive(
             let include_file_name = unsafe { clang_sys::clang_getFileName(include_file) };
             let path = cxstring_to_string(include_file_name).replace(r"\", "/");
 
-            let include_paths =
-                unsafe { &mut *(client_data as *mut std::collections::BTreeSet<String>) };
+            let include_paths = unsafe { &mut *(client_data as *mut BTreeSet<String>) };
             include_paths.insert(path);
         }
     }

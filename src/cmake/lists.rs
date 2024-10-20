@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, BTreeSet};
+
 use chrono::Datelike;
 
 use handlebars::Handlebars;
@@ -123,15 +125,15 @@ fn group_data(
     options: &util::cli::Options,
     source_mappings: &clang::parser::SourceMappings,
 ) -> (
-    std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
-    std::collections::HashMap<String, String>,
-    std::collections::BTreeMap<String, String>,
+    BTreeMap<String, BTreeSet<String>>,
+    HashMap<String, String>,
+    BTreeMap<String, String>,
 ) {
     // group sources by dir name
     let mut group_sources =
-        std::collections::BTreeMap::<String, std::collections::BTreeSet<String>>::new();
-    let mut classify_to_dir = std::collections::HashMap::<String, String>::new();
-    let mut install_headers = std::collections::BTreeMap::<String, String>::new();
+        BTreeMap::<String, BTreeSet<String>>::new();
+    let mut classify_to_dir = HashMap::<String, String>::new();
+    let mut install_headers = BTreeMap::<String, String>::new();
     for (header, sources) in &source_mappings.header_include_by_sources {
         {
             let header_locate_dir = std::path::Path::new(header)

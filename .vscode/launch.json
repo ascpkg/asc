@@ -19,15 +19,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'asb'",
+            "name": "Cargo run 'asc'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=asb",
-                    "--package=asb"
+                    "--bin=asc",
+                    "--package=asc"
                 ],
                 "filter": {
-                    "name": "asb",
+                    "name": "asc",
                     "kind": "bin"
                 }
             },
@@ -37,6 +37,42 @@
                 "--action-type=all",
                 "--cmake-target-type=library",
                 "--cmake-lib-type=shared"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Cargo test",
+            "type": "lldb",
+            "request": "launch",
+            "program": "cargo",
+            "args": [
+                "test",
+            ]
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run asc new",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "new",
+                "--lib",
+                "abc",
+                "--workspace",
+                "a",
+                "b",
+                "c"
             ],
             "cwd": "${workspaceFolder}"
         },

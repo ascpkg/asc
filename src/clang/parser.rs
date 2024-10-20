@@ -1,22 +1,26 @@
+use std::cell::RefCell;
+use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
+
 use super::visitor;
 
 use crate::util;
 
-type StringSet = std::collections::BTreeSet<String>;
-type StringMapSet = std::collections::BTreeMap<String, std::collections::BTreeSet<String>>;
-type RcRefCellStringMapSet = std::rc::Rc<std::cell::RefCell<StringMapSet>>;
+type StringSet = BTreeSet<String>;
+type StringSetMap = BTreeMap<String, BTreeSet<String>>;
+type RcRefCellStringSetMap = Rc<RefCell<StringSetMap>>;
 
 #[derive(Debug, Clone)]
 pub struct SourceMappings {
     // header - sources
-    pub header_include_by_sources: StringMapSet,
+    pub header_include_by_sources: StringSetMap,
     // source - headers
-    pub source_include_headers: StringMapSet,
+    pub source_include_headers: StringSetMap,
 }
 
 impl SourceMappings {
     pub fn scan(options: &util::cli::Options) -> SourceMappings {
-        let mut parsed_files = std::collections::BTreeSet::new();
+        let mut parsed_files = BTreeSet::new();
 
         let (source_to_headers_from_entry_point, header_to_sources_from_entry_point) =
             Self::get_includes_from_entry_point(
@@ -26,10 +30,7 @@ impl SourceMappings {
             );
 
         let (_source_to_headers_from_source_files, header_to_sources_from_sources_files) =
-            Self::get_includes_from_source_files(
-                &options,
-                &mut parsed_files,
-            );
+            Self::get_includes_from_source_files(&options, &mut parsed_files);
 
         for (header, sources) in header_to_sources_from_entry_point.borrow_mut().iter_mut() {
             if header_to_sources_from_sources_files
@@ -70,11 +71,9 @@ impl SourceMappings {
     fn get_includes_from_source_files(
         options: &util::cli::Options,
         parsed_files: &mut StringSet,
-    ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
-        let source_to_headers =
-            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
-        let header_to_sources =
-            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
+    ) -> (RcRefCellStringSetMap, RcRefCellStringSetMap) {
+        let source_to_headers = Rc::new(RefCell::new(BTreeMap::new()));
+        let header_to_sources = Rc::new(RefCell::new(BTreeMap::new()));
 
         for source_file in util::fs::find_source_files(&options.source_dir) {
             Self::get_include_files_in_source_dir(
@@ -93,11 +92,9 @@ impl SourceMappings {
         options: &util::cli::Options,
         parsed_files: &mut StringSet,
         source_file: String,
-    ) -> (RcRefCellStringMapSet, RcRefCellStringMapSet) {
-        let source_to_headers =
-            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
-        let header_to_sources =
-            std::rc::Rc::new(std::cell::RefCell::new(std::collections::BTreeMap::new()));
+    ) -> (RcRefCellStringSetMap, RcRefCellStringSetMap) {
+        let source_to_headers = Rc::new(RefCell::new(BTreeMap::new()));
+        let header_to_sources = Rc::new(RefCell::new(BTreeMap::new()));
 
         Self::get_include_files_in_source_dir(
             options,
@@ -114,8 +111,8 @@ impl SourceMappings {
         options: &util::cli::Options,
         parsed_files: &mut StringSet,
         source_file: &String,
-        source_include_headers: RcRefCellStringMapSet,
-        header_include_by_sources: RcRefCellStringMapSet,
+        source_include_headers: RcRefCellStringSetMap,
+        header_include_by_sources: RcRefCellStringSetMap,
     ) {
         // skip parsed
         if parsed_files.contains(source_file) {
@@ -128,7 +125,7 @@ impl SourceMappings {
             source_include_headers
                 .borrow_mut()
                 .entry(source_file.clone())
-                .or_insert_with(std::collections::BTreeSet::new)
+                .or_insert_with(BTreeSet::new)
                 .insert(include.clone());
 
             // map header to sources
@@ -136,7 +133,7 @@ impl SourceMappings {
             header_include_by_sources_cloned
                 .borrow_mut()
                 .entry(include.clone())
-                .or_insert_with(std::collections::BTreeSet::new)
+                .or_insert_with(BTreeSet::new)
                 .insert(source_file.clone());
 
             // recurse
