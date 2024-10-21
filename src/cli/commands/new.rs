@@ -1,11 +1,15 @@
-use super::init;
-use crate::{cli::{config, template}, util};
-
 use clap::Args;
 
 use handlebars::Handlebars;
 
 use serde_json;
+
+use super::init;
+use crate::errors::ErrorTag;
+use crate::{
+    cli::{config, template},
+    util,
+};
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct NewArgs {
@@ -32,6 +36,7 @@ impl NewArgs {
     }
 
     fn new_bin(&self, name: &str) -> bool {
+        tracing::info!("new bin");
         // write asc.toml
         if !self.new_package(name) {
             return false;
@@ -51,6 +56,7 @@ impl NewArgs {
     }
 
     fn new_lib(&self, name: &str) -> bool {
+        tracing::info!("new lib");
         // write asc.toml
         if !self.new_package(name) {
             return false;
@@ -65,9 +71,10 @@ impl NewArgs {
             ) {
                 Err(e) => {
                     tracing::error!(
-                        message = "Handlebars::render_template",
+                        call = "Handlebars::render_template",
                         template = template::NEW_LIB_EXPORT_HBS,
-                        error = e.to_string()
+                        error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
+                        error_str = e.to_string()
                     );
 
                     return false;
@@ -81,10 +88,11 @@ impl NewArgs {
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
-                            message = "std::fs::write",
+                            call = "std::fs::write",
                             path = path,
-                            text = text,
-                            error = e.to_string()
+                            error_tag = ErrorTag::WriteFileError.as_ref(),
+                            error_str = e.to_string(),
+                            message = text,
                         );
                         return false;
                     }
@@ -101,9 +109,10 @@ impl NewArgs {
             ) {
                 Err(e) => {
                     tracing::error!(
-                        message = "Handlebars::render_template",
+                        call = "Handlebars::render_template",
                         template = template::NEW_LIB_EXPORT_HBS,
-                        error = e.to_string()
+                        error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
+                        error_str = e.to_string()
                     );
 
                     return false;
@@ -117,10 +126,11 @@ impl NewArgs {
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
-                            message = "std::fs::write",
+                            call = "std::fs::write",
                             path = path,
-                            text = text,
-                            error = e.to_string()
+                            error_tag = ErrorTag::WriteFileError.as_ref(),
+                            error_str = e.to_string(),
+                            message = text,
                         );
                         return false;
                     }
@@ -132,21 +142,35 @@ impl NewArgs {
     }
 
     fn new_package(&self, name: &str) -> bool {
+        tracing::info!("new package");
         // validate args
         if name.is_empty() {
+            tracing::error!(
+                call = "name.is_empty",
+                error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+            );
             return false;
         }
 
         // skip is exists
-        if std::fs::metadata(name).is_ok() {
-            tracing::error!(message = "std::fs::metadata", path = name, error = "exits");
+        if util::fs::is_file_exists(name) {
+            tracing::error!(
+                call = "util::fs::is_file_exists",
+                path = name,
+                error_tag = ErrorTag::FileExistsError.as_ref()
+            );
             return false;
         }
 
         // create src dir
         let src_dir = format!("{name}/{}", config::PROJECT_SRC_DIR);
-        if let Err(e) = std::fs::create_dir_all(src_dir) {
-            tracing::error!(message = "std::fs::create_dir_all", error = e.to_string());
+        if let Err(e) = std::fs::create_dir_all(&src_dir) {
+            tracing::error!(
+                call = "std::fs::create_dir_all",
+                path = src_dir,
+                error_tag = ErrorTag::CretaeDirectoryError.as_ref(),
+                error_str = e.to_string()
+            );
             return false;
         }
 
@@ -170,8 +194,12 @@ impl NewArgs {
         }
 
         // skip is exists
-        if std::fs::metadata(name).is_ok() {
-            tracing::error!(message = "std::fs::metadata", path = name, error = "exits");
+        if util::fs::is_file_exists(name) {
+            tracing::error!(
+                call = "util::fs::is_file_exists",
+                path = name,
+                error_tag = ErrorTag::FileExistsError.as_ref()
+            );
             return false;
         }
 
@@ -179,9 +207,9 @@ impl NewArgs {
 
         if let Err(e) = std::fs::create_dir(name) {
             tracing::info!(
-                message = "std::fs::create_dir",
+                call = "std::fs::create_dir",
                 path = name,
-                error = e.to_string()
+                error_tag = e.to_string()
             );
             return false;
         }
@@ -210,11 +238,11 @@ impl NewArgs {
 
         // skip if exists
         let path = format!("{name}/{}", config::PROJECT_TOML);
-        if std::fs::metadata(&path).is_ok() {
+        if util::fs::is_file_exists(&path) {
             tracing::error!(
-                message = "std::fs::metadata",
+                call = "util::fs::is_file_exists",
                 path = config::PROJECT_TOML,
-                error = "exits"
+                error_tag = ErrorTag::FileExistsError.as_ref(),
             );
             return false;
         }

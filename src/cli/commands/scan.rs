@@ -1,10 +1,9 @@
-use std::collections::BTreeSet;
-
 use clap::Args;
 
 use crate::clang;
 use crate::cli::config;
 use crate::cmake;
+use crate::errors::ErrorTag;
 use crate::graph;
 use crate::util;
 
@@ -35,8 +34,13 @@ pub struct ScanArgs {
 
 impl ScanArgs {
     pub fn exec(&self) -> bool {
-        if std::fs::metadata(config::PROJECT_TOML).is_err() {
-            tracing::error!("{} not found, please run init first", config::PROJECT_TOML);
+        if !util::fs::is_file_exists(config::PROJECT_TOML) {
+            tracing::error!(
+                call = "!util::fs::is_file_exists",
+                path = config::PROJECT_TOML,
+                error_tag = ErrorTag::FileNotFoundError.as_ref(),
+                message = "please run asc init first"
+            );
             return false;
         }
 
@@ -47,7 +51,10 @@ impl ScanArgs {
                     && project_conf.bins.is_none()
                     && project_conf.libs.is_none()
                 {
-                    tracing::error!("package, bins, libs were not found");
+                    tracing::error!(
+                        error_tag = ErrorTag::InvalidProjectPackageError.as_ref(),
+                        message = "package, bins, libs were not found"
+                    );
                     return false;
                 }
 
@@ -55,73 +62,10 @@ impl ScanArgs {
                     return self.scan_workspace();
                 }
 
-                let mut package_name = String::new();
-                if project_conf.package.is_some() {
-                    package_name = project_conf.package.as_ref().unwrap().name.clone();
-                }
-
-                if !self.shared_lib && !self.static_lib {
-                    // bin
-                    let (n, p) = self.get_name_path(
-                        &project_conf.bins,
-                        &package_name,
-                        &format!("{}/{}", config::PROJECT_SRC_DIR, config::PROJECT_BIN_SRC),
-                    );
-                    if n.is_empty() || p.is_empty() {
-                        return false;
-                    }
-                    return self.scan_package(&n, &p);
-                } else {
-                    // lib
-                    let (n, p) = self.get_name_path(
-                        &project_conf.libs,
-                        &package_name,
-                        &format!("{}/{}", config::PROJECT_SRC_DIR, config::PROJECT_LIB_SRC),
-                    );
-                    if n.is_empty() || p.is_empty() {
-                        return false;
-                    }
-                    return self.scan_package(&n, &p);
-                }
+                let (target_name, target_src) =
+                    project_conf.get_target_name_src(&self.name, self.shared_lib, self.static_lib);
+                return self.scan_package(&target_name, &target_src);
             }
-        }
-    }
-
-    fn get_name_path(
-        &self,
-        entries: &Option<BTreeSet<config::EntryConfig>>,
-        package_name: &str,
-        default_path: &str,
-    ) -> (String, String) {
-        // no bins and libs, use package
-        if entries.is_none() || entries.as_ref().unwrap().is_empty() {
-            if package_name.is_empty() {
-                return (String::new(), String::new());
-            }
-            return (package_name.to_string(), default_path.to_string());
-        } else {
-            // try to use bins/libs
-            if self.name.is_none() {
-                return (String::new(), String::new());
-            }
-            let name = self.name.as_ref().unwrap();
-            // validate name
-            if name.is_empty() {
-                return (String::new(), String::new());
-            }
-            // validate bins/libs
-            let mut path = String::new();
-            for entry in entries.as_ref().unwrap() {
-                if &entry.name == name {
-                    path = entry.path.clone();
-                    break;
-                }
-            }
-            if path.is_empty() {
-                return (String::new(), String::new());
-            }
-
-            return (name.clone(), path);
         }
     }
 
@@ -157,6 +101,8 @@ impl ScanArgs {
         tracing::warn!("output {}", cmake::path::cmake_lists_path(&options));
         cmake::lists::gen(&options, &source_mappings);
 
+        tracing::warn!("generate a build system with cmake");
+        cmake::project::gen(&options);
         return true;
     }
 

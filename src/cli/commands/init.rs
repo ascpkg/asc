@@ -1,7 +1,8 @@
-use crate::cli::config;
-use crate::util;
-
 use clap::Args;
+
+use crate::cli::config;
+use crate::errors::ErrorTag;
+use crate::util;
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct InitArgs {
@@ -28,25 +29,32 @@ impl InitArgs {
     }
 
     pub fn init_bin(&self, name: &str) -> bool {
+        tracing::info!("init bin");
         return self.init_package(name);
     }
 
     pub fn init_lib(&self, name: &str) -> bool {
+        tracing::info!("init bin");
         return self.init_package(name);
     }
 
     pub fn init_package(&self, name: &str) -> bool {
+        tracing::info!("init package");
         // validate args
         if name.is_empty() {
+            tracing::error!(
+                call = "name.is_empty",
+                error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+            );
             return false;
         }
 
         // skip if exists
-        if std::fs::metadata(config::PROJECT_TOML).is_ok() {
+        if util::fs::is_file_exists(config::PROJECT_TOML) {
             tracing::error!(
-                message = "std::fs::metadata",
+                call = "util::fs::is_file_exists",
                 path = config::PROJECT_TOML,
-                error = "exits"
+                error_tag = ErrorTag::FileExistsError.as_ref(),
             );
             return false;
         }
@@ -63,9 +71,15 @@ impl InitArgs {
     }
 
     pub fn init_workspace(&self) -> bool {
+        tracing::info!("init workspace");
+
         // validate args
         let members = self.member.as_ref().unwrap();
         if members.is_empty() {
+            tracing::error!(
+                call = "members.is_empty",
+                error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+            );
             return false;
         }
 
@@ -90,11 +104,11 @@ impl InitArgs {
         project.workspace = Some(workspace);
 
         // skip if exists
-        if std::fs::metadata(config::PROJECT_TOML).is_ok() {
+        if util::fs::is_file_exists(config::PROJECT_TOML) {
             tracing::error!(
-                message = "std::fs::metadata",
+                call = "util::fs::is_file_exists",
                 path = config::PROJECT_TOML,
-                error = "exits"
+                error_tag = ErrorTag::FileExistsError.as_ref(),
             );
             return false;
         }

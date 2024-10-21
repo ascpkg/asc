@@ -6,12 +6,14 @@ use serde::{Deserialize, Serialize};
 
 use toml;
 
+use crate::errors::ErrorTag;
+
 pub static PROJECT_TOML: &str = "asc.toml";
 pub static PROJECT_EDITION: &str = "2024";
 pub static PROJECT_TARGET_DIR: &str = "target";
 pub static PROJECT_SRC_DIR: &str = "src";
 pub static PROJECT_BIN_SRC: &str = "main.cpp";
-pub static PROJECT_LIB_SRC: &str = "lib.cpp";
+pub static PROJECT_LIB_SRC: &str = "lib.hpp";
 pub static PROJECT_EXPORT_SRC: &str = "export.h";
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
@@ -57,7 +59,15 @@ impl ProjectConfig {
     }
 
     pub fn validate(&self) -> bool {
-        if self.workspace.is_some() {
+        if self.workspace.is_none() {
+            if self.package.is_none() {
+                tracing::error!(
+                    call = "self.package.is_none",
+                    error_tag = ErrorTag::InvalidProjectPackageError.as_ref()
+                );
+                return false;
+            }
+        } else {
             let mut errors = vec![];
             if self.package.is_some() {
                 errors.push("package");
@@ -77,17 +87,13 @@ impl ProjectConfig {
 
             if !errors.is_empty() {
                 tracing::error!(
-                    message = "workspace conflicts",
-                    conflicts = errors.join(", ")
+                    call = "!errors.is_empty",
+                    error_tag = ErrorTag::InvalidProjectWorkspaceError.as_ref(),
+                    error_str = errors.join(", ") + "conflicts",
                 );
             }
 
             return errors.is_empty();
-        } else {
-            if self.package.is_none() {
-                tracing::error!(message = "package empty");
-                return false;
-            }
         }
 
         return true;
@@ -98,9 +104,10 @@ impl ProjectConfig {
             Ok(text) => Self::loads(&text),
             Err(e) => {
                 tracing::error!(
-                    messsage = "std::fs::read_to_string",
+                    call = "std::fs::read_to_string",
                     path = path,
-                    error = e.to_string()
+                    error_tag = ErrorTag::ReadFileError.as_ref(),
+                    error_str = e.to_string(),
                 );
                 None
             }
@@ -112,9 +119,10 @@ impl ProjectConfig {
             Ok(c) => Some(c),
             Err(e) => {
                 tracing::error!(
-                    messsage = "toml::from_str",
-                    text = text,
-                    error = e.to_string()
+                    call = "toml::from_str",
+                    error_tag = ErrorTag::TomlDeserializeError.as_ref(),
+                    error_str = e.to_string(),
+                    message = text,
                 );
                 None
             }
@@ -131,10 +139,11 @@ impl ProjectConfig {
             Ok(_) => true,
             Err(e) => {
                 tracing::error!(
-                    messsage = "std::fs::write",
+                    call = "std::fs::write",
                     path = path,
-                    text = text,
-                    error = e.to_string()
+                    error_tag = ErrorTag::WriteFileError.as_ref(),
+                    error_str = e.to_string(),
+                    messsage = text,
                 );
                 false
             }
@@ -145,9 +154,82 @@ impl ProjectConfig {
         match toml::to_string_pretty(self) {
             Ok(text) => text,
             Err(e) => {
-                tracing::error!(messsage = "toml::to_string_pretty", error = e.to_string());
+                tracing::error!(
+                    call = "toml::to_string_pretty",
+                    error_tag = ErrorTag::TomlSerializeError.as_ref(),
+                    error_str = e.to_string(),
+                );
                 String::new()
             }
+        }
+    }
+
+    pub fn get_target_name_src(
+        &self,
+        name: &Option<String>,
+        shared_lib: bool,
+        static_lib: bool,
+    ) -> (String, String) {
+        let mut package_name = String::new();
+        if self.package.is_some() {
+            package_name = self.package.as_ref().unwrap().name.clone();
+        }
+
+        if !shared_lib && !static_lib {
+            // bin
+            return self.get_target_name_src_inner(
+                name,
+                &self.bins,
+                &package_name,
+                &format!("{}/{}", PROJECT_SRC_DIR, PROJECT_BIN_SRC),
+            );
+        } else {
+            // lib
+            return self.get_target_name_src_inner(
+                name,
+                &self.libs,
+                &package_name,
+                &format!("{}/{}", PROJECT_SRC_DIR, PROJECT_LIB_SRC),
+            );
+        }
+    }
+
+    fn get_target_name_src_inner(
+        &self,
+        name: &Option<String>,
+        entries: &Option<BTreeSet<EntryConfig>>,
+        default_name: &str,
+        default_path: &str,
+    ) -> (String, String) {
+        // no bins and libs, use package
+        if entries.is_none() || entries.as_ref().unwrap().is_empty() {
+            if default_name.is_empty() {
+                return (String::new(), String::new());
+            }
+            return (default_name.to_string(), default_path.to_string());
+        } else {
+            // try to use bins/libs
+            if name.is_none() {
+                return (String::new(), String::new());
+            }
+            let name = name.as_ref().unwrap();
+            // validate name
+            if name.is_empty() {
+                return (String::new(), String::new());
+            }
+            // validate bins/libs
+            let mut path = String::new();
+            for entry in entries.as_ref().unwrap() {
+                if &entry.name == name {
+                    path = entry.path.clone();
+                    break;
+                }
+            }
+            if path.is_empty() {
+                return (String::new(), String::new());
+            }
+
+            return (name.clone(), path);
         }
     }
 }

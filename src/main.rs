@@ -8,6 +8,7 @@ use tracing_subscriber::{self, fmt::time::OffsetTime};
 pub mod clang;
 pub mod cli;
 pub mod cmake;
+pub mod errors;
 pub mod graph;
 pub mod util;
 

@@ -47,7 +47,6 @@ struct SearchArgs {}
 #[derive(Args, Debug, Clone)]
 struct ScanArgs {}
 
-
 fn main() {
     let cli = Cli::parse();
 

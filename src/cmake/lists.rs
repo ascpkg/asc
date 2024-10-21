@@ -53,7 +53,7 @@ pub fn gen(
     source_mappings: &clang::parser::SourceMappings,
 ) {
     // output default config.in.cm if not exists
-    if std::fs::metadata(path::config_h_cm_path(options)).is_err() {
+    if !util::fs::is_file_exists(&path::config_h_cm_path(options)) {
         std::fs::write(
             path::config_h_cm_path(options),
             template::CONFIG_IN_CM_HBS.as_bytes(),
@@ -62,7 +62,7 @@ pub fn gen(
     }
 
     // output default check.cmake if not exists
-    if std::fs::metadata(path::check_cmake_path(options)).is_err() {
+    if !util::fs::is_file_exists(&path::check_cmake_path(options)) {
         std::fs::write(
             path::check_cmake_path(options),
             template::CHECK_CMAKE_HBS.as_bytes(),

@@ -5,7 +5,7 @@ pub struct AddArgs {
     #[clap(long)]
     name: String,
     #[clap(long)]
-    features: Vec<String>
+    features: Vec<String>,
 }
 
 impl AddArgs {

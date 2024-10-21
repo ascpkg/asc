@@ -40,11 +40,10 @@ pub enum Commands {
 
     Scan(ScanArgs),
     Build(BuildArgs),
-    
+
     Run(RunArgs),
     Clean(CleanArgs),
 }
-
 
 #[derive(Clone, Debug, PartialEq, ValueEnum, AsRefStr, FromRepr)]
 #[clap(rename_all = "snake_case")]

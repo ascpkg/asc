@@ -67,3 +67,21 @@ pub fn get_cwd_name() -> String {
 pub fn set_cwd(dir: &str) -> bool {
     std::env::set_current_dir(dir).is_ok()
 }
+
+pub fn is_file_exists(path: &str) -> bool {
+    if let Ok(metadata) = std::fs::metadata(path) {
+        if metadata.is_file() {
+            return true;
+        }
+    }
+    return false;
+}
+
+pub fn is_dir_exists(path: &str) -> bool {
+    if let Ok(metadata) = std::fs::metadata(path) {
+        if metadata.is_dir() {
+            return true;
+        }
+    }
+    return false;
+}
