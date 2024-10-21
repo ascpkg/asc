@@ -1,4 +1,5 @@
 use crate::cli::config;
+use crate::util;
 
 use clap::Args;
 
@@ -23,13 +24,7 @@ impl InitArgs {
     }
 
     pub fn name(&self) -> String {
-        std::env::current_dir()
-            .unwrap()
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
+        util::fs::get_cwd_name()
     }
 
     pub fn init_bin(&self, name: &str) -> bool {
@@ -74,11 +69,7 @@ impl InitArgs {
             return false;
         }
 
-        let cwd = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
+        let cwd = util::fs::get_cwd();
 
         // init members
         let mut has_error = false;
@@ -88,11 +79,11 @@ impl InitArgs {
                 let mut args = Self::default();
                 args.lib = self.lib;
 
-                std::env::set_current_dir(m).unwrap();
+                util::fs::set_cwd(m);
                 if !args.init_package(m) {
                     has_error = true;
                 }
-                std::env::set_current_dir(&cwd).unwrap();
+                util::fs::set_cwd(&cwd);
             }
         }
         let mut project = config::ProjectConfig::default();

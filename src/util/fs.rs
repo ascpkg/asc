@@ -45,3 +45,25 @@ pub fn remove_prefix(path: &String, source_dir: &String, build_dir: &String) -> 
         String::new()
     }
 }
+
+pub fn get_cwd() -> String {
+    std::env::current_dir()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace(r"\", "/")
+}
+
+pub fn get_cwd_name() -> String {
+    std::env::current_dir()
+        .unwrap()
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string()
+}
+
+pub fn set_cwd(dir: &str) -> bool {
+    std::env::set_current_dir(dir).is_ok()
+}

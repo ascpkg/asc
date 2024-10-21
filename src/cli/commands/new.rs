@@ -1,5 +1,5 @@
 use super::init;
-use crate::cli::{config, template};
+use crate::{cli::{config, template}, util};
 
 use clap::Args;
 
@@ -150,19 +150,15 @@ impl NewArgs {
             return false;
         }
 
-        let cwd = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
+        let cwd = util::fs::get_cwd();
 
         // init
-        std::env::set_current_dir(name).unwrap();
+        util::fs::set_cwd(name);
         let mut args = init::InitArgs::default();
         args.lib = self.lib;
         args.workspace = self.workspace;
         args.member = self.member.clone();
-        return args.init_package(name) && std::env::set_current_dir(cwd).is_ok();
+        return args.init_package(name) && util::fs::set_cwd(&cwd);
     }
 
     fn new_workspace(&self) -> bool {
@@ -179,11 +175,7 @@ impl NewArgs {
             return false;
         }
 
-        let cwd = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
+        let cwd = util::fs::get_cwd();
 
         if let Err(e) = std::fs::create_dir(name) {
             tracing::info!(
@@ -195,7 +187,7 @@ impl NewArgs {
         }
 
         // create members
-        std::env::set_current_dir(name).unwrap();
+        util::fs::set_cwd(name);
         let mut has_error = false;
         let mut workspace = config::WorkSpaceConfig::default();
         for m in members {
@@ -214,7 +206,7 @@ impl NewArgs {
         let mut project = config::ProjectConfig::default();
         project.workspace = Some(workspace);
 
-        std::env::set_current_dir(cwd).unwrap();
+        util::fs::set_cwd(&cwd);
 
         // skip if exists
         let path = format!("{name}/{}", config::PROJECT_TOML);

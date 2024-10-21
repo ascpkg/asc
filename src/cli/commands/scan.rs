@@ -6,6 +6,7 @@ use crate::clang;
 use crate::cli::config;
 use crate::cmake;
 use crate::graph;
+use crate::util;
 
 #[derive(Clone, Debug, Default)]
 pub struct ScanOptions {
@@ -125,23 +126,18 @@ impl ScanArgs {
     }
 
     pub fn scan_package(&self, name: &str, path: &str) -> bool {
-        let cwd = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
-            .replace(r"\", "/");
+        let cwd = util::fs::get_cwd();
         let options = ScanOptions {
             project: name.to_string(),
             project_dir: cwd.clone(),
-            build_dir: format!("{cwd}/{}", config::PROJECT_TARGET_DIR.to_string()),
-            source_dir: format!("{cwd}/{}", config::PROJECT_SRC_DIR.to_string()),
+            build_dir: format!("{cwd}/{}", config::PROJECT_TARGET_DIR),
+            source_dir: format!("{cwd}/{}", config::PROJECT_SRC_DIR),
             entry_point_source: format!("{cwd}/{}", path),
             include_dirs: vec![],
             shared_lib: self.shared_lib,
             static_lib: self.static_lib,
             cmake_minimum_version: self.cmake_minimum_version.clone(),
-            cmake_config: String::new(),
+            ..Default::default()
         };
 
         tracing::info!("{:#?}", options);
