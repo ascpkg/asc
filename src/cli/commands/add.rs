@@ -8,3 +8,8 @@ pub struct AddArgs {
     features: Vec<String>
 }
 
+impl AddArgs {
+    pub fn exec(&self) -> bool {
+        false
+    }
+}

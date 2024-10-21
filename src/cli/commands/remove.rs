@@ -5,3 +5,9 @@ pub struct RemoveArgs {
     #[clap(long)]
     name: String,
 }
+
+impl RemoveArgs {
+    pub fn exec(&self) -> bool {
+        false
+    }
+}

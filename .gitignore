@@ -20,6 +20,7 @@ Cargo.lock
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+asc.toml
 test_c_cpp/build
 test_c_cpp/target
 test_c_cpp/*.cmake

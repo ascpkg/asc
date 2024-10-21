@@ -5,3 +5,9 @@ pub struct SearchArgs {
     #[clap(long)]
     name: String,
 }
+
+impl SearchArgs {
+    pub fn exec(&self) -> bool {
+        false
+    }
+}

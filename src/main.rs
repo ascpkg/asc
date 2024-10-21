@@ -5,7 +5,11 @@ use time::{macros::format_description, UtcOffset};
 use tracing;
 use tracing_subscriber::{self, fmt::time::OffsetTime};
 
+pub mod clang;
 pub mod cli;
+pub mod cmake;
+pub mod graph;
+pub mod util;
 
 fn main() {
     // init stdout tracing log
@@ -20,6 +24,7 @@ fn main() {
 
     let cli = cli::Cli::parse();
     match &cli.command {
+        // new/init bin/lib/workspace
         cli::Commands::New(options) => {
             options.exec();
         }
@@ -27,27 +32,31 @@ fn main() {
             options.exec();
         }
 
+        // search/add/remove lib
         cli::Commands::Search(options) => {
-            println!("Search: {:?}", options);
+            options.exec();
         }
         cli::Commands::Add(options) => {
-            println!("Add: {:?}", options);
+            options.exec();
         }
         cli::Commands::Remove(options) => {
-            println!("Remove: {:?}", options);
+            options.exec();
         }
 
+        // scan/build source tree
         cli::Commands::Scan(options) => {
-            println!("Scan: {:?}", options);
+            options.exec();
         }
         cli::Commands::Build(options) => {
-            println!("Build: {:?}", options);
+            options.exec();
         }
+
+        // clean/run target
         cli::Commands::Clean(options) => {
-            println!("Clean: {:?}", options);
+            options.exec();
         }
         cli::Commands::Run(options) => {
-            println!("Run: {:?}", options);
+            options.exec();
         }
     }
 }
@@ -58,11 +67,6 @@ fn main() {
 
 // use tracing;
 // use tracing_subscriber::{self, fmt::time::OffsetTime};
-
-// pub mod clang;
-// pub mod cmake;
-// pub mod graph;
-// pub mod util;
 
 // fn main() {
 //     // init stdout tracing log

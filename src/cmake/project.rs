@@ -1,13 +1,11 @@
 use tracing;
 
-use crate::util;
+use crate::cli;
 
-pub fn gen(options: &util::cli::Options) {
+pub fn gen(options: &cli::commands::scan::ScanOptions) {
     let mut args = vec!["-S", &options.project_dir, "-B", &options.build_dir];
 
-    if options.cmake_target_type == util::cli::types::CMakeTargetType::Library
-        && options.cmake_lib_type == util::cli::types::CMakeLibraryType::Shared
-    {
+    if options.shared_lib {
         args.push("-D BUILD_SHARED_LIBS=1");
     }
 

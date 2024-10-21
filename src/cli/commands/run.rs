@@ -7,3 +7,9 @@ pub struct RunArgs {
     #[clap(long, default_value = "Debug")]
     config: ConfigType,
 }
+
+impl RunArgs {
+    pub fn exec(&self) -> bool {
+        false
+    }
+}

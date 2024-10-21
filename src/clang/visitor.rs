@@ -1,12 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
+use crate::cli;
 use crate::util;
 
 use clang_sys;
 
 type StringSet = BTreeSet<String>;
 
-pub fn get_include_files(source: &String, options: &util::cli::Options) -> StringSet {
+pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOptions) -> StringSet {
     let mut include_files = BTreeSet::<String>::new();
 
     // set include search paths

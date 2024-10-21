@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 use super::visitor;
 
+use crate::cli;
 use crate::util;
 
 type StringSet = BTreeSet<String>;
@@ -19,14 +20,14 @@ pub struct SourceMappings {
 }
 
 impl SourceMappings {
-    pub fn scan(options: &util::cli::Options) -> SourceMappings {
+    pub fn scan(options: &cli::commands::scan::ScanOptions) -> SourceMappings {
         let mut parsed_files = BTreeSet::new();
 
         let (source_to_headers_from_entry_point, header_to_sources_from_entry_point) =
             Self::get_includes_from_entry_point(
                 &options,
                 &mut parsed_files,
-                format!("{}/{}", &options.source_dir, &options.entry_point_source),
+                options.entry_point_source.clone(),
             );
 
         let (_source_to_headers_from_source_files, header_to_sources_from_sources_files) =
@@ -69,7 +70,7 @@ impl SourceMappings {
     }
 
     fn get_includes_from_source_files(
-        options: &util::cli::Options,
+        options: &cli::commands::scan::ScanOptions,
         parsed_files: &mut StringSet,
     ) -> (RcRefCellStringSetMap, RcRefCellStringSetMap) {
         let source_to_headers = Rc::new(RefCell::new(BTreeMap::new()));
@@ -89,7 +90,7 @@ impl SourceMappings {
     }
 
     fn get_includes_from_entry_point(
-        options: &util::cli::Options,
+        options: &cli::commands::scan::ScanOptions,
         parsed_files: &mut StringSet,
         source_file: String,
     ) -> (RcRefCellStringSetMap, RcRefCellStringSetMap) {
@@ -108,7 +109,7 @@ impl SourceMappings {
     }
 
     fn get_include_files_in_source_dir(
-        options: &util::cli::Options,
+        options: &cli::commands::scan::ScanOptions,
         parsed_files: &mut StringSet,
         source_file: &String,
         source_include_headers: RcRefCellStringSetMap,

@@ -1,7 +1,5 @@
 ```mermaid
 flowchart LR;
-    main.cpp ---> config.h;
-    main.cpp ---> version.h;
     a/a.c ---> a/a.h;
     a/mod.hpp ---> a/a.h;
     a/a.cpp ---> a/a.hpp;
@@ -17,9 +15,10 @@ flowchart LR;
     c/c.cpp ---> c/c.hpp;
     c/mod.hpp ---> c/c.hpp;
     wrapping.hpp ---> c/mod.hpp;
-    a/a.h ---> export.h;
-    a/a.hpp ---> export.h;
     b/b.h ---> export.h;
-    c/c.h ---> export.h;
+    d/d.h ---> export.h;
+    d/d.hpp ---> export.h;
     main.cpp ---> wrapping.hpp;
+    main.cpp ---> config.h;
+    main.cpp ---> version.h;
 ```

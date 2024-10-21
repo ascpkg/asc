@@ -1,13 +1,13 @@
 use crate::clang;
-
+use crate::cli;
 use crate::util;
 
-pub fn path(options: &util::cli::Options) -> String {
-    format!("{}.md", options.project)
+pub fn path(_options: &cli::commands::scan::ScanOptions) -> String {
+    format!("flowchart.md")
 }
 
 pub fn gen(
-    options: &util::cli::Options,
+    options: &cli::commands::scan::ScanOptions,
     source_mappings: &clang::parser::SourceMappings,
 ) -> String {
     let mut mermaid_flow_chart = String::from("flowchart LR;");

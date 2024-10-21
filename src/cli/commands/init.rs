@@ -4,7 +4,6 @@ use clap::Args;
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct InitArgs {
-    pub name: Option<String>,
     #[clap(long, default_value_t = false)]
     pub lib: bool,
     #[clap(long, default_value_t = false)]
@@ -14,16 +13,23 @@ pub struct InitArgs {
 
 impl InitArgs {
     pub fn exec(&self) -> bool {
-        if self.name.is_some() {
-            if self.workspace && self.member.is_some() {
-                return self.init_workspace();
-            } else if !self.lib {
-                return self.init_bin(self.name.as_ref().unwrap());
-            } else {
-                return self.init_lib(self.name.as_ref().unwrap());
-            }
+        if self.workspace && self.member.is_some() {
+            return self.init_workspace();
+        } else if !self.lib {
+            return self.init_bin(&self.name());
+        } else {
+            return self.init_lib(&self.name());
         }
-        return false;
+    }
+
+    pub fn name(&self) -> String {
+        std::env::current_dir()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
     }
 
     pub fn init_bin(&self, name: &str) -> bool {
@@ -63,9 +69,8 @@ impl InitArgs {
 
     pub fn init_workspace(&self) -> bool {
         // validate args
-        let name = self.name.as_ref().unwrap();
         let members = self.member.as_ref().unwrap();
-        if name.is_empty() || members.is_empty() {
+        if members.is_empty() {
             return false;
         }
 
@@ -81,7 +86,6 @@ impl InitArgs {
         for m in members {
             if workspace.members.insert(m.clone()) {
                 let mut args = Self::default();
-                args.name = Some(m.clone());
                 args.lib = self.lib;
 
                 std::env::set_current_dir(m).unwrap();

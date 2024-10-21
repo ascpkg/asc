@@ -40,6 +40,7 @@ pub enum Commands {
 
     Scan(ScanArgs),
     Build(BuildArgs),
+    
     Run(RunArgs),
     Clean(CleanArgs),
 }

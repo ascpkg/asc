@@ -159,7 +159,6 @@ impl NewArgs {
         // init
         std::env::set_current_dir(name).unwrap();
         let mut args = init::InitArgs::default();
-        args.name = Some(name.to_string());
         args.lib = self.lib;
         args.workspace = self.workspace;
         args.member = self.member.clone();

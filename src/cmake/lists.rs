@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use chrono::Datelike;
 
@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub use super::path;
 pub use super::template;
 use crate::clang;
+use crate::cli;
 use crate::util;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -47,15 +48,26 @@ struct CMakeListsData {
     install_headers: Vec<InstallHeader>,
 }
 
-pub fn gen(options: &util::cli::Options, source_mappings: &clang::parser::SourceMappings) {
+pub fn gen(
+    options: &cli::commands::scan::ScanOptions,
+    source_mappings: &clang::parser::SourceMappings,
+) {
     // output default config.in.cm if not exists
     if std::fs::metadata(path::config_h_cm_path(options)).is_err() {
-        std::fs::write(path::config_h_cm_path(options), template::CONFIG_IN_CM_HBS.as_bytes()).unwrap();
+        std::fs::write(
+            path::config_h_cm_path(options),
+            template::CONFIG_IN_CM_HBS.as_bytes(),
+        )
+        .unwrap();
     }
 
     // output default check.cmake if not exists
     if std::fs::metadata(path::check_cmake_path(options)).is_err() {
-        std::fs::write(path::check_cmake_path(options), template::CHECK_CMAKE_HBS.as_bytes()).unwrap()
+        std::fs::write(
+            path::check_cmake_path(options),
+            template::CHECK_CMAKE_HBS.as_bytes(),
+        )
+        .unwrap()
     }
 
     // group data
@@ -74,9 +86,9 @@ pub fn gen(options: &util::cli::Options, source_mappings: &clang::parser::Source
     data.build_day = local_date_time_east8.day();
     data.check_cmake_txt =
         std::fs::read_to_string(path::check_cmake_path(options)).unwrap_or(String::new());
-    data.executable = options.cmake_target_type == util::cli::types::CMakeTargetType::Executable;
-    data.library = options.cmake_target_type == util::cli::types::CMakeTargetType::Library;
-    data.shared_library = data.library && options.cmake_lib_type == util::cli::types::CMakeLibraryType::Shared;
+    data.executable = !options.static_lib && !options.shared_lib;
+    data.library = options.static_lib || options.shared_lib;
+    data.shared_library = data.library && options.shared_lib;
     data.include_dirs = options.include_dirs.clone();
     data.link_libraries = false;
     data.link_public_libraries = false;
@@ -102,27 +114,33 @@ pub fn gen(options: &util::cli::Options, source_mappings: &clang::parser::Source
     {
         // write project-config.cmake.in
         let reg = Handlebars::new();
-        let text = reg.render_template(template::CMAKE_CONFIG_HBS, &data).unwrap();
+        let text = reg
+            .render_template(template::CMAKE_CONFIG_HBS, &data)
+            .unwrap();
         std::fs::write(path::config_cmake_in_path(options), text.as_bytes()).unwrap();
     }
 
     {
         // write version.h.in
         let reg = Handlebars::new();
-        let text = reg.render_template(template::VERSION_IN_HBS, &data).unwrap();
+        let text = reg
+            .render_template(template::VERSION_IN_HBS, &data)
+            .unwrap();
         std::fs::write(path::version_h_in_path(options), text.as_bytes()).unwrap();
     }
 
     {
         // write CMakeLists.txt
         let reg = Handlebars::new();
-        let text = reg.render_template(template::CMAKE_LISTS_HBS, &data).unwrap();
+        let text = reg
+            .render_template(template::CMAKE_LISTS_HBS, &data)
+            .unwrap();
         std::fs::write(path::cmake_lists_path(&options), text.as_bytes()).unwrap();
     }
 }
 
 fn group_data(
-    options: &util::cli::Options,
+    options: &cli::commands::scan::ScanOptions,
     source_mappings: &clang::parser::SourceMappings,
 ) -> (
     BTreeMap<String, BTreeSet<String>>,
@@ -130,8 +148,7 @@ fn group_data(
     BTreeMap<String, String>,
 ) {
     // group sources by dir name
-    let mut group_sources =
-        BTreeMap::<String, BTreeSet<String>>::new();
+    let mut group_sources = BTreeMap::<String, BTreeSet<String>>::new();
     let mut classify_to_dir = HashMap::<String, String>::new();
     let mut install_headers = BTreeMap::<String, String>::new();
     for (header, sources) in &source_mappings.header_include_by_sources {
