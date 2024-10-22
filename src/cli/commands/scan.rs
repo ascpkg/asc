@@ -34,9 +34,9 @@ pub struct ScanArgs {
 
 impl ScanArgs {
     pub fn exec(&self) -> bool {
-        if !util::fs::is_file_exists(config::PROJECT_TOML) {
+        if !config::ProjectConfig::is_conf_exists() {
             tracing::error!(
-                call = "!util::fs::is_file_exists",
+                call = "!config::ProjectConfig::is_conf_exists",
                 path = config::PROJECT_TOML,
                 error_tag = ErrorTag::FileNotFoundError.as_ref(),
                 message = "please run asc init first"
@@ -44,7 +44,7 @@ impl ScanArgs {
             return false;
         }
 
-        match config::ProjectConfig::load(config::PROJECT_TOML) {
+        match config::ProjectConfig::read_project_conf() {
             None => false,
             Some(project_conf) => {
                 if project_conf.package.is_none()

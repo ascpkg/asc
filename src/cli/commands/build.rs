@@ -13,7 +13,7 @@ pub struct BuildArgs {
 
 impl BuildArgs {
     pub fn exec(&self) -> bool {
-        match config::ProjectConfig::load(config::PROJECT_TOML) {
+        match config::ProjectConfig::read_project_conf() {
             None => {
                 tracing::error!(message = "please run asc init, asc scan first");
                 false

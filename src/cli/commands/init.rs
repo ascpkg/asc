@@ -50,9 +50,9 @@ impl InitArgs {
         }
 
         // skip if exists
-        if util::fs::is_file_exists(config::PROJECT_TOML) {
+        if config::ProjectConfig::is_conf_exists() {
             tracing::error!(
-                call = "util::fs::is_file_exists",
+                call = "config::ProjectConfig::is_conf_exists",
                 path = config::PROJECT_TOML,
                 error_tag = ErrorTag::FileExistsError.as_ref(),
             );
@@ -67,7 +67,7 @@ impl InitArgs {
         project.package = Some(package);
 
         // write asc.toml
-        return project.dump(config::PROJECT_TOML);
+        return project.write_project_conf();
     }
 
     pub fn init_workspace(&self) -> bool {
@@ -104,9 +104,9 @@ impl InitArgs {
         project.workspace = Some(workspace);
 
         // skip if exists
-        if util::fs::is_file_exists(config::PROJECT_TOML) {
+        if config::ProjectConfig::is_conf_exists() {
             tracing::error!(
-                call = "util::fs::is_file_exists",
+                call = "config::ProjectConfig::is_conf_exists",
                 path = config::PROJECT_TOML,
                 error_tag = ErrorTag::FileExistsError.as_ref(),
             );
@@ -114,6 +114,6 @@ impl InitArgs {
         }
 
         // write asc.toml
-        return !has_error && project.validate() && project.dump(config::PROJECT_TOML);
+        return !has_error && project.validate() && project.write_project_conf();
     }
 }

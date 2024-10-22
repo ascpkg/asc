@@ -234,13 +234,10 @@ impl NewArgs {
         let mut project = config::ProjectConfig::default();
         project.workspace = Some(workspace);
 
-        util::fs::set_cwd(&cwd);
-
         // skip if exists
-        let path = format!("{name}/{}", config::PROJECT_TOML);
-        if util::fs::is_file_exists(&path) {
+        if config::ProjectConfig::is_conf_exists() {
             tracing::error!(
-                call = "util::fs::is_file_exists",
+                call = "config::ProjectConfig::is_conf_exists",
                 path = config::PROJECT_TOML,
                 error_tag = ErrorTag::FileExistsError.as_ref(),
             );
@@ -248,6 +245,8 @@ impl NewArgs {
         }
 
         // write asc.toml
-        return !has_error && project.validate() && project.dump(&path);
+        let result = !has_error && project.validate() && project.write_project_conf();
+        util::fs::set_cwd(&cwd);
+        return result;
     }
 }

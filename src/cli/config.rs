@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use toml;
 
 use crate::errors::ErrorTag;
+use crate::util;
 
 pub static PROJECT_TOML: &str = "asc.toml";
 pub static PROJECT_EDITION: &str = "2024";
@@ -162,6 +163,18 @@ impl ProjectConfig {
                 String::new()
             }
         }
+    }
+
+    pub fn is_conf_exists() -> bool {
+        util::fs::is_file_exists(PROJECT_TOML)
+    }
+
+    pub fn read_project_conf() -> Option<Self> {
+        Self::load(PROJECT_TOML)
+    }
+
+    pub fn write_project_conf(&self) -> bool {
+        self.dump(PROJECT_TOML)
     }
 
     pub fn get_target_name_src(
