@@ -49,6 +49,19 @@ pub static VERSION_IN_HBS: &str = r#"
 #define {{project_upper}}_VERSION {{project_upper}}_VERSION_CODE({{project_upper}}_VERSION_MAJOR, {{project_upper}}_VERSION_MINOR, {{project_upper}}_VERSION_MICRO)
 "#;
 
+pub static CMKAE_WORKSPACE_HBS: &str = r#"
+# set cmake version required
+cmake_minimum_required(VERSION {{cmake_version}})
+
+# set project name
+project ({{project}} C CXX)
+
+# add workspace members
+{{#each members as |member|}}
+add_subdirectory({{member}})
+{{/each}}
+"#;
+
 pub static CMAKE_LISTS_HBS: &str = r#"# set cmake version required
 cmake_minimum_required(VERSION {{cmake_version}})
 
@@ -79,10 +92,18 @@ set({{project_upper}}_VERSION_MAJOR {{build_year}})
 set({{project_upper}}_VERSION_MINOR {{build_month}})
 set({{project_upper}}_VERSION_MICRO {{build_day}})
 set(VERSION_STRING "{{build_year}}.{{build_month}}.{{build_day}}")
+{{#if is_workspace}}
+configure_file(${CMAKE_SOURCE_DIR}/{{project}}/version.h.in ${CMAKE_BINARY_DIR}/{{project}}/version.h @ONLY)
+{{else}}
 configure_file(${CMAKE_SOURCE_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
+{{/if}}
 
 {{{check_cmake_txt}}}
+{{#if is_workspace}}
+configure_file(${CMAKE_SOURCE_DIR}/{{project}}/config.h.cm ${CMAKE_BINARY_DIR}/{{project}}/config.h)
+{{else}}
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cm ${CMAKE_BINARY_DIR}/config.h)
+{{/if}}
 
 # package
 include(CMakePackageConfigHelpers)

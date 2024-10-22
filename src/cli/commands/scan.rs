@@ -1,8 +1,9 @@
 use clap::Args;
 
 use crate::clang;
-use crate::config;
 use crate::cmake;
+use crate::config;
+use crate::config::ProjectConfig;
 use crate::errors::ErrorTag;
 use crate::graph;
 use crate::util;
@@ -34,19 +35,17 @@ pub struct ScanArgs {
 
 impl ScanArgs {
     pub fn exec(&self) -> bool {
-        if !config::ProjectConfig::is_conf_exists() {
-            tracing::error!(
-                call = "!config::ProjectConfig::is_conf_exists",
-                path = config::PROJECT_TOML,
-                error_tag = ErrorTag::FileNotFoundError.as_ref(),
-                message = "please run asc init first"
-            );
+        if !config::ProjectConfig::is_project_inited(false) {
             return false;
         }
 
         match config::ProjectConfig::read_project_conf() {
             None => false,
             Some(project_conf) => {
+                if project_conf.workspace.is_some() {
+                    return self.scan_workspace(&project_conf);
+                }
+
                 if project_conf.package.is_none()
                     && project_conf.bins.is_none()
                     && project_conf.libs.is_none()
@@ -58,24 +57,28 @@ impl ScanArgs {
                     return false;
                 }
 
-                if project_conf.workspace.is_some() {
-                    return self.scan_workspace();
-                }
-
                 let (target_name, target_src) =
                     project_conf.get_target_name_src(&self.name, self.shared_lib, self.static_lib);
-                return self.scan_package(&target_name, &target_src);
+                if target_name.is_empty() || target_src.is_empty() {
+                    tracing::error!(
+                        call = "target_name.is_empty || target_src.is_empty",
+                        error_tag = ErrorTag::InvalidCliArgsError.as_ref()
+                    );
+                }
+                return self.scan_package(&target_name, &target_src, false);
             }
         }
     }
 
-    pub fn scan_package(&self, name: &str, path: &str) -> bool {
+    pub fn scan_package(&self, name: &str, path: &str, is_workspace: bool) -> bool {
+        tracing::info!("scan package");
+
         let cwd = util::fs::get_cwd();
         let options = ScanOptions {
             project: name.to_string(),
             project_dir: cwd.clone(),
-            build_dir: format!("{cwd}/{}", config::PROJECT_TARGET_DIR),
-            source_dir: format!("{cwd}/{}", config::PROJECT_SRC_DIR),
+            build_dir: format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR),
+            source_dir: format!("{cwd}/{}", config::path::PROJECT_SRC_DIR),
             entry_point_source: format!("{cwd}/{}", path),
             include_dirs: vec![],
             shared_lib: self.shared_lib,
@@ -98,15 +101,69 @@ impl ScanArgs {
         let mermaid_flowchart = graph::flowchart::gen(&options, &source_mappings);
         tracing::info!("\n{mermaid_flowchart}");
 
-        tracing::warn!("output {}", cmake::path::cmake_lists_path(&options));
-        cmake::lists::gen(&options, &source_mappings);
+        tracing::warn!("output {}", cmake::path::CMAKE_LISTS_PATH);
+        cmake::lists::gen(&options, &source_mappings, is_workspace);
 
-        tracing::warn!("generate a build system with cmake");
-        cmake::project::gen(&options);
+        if !is_workspace {
+            tracing::warn!("generate a build system with cmake");
+            cmake::project::gen(&options);
+        }
         return true;
     }
 
-    pub fn scan_workspace(&self) -> bool {
-        false
+    pub fn scan_workspace(&self, project_conf: &ProjectConfig) -> bool {
+        tracing::info!("scan workspace");
+
+        let cwd = util::fs::get_cwd();
+        let mut has_error = false;
+        let mut members = vec![];
+        for member in &project_conf.workspace.as_ref().unwrap().members {
+            util::fs::set_cwd(member);
+
+            match config::ProjectConfig::read_project_conf() {
+                None => {
+                    has_error = true;
+                }
+                Some(project_conf) => {
+                    let (target_name, target_src) = project_conf.get_target_name_src(
+                        &Some(member.clone()),
+                        self.shared_lib,
+                        self.static_lib,
+                    );
+                    if !target_name.is_empty() && !target_src.is_empty() {
+                        if self.scan_package(&target_name, &target_src, true) {
+                            members.push(member.clone());
+                        } else {
+                            has_error = true;
+                        }
+                    } else {
+                        has_error = true;
+                        tracing::error!(
+                            call = "target_name.is_empty || target_src.is_empty",
+                            error_tag = ErrorTag::InvalidCliArgsError.as_ref()
+                        );
+                    }
+                }
+            }
+
+            util::fs::set_cwd(&cwd);
+        }
+
+        cmake::lists::gen_worksapce(
+            &self.cmake_minimum_version,
+            &util::fs::get_cwd_name(),
+            &members,
+        );
+
+        tracing::warn!("generate a build system with cmake");
+        let options = ScanOptions {
+            project_dir: cwd.clone(),
+            build_dir: format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR),
+            shared_lib: self.shared_lib,
+            ..Default::default()
+        };
+        cmake::project::gen(&options);
+
+        return has_error;
     }
 }

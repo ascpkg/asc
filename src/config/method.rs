@@ -1,10 +1,12 @@
+use super::path::PROJECT_TARGET_DIR;
 #[allow(unused_imports)]
 use super::{
-    DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig, PROJECT_BIN_SRC,
-    PROJECT_LIB_SRC, PROJECT_SRC_DIR, PROJECT_TOML,
+    path::PROJECT_BIN_SRC, path::PROJECT_LIB_HDR, path::PROJECT_LIB_SRC, path::PROJECT_SRC_DIR,
+    path::PROJECT_TOML, DependencyConfig, EntryConfig, PackageConfig, ProjectConfig,
+    WorkSpaceConfig,
 };
-use crate::errors::ErrorTag;
 use crate::util;
+use crate::{cmake, errors::ErrorTag};
 
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
@@ -125,8 +127,26 @@ impl ProjectConfig {
         }
     }
 
-    pub fn is_conf_exists() -> bool {
-        util::fs::is_file_exists(PROJECT_TOML)
+    pub fn is_project_inited(ignore: bool) -> bool {
+        if util::fs::is_file_exists(PROJECT_TOML) {
+            tracing::warn!(
+                call = "util::fs::is_file_exists",
+                path = PROJECT_TOML,
+                error_tag = ErrorTag::FileExistsError.as_ref(),
+                message = "skip"
+            );
+            return true;
+        } else {
+            if !ignore {
+                tracing::error!(
+                    call = "util::fs::is_file_exists",
+                    path = PROJECT_TOML,
+                    error_tag = ErrorTag::FileNotFoundError.as_ref(),
+                    message = "please run asc init first"
+                );
+            }
+            return false;
+        }
     }
 
     pub fn read_project_conf() -> Option<Self> {
@@ -135,6 +155,23 @@ impl ProjectConfig {
 
     pub fn write_project_conf(&self) -> bool {
         self.dump(PROJECT_TOML)
+    }
+
+    pub fn is_source_scaned() -> bool {
+        if util::fs::is_file_exists(cmake::path::CMAKE_LISTS_PATH)
+            && util::fs::is_dir_exists(PROJECT_TARGET_DIR)
+        {
+            return true;
+        } else {
+            tracing::error!(
+                call = "util::fs::is_file_exists && util::fs::is_dir_exists",
+                file = cmake::path::CMAKE_LISTS_PATH,
+                dir = PROJECT_TARGET_DIR,
+                error_tag = ErrorTag::PathNotFoundError.as_ref(),
+                message = "please run asc scan first"
+            );
+            return false;
+        }
     }
 
     pub fn get_target_name_src(
@@ -360,7 +397,7 @@ default = [
         dependencies.insert(
             String::from("tracing-subscriber"),
             DependencyConfig {
-                version: String::from("clang_18_0"),
+                version: String::from("clang_10_0"),
                 features: Some(
                     [
                         String::from("env-filter"),

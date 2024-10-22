@@ -50,12 +50,7 @@ impl InitArgs {
         }
 
         // skip if exists
-        if config::ProjectConfig::is_conf_exists() {
-            tracing::error!(
-                call = "config::ProjectConfig::is_conf_exists",
-                path = config::PROJECT_TOML,
-                error_tag = ErrorTag::FileExistsError.as_ref(),
-            );
+        if config::ProjectConfig::is_project_inited(true) {
             return false;
         }
 
@@ -63,7 +58,7 @@ impl InitArgs {
         let mut package = config::PackageConfig::default();
         package.name = name.to_string();
         package.version = config::ProjectConfig::version_date();
-        package.edition = config::PROJECT_EDITION.to_string();
+        package.edition = config::path::PROJECT_EDITION.to_string();
         project.package = Some(package);
 
         // write asc.toml
@@ -104,12 +99,7 @@ impl InitArgs {
         project.workspace = Some(workspace);
 
         // skip if exists
-        if config::ProjectConfig::is_conf_exists() {
-            tracing::error!(
-                call = "config::ProjectConfig::is_conf_exists",
-                path = config::PROJECT_TOML,
-                error_tag = ErrorTag::FileExistsError.as_ref(),
-            );
+        if config::ProjectConfig::is_project_inited(true) {
             return false;
         }
 

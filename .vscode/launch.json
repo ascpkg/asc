@@ -93,9 +93,10 @@
                 }
             },
             "args": [
-                "scan"
+                "scan",
+                "--shared-lib"
             ],
-            "cwd": "${workspaceFolder}/test_c_cpp"
+            "cwd": "${workspaceFolder}/abc"
         },
     ]
 }

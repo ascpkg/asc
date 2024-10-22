@@ -34,6 +34,7 @@ impl NewArgs {
 
     fn new_bin(&self, name: &str) -> bool {
         tracing::info!("new bin");
+
         // write asc.toml
         if !self.new_package(name) {
             return false;
@@ -44,8 +45,8 @@ impl NewArgs {
             format!(
                 "{}/{}/{}",
                 name,
-                config::PROJECT_SRC_DIR,
-                config::PROJECT_BIN_SRC
+                config::path::PROJECT_SRC_DIR,
+                config::path::PROJECT_BIN_SRC
             ),
             template::NEW_BIN_HBS.as_bytes(),
         )
@@ -54,6 +55,7 @@ impl NewArgs {
 
     fn new_lib(&self, name: &str) -> bool {
         tracing::info!("new lib");
+
         // write asc.toml
         if !self.new_package(name) {
             return false;
@@ -80,8 +82,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::PROJECT_SRC_DIR,
-                        config::PROJECT_EXPORT_SRC
+                        config::path::PROJECT_SRC_DIR,
+                        config::path::PROJECT_EXPORT_SRC
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -98,16 +100,16 @@ impl NewArgs {
         }
 
         {
-            // write main.cpp
+            // write lib.hpp
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_MAIN_HBS,
+                template::NEW_LIB_HDR_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         call = "Handlebars::render_template",
-                        template = template::NEW_LIB_EXPORT_HBS,
+                        template = template::NEW_LIB_HDR_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );
@@ -118,8 +120,46 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::PROJECT_SRC_DIR,
-                        config::PROJECT_LIB_SRC
+                        config::path::PROJECT_SRC_DIR,
+                        config::path::PROJECT_LIB_HDR
+                    );
+                    if let Err(e) = std::fs::write(&path, text.as_bytes()) {
+                        tracing::error!(
+                            call = "std::fs::write",
+                            path = path,
+                            error_tag = ErrorTag::WriteFileError.as_ref(),
+                            error_str = e.to_string(),
+                            message = text,
+                        );
+                        return false;
+                    }
+                }
+            }
+        }
+
+        {
+            // write lib.cpp
+            let reg = Handlebars::new();
+            match reg.render_template(
+                template::NEW_LIB_MAIN_HBS,
+                &serde_json::json!({"project_upper": name.to_uppercase()}),
+            ) {
+                Err(e) => {
+                    tracing::error!(
+                        call = "Handlebars::render_template",
+                        template = template::NEW_LIB_MAIN_HBS,
+                        error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
+                        error_str = e.to_string()
+                    );
+
+                    return false;
+                }
+                Ok(text) => {
+                    let path = format!(
+                        "{}/{}/{}",
+                        name,
+                        config::path::PROJECT_SRC_DIR,
+                        config::path::PROJECT_LIB_SRC
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -140,6 +180,7 @@ impl NewArgs {
 
     fn new_package(&self, name: &str) -> bool {
         tracing::info!("new package");
+
         // validate args
         if name.is_empty() {
             tracing::error!(
@@ -160,7 +201,7 @@ impl NewArgs {
         }
 
         // create src dir
-        let src_dir = format!("{name}/{}", config::PROJECT_SRC_DIR);
+        let src_dir = format!("{name}/{}", config::path::PROJECT_SRC_DIR);
         if let Err(e) = std::fs::create_dir_all(&src_dir) {
             tracing::error!(
                 call = "std::fs::create_dir_all",
@@ -183,6 +224,8 @@ impl NewArgs {
     }
 
     fn new_workspace(&self) -> bool {
+        tracing::info!("new workspace");
+
         // validate args
         let name = self.name.as_ref().unwrap();
         let members = self.member.as_ref().unwrap();
@@ -232,12 +275,7 @@ impl NewArgs {
         project.workspace = Some(workspace);
 
         // skip if exists
-        if config::ProjectConfig::is_conf_exists() {
-            tracing::error!(
-                call = "config::ProjectConfig::is_conf_exists",
-                path = config::PROJECT_TOML,
-                error_tag = ErrorTag::FileExistsError.as_ref(),
-            );
+        if config::ProjectConfig::is_project_inited(true) {
             return false;
         }
 

@@ -10,6 +10,8 @@ pub struct RunArgs {
 
 impl RunArgs {
     pub fn exec(&self) -> bool {
+        tracing::info!("run");
+
         false
     }
 }

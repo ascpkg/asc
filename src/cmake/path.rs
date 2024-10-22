@@ -1,21 +1,10 @@
 use crate::cli;
 
-pub fn cmake_lists_path(_options: &cli::commands::scan::ScanOptions) -> String {
-    String::from("CMakeLists.txt")
-}
-
-pub fn version_h_in_path(_options: &cli::commands::scan::ScanOptions) -> String {
-    String::from("version.h.in")
-}
+pub static CMAKE_LISTS_PATH: &str = "CMakeLists.txt";
+pub static VERSION_H_IN_PATH: &str = "version.h.in";
+pub static CONFIG_H_CM_PATH: &str = "config.h.cm";
+pub static CHECK_CMAKE_PATH: &str = "check.cmake";
 
 pub fn config_cmake_in_path(options: &cli::commands::scan::ScanOptions) -> String {
     format!("{}-config.cmake.in", &options.project)
-}
-
-pub fn config_h_cm_path(_options: &cli::commands::scan::ScanOptions) -> String {
-    String::from("config.h.cm")
-}
-
-pub fn check_cmake_path(_options: &cli::commands::scan::ScanOptions) -> String {
-    String::from("check.cmake")
 }

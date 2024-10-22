@@ -29,6 +29,7 @@ struct InstallHeader {
 #[derive(Default, Debug, Serialize, Deserialize)]
 struct CMakeListsData {
     cmake_version: String,
+    is_workspace: bool,
     project: String,
     project_upper: String,
     build_year: i32,
@@ -51,20 +52,21 @@ struct CMakeListsData {
 pub fn gen(
     options: &cli::commands::scan::ScanOptions,
     source_mappings: &clang::parser::SourceMappings,
+    is_workspace: bool,
 ) {
     // output default config.in.cm if not exists
-    if !util::fs::is_file_exists(&path::config_h_cm_path(options)) {
+    if !util::fs::is_file_exists(path::CONFIG_H_CM_PATH) {
         std::fs::write(
-            path::config_h_cm_path(options),
+            path::CONFIG_H_CM_PATH,
             template::CONFIG_IN_CM_HBS.as_bytes(),
         )
         .unwrap();
     }
 
     // output default check.cmake if not exists
-    if !util::fs::is_file_exists(&path::check_cmake_path(options)) {
+    if !util::fs::is_file_exists(path::CHECK_CMAKE_PATH) {
         std::fs::write(
-            path::check_cmake_path(options),
+            path::CHECK_CMAKE_PATH,
             template::CHECK_CMAKE_HBS.as_bytes(),
         )
         .unwrap()
@@ -75,17 +77,16 @@ pub fn gen(
 
     // init data
     let local_date_time = chrono::prelude::Local::now();
-    let timezone_east8 = chrono::FixedOffset::east_opt(8 * 3600).unwrap();
-    let local_date_time_east8 = local_date_time.with_timezone(&timezone_east8);
     let mut data = CMakeListsData::default();
+    data.is_workspace = is_workspace;
     data.cmake_version = options.cmake_minimum_version.clone();
     data.project = options.project.clone();
     data.project_upper = options.project.to_uppercase();
-    data.build_year = local_date_time_east8.year();
-    data.build_month = local_date_time_east8.month();
-    data.build_day = local_date_time_east8.day();
+    data.build_year = local_date_time.year();
+    data.build_month = local_date_time.month();
+    data.build_day = local_date_time.day();
     data.check_cmake_txt =
-        std::fs::read_to_string(path::check_cmake_path(options)).unwrap_or(String::new());
+        std::fs::read_to_string(path::CHECK_CMAKE_PATH).unwrap_or(String::new());
     data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;
@@ -126,7 +127,7 @@ pub fn gen(
         let text = reg
             .render_template(template::VERSION_IN_HBS, &data)
             .unwrap();
-        std::fs::write(path::version_h_in_path(options), text.as_bytes()).unwrap();
+        std::fs::write(path::VERSION_H_IN_PATH, text.as_bytes()).unwrap();
     }
 
     {
@@ -135,8 +136,27 @@ pub fn gen(
         let text = reg
             .render_template(template::CMAKE_LISTS_HBS, &data)
             .unwrap();
-        std::fs::write(path::cmake_lists_path(&options), text.as_bytes()).unwrap();
+        std::fs::write(path::CMAKE_LISTS_PATH, text.as_bytes()).unwrap();
     }
+}
+
+pub fn gen_worksapce(cmake_minimum_version: &str, project: &str, members: &Vec<String>) {
+    let data = serde_json::json!({
+        "cmake_version": cmake_minimum_version,
+        "project": project,
+        "members": members,
+    });
+
+    // write CMakeLists.txt
+    let reg = Handlebars::new();
+    let text = reg
+        .render_template(template::CMKAE_WORKSPACE_HBS, &data)
+        .unwrap();
+    std::fs::write(
+        path::CMAKE_LISTS_PATH,
+        text.as_bytes(),
+    )
+    .unwrap();
 }
 
 fn group_data(

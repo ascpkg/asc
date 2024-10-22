@@ -10,6 +10,8 @@ pub struct AddArgs {
 
 impl AddArgs {
     pub fn exec(&self) -> bool {
+        tracing::info!("add");
+
         false
     }
 }

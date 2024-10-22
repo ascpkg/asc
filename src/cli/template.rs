@@ -5,9 +5,17 @@ int main(int argc, char **argv) {
 }
 "#;
 
-pub static NEW_LIB_MAIN_HBS: &str = r#"#include "export.h"
+pub static NEW_LIB_HDR_HBS: &str = r#"#include "export.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int {{project_upper}}_API test(int left, int right);
+
+#ifdef __cplusplus
+}
+#endif
 
 class {{project_upper}}_API Test
 {
@@ -15,6 +23,9 @@ public:
     int add(int left, int right);
 };
 
+"#;
+
+pub static NEW_LIB_MAIN_HBS: &str = r#"#include "lib.hpp"
 
 int test(int left, int right) {
     return left + right;
@@ -23,6 +34,12 @@ int test(int left, int right) {
 
 int Test::add(int left, int right) {
     return left + right;
+}
+
+
+int main(int argc, char **argv) {
+    int a = test(1, 2);
+    int b = Test().add(1, 2);
 }
 "#;
 
