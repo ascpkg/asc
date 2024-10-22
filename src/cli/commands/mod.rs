@@ -16,6 +16,8 @@ pub mod search;
 pub use search::SearchArgs;
 pub mod scan;
 pub use scan::ScanArgs;
+pub mod install;
+pub use install::InstallArgs;
 
 use clap::{Parser, Subcommand, ValueEnum};
 
@@ -40,6 +42,7 @@ pub enum Commands {
 
     Scan(ScanArgs),
     Build(BuildArgs),
+    Install(InstallArgs),
 
     Run(RunArgs),
     Clean(CleanArgs),

@@ -1,6 +1,6 @@
 use crate::cli;
 
-pub fn run(options: &cli::commands::scan::ScanOptions) {
+pub fn exec(options: &cli::commands::scan::ScanOptions) {
     let args = vec![
         "--build",
         &options.build_dir,

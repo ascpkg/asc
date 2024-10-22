@@ -4,15 +4,15 @@ use super::{scan::ScanOptions, ConfigType};
 use crate::{cmake, config};
 
 #[derive(Args, Debug, Clone)]
-pub struct BuildArgs {
+pub struct InstallArgs {
     pub name: Option<String>,
     #[clap(long, default_value = "debug")]
     config: ConfigType,
 }
 
-impl BuildArgs {
+impl InstallArgs {
     pub fn exec(&self) -> bool {
-        tracing::info!("build");
+        tracing::info!("install");
 
         if !config::ProjectConfig::is_project_inited(false) {
             return false;
@@ -27,7 +27,7 @@ impl BuildArgs {
             cmake_config: self.config.as_ref().to_string(),
             ..Default::default()
         };
-        cmake::build::exec(&options);
+        cmake::install::exec(&options);
 
         return true;
     }
