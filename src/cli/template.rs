@@ -26,6 +26,9 @@ public:
 "#;
 
 pub static NEW_LIB_MAIN_HBS: &str = r#"#include "lib.hpp"
+#include "config.h"
+#include "version.h"
+
 
 int test(int left, int right) {
     return left + right;

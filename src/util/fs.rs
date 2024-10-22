@@ -64,6 +64,16 @@ pub fn get_cwd_name() -> String {
         .to_string()
 }
 
+pub fn get_cwd_parent() -> String {
+    std::env::current_dir()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace(r"\", "/")
+}
+
 pub fn set_cwd(dir: &str) -> bool {
     std::env::set_current_dir(dir).is_ok()
 }

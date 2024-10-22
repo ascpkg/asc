@@ -77,7 +77,16 @@ impl ScanArgs {
         let options = ScanOptions {
             project: name.to_string(),
             project_dir: cwd.clone(),
-            build_dir: format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR),
+            build_dir: if !is_workspace {
+                format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR)
+            } else {
+                format!(
+                    "{}/{}/{}",
+                    util::fs::get_cwd_parent(),
+                    config::path::PROJECT_TARGET_DIR,
+                    name
+                )
+            },
             source_dir: format!("{cwd}/{}", config::path::PROJECT_SRC_DIR),
             entry_point_source: format!("{cwd}/{}", path),
             include_dirs: vec![],
@@ -90,7 +99,7 @@ impl ScanArgs {
         tracing::info!("{:#?}", options);
 
         // write empty files
-        std::fs::create_dir(&options.build_dir).unwrap_or(());
+        std::fs::create_dir_all(&options.build_dir).unwrap_or(());
         std::fs::write(format!("{}/config.h", &options.build_dir), b"").unwrap_or(());
         std::fs::write(format!("{}/version.h", &options.build_dir), b"").unwrap_or(());
 
