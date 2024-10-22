@@ -6,10 +6,7 @@ use serde_json;
 
 use super::init;
 use crate::errors::ErrorTag;
-use crate::{
-    cli::{config, template},
-    util,
-};
+use crate::{cli::template, config, util};
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct NewArgs {

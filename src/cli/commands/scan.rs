@@ -1,7 +1,7 @@
 use clap::Args;
 
 use crate::clang;
-use crate::cli::config;
+use crate::config;
 use crate::cmake;
 use crate::errors::ErrorTag;
 use crate::graph;

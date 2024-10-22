@@ -2,7 +2,7 @@ use clap::Args;
 
 use super::{scan::ScanOptions, ConfigType};
 use crate::errors::ErrorTag;
-use crate::{cli::config, cmake};
+use crate::{config, cmake};
 
 #[derive(Args, Debug, Clone)]
 pub struct BuildArgs {

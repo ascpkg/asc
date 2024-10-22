@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::cli::config;
+use crate::config;
 use crate::errors::ErrorTag;
 use crate::util;
 
