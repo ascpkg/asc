@@ -3,7 +3,7 @@ use clap::Args;
 use crate::clang;
 use crate::cmake;
 use crate::config;
-use crate::config::ProjectConfig;
+use crate::config::data::ProjectConfig;
 use crate::errors::ErrorTag;
 use crate::graph;
 use crate::util;
@@ -35,11 +35,11 @@ pub struct ScanArgs {
 
 impl ScanArgs {
     pub fn exec(&self) -> bool {
-        if !config::ProjectConfig::is_project_inited(false) {
+        if !config::data::ProjectConfig::is_project_inited(false) {
             return false;
         }
 
-        match config::ProjectConfig::read_project_conf() {
+        match config::data::ProjectConfig::read_project_conf() {
             None => false,
             Some(project_conf) => {
                 if project_conf.workspace.is_some() {
@@ -129,7 +129,7 @@ impl ScanArgs {
         for member in &project_conf.workspace.as_ref().unwrap().members {
             util::fs::set_cwd(member);
 
-            match config::ProjectConfig::read_project_conf() {
+            match config::data::ProjectConfig::read_project_conf() {
                 None => {
                     has_error = true;
                 }

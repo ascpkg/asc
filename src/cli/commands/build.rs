@@ -14,11 +14,11 @@ impl BuildArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "build", name = util::fs::get_cwd_name());
 
-        if !config::ProjectConfig::is_project_inited(false) {
+        if !config::data::ProjectConfig::is_project_inited(false) {
             return false;
         }
 
-        if !config::ProjectConfig::is_source_scaned() {
+        if !config::data::ProjectConfig::is_source_scaned() {
             return false;
         }
 

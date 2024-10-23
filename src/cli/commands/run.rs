@@ -18,7 +18,7 @@ impl RunArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "run");
 
-        if let Some(project_conf) = config::ProjectConfig::read_project_conf() {
+        if let Some(project_conf) = config::data::ProjectConfig::read_project_conf() {
             if let Some(workspace) = project_conf.workspace {
                 if let Some(name) = &self.name {
                     return self.run(

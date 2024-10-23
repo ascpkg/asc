@@ -1,19 +1,16 @@
 use super::path::PROJECT_TARGET_DIR;
 #[allow(unused_imports)]
 use super::{
-    path::PROJECT_BIN_SRC, path::PROJECT_LIB_HEADER, path::PROJECT_LIB_SRC, path::PROJECT_SRC_DIR,
-    path::PROJECT_TOML, DependencyConfig, EntryConfig, PackageConfig, ProjectConfig,
-    WorkSpaceConfig,
+    data::{DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig},
+    path::{PROJECT_BIN_SRC, PROJECT_LIB_HEADER, PROJECT_LIB_SRC, PROJECT_SRC_DIR, PROJECT_TOML},
 };
-use crate::util;
+use crate::{types, util};
 use crate::{cmake, errors::ErrorTag};
 
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
 
 use chrono;
-
-use toml;
 
 impl ProjectConfig {
     pub fn version_date() -> String {
@@ -63,68 +60,20 @@ impl ProjectConfig {
     }
 
     pub fn load(path: &str) -> Option<Self> {
-        match std::fs::read_to_string(path) {
-            Ok(text) => Self::loads(&text),
-            Err(e) => {
-                tracing::error!(
-                    func = "std::fs::read_to_string",
-                    path = path,
-                    error_tag = ErrorTag::ReadFileError.as_ref(),
-                    error_str = e.to_string(),
-                );
-                None
-            }
-        }
+        types::toml::TomlContainer::<Self>::load(path)
     }
 
     pub fn loads(text: &str) -> Option<Self> {
-        match toml::from_str(text) {
-            Ok(c) => Some(c),
-            Err(e) => {
-                tracing::error!(
-                    func = "toml::from_str",
-                    error_tag = ErrorTag::TomlDeserializeError.as_ref(),
-                    error_str = e.to_string(),
-                    message = text,
-                );
-                None
-            }
-        }
+        types::toml::TomlContainer::<Self>::loads(text)
     }
 
     pub fn dump(&self, path: &str) -> bool {
-        let text = self.dumps();
-        if text.is_empty() {
-            return false;
-        }
-
-        match std::fs::write(path, text.as_bytes()) {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!(
-                    func = "std::fs::write",
-                    path = path,
-                    error_tag = ErrorTag::WriteFileError.as_ref(),
-                    error_str = e.to_string(),
-                    messsage = text,
-                );
-                false
-            }
-        }
+        types::toml::TomlContainer::new(self.clone(), path).dump()
     }
 
     pub fn dumps(&self) -> String {
-        match toml::to_string_pretty(self) {
-            Ok(text) => text,
-            Err(e) => {
-                tracing::error!(
-                    func = "toml::to_string_pretty",
-                    error_tag = ErrorTag::TomlSerializeError.as_ref(),
-                    error_str = e.to_string(),
-                );
-                String::new()
-            }
-        }
+        types::toml::TomlContainer::new(self.clone(), "").dumps()
+
     }
 
     pub fn is_project_inited(ignore: bool) -> bool {

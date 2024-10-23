@@ -50,14 +50,14 @@ impl InitArgs {
         }
 
         // skip if exists
-        if config::ProjectConfig::is_project_inited(true) {
+        if config::data::ProjectConfig::is_project_inited(true) {
             return false;
         }
 
-        let mut project = config::ProjectConfig::default();
-        let mut package = config::PackageConfig::default();
+        let mut project = config::data::ProjectConfig::default();
+        let mut package = config::data::PackageConfig::default();
         package.name = name.to_string();
-        package.version = config::ProjectConfig::version_date();
+        package.version = config::data::ProjectConfig::version_date();
         package.edition = config::path::PROJECT_EDITION.to_string();
         project.package = Some(package);
 
@@ -82,7 +82,7 @@ impl InitArgs {
 
         // init members
         let mut has_error = false;
-        let mut workspace = config::WorkSpaceConfig::default();
+        let mut workspace = config::data::WorkSpaceConfig::default();
         for m in members {
             if workspace.members.insert(m.clone()) {
                 let mut args = Self::default();
@@ -95,11 +95,11 @@ impl InitArgs {
                 util::fs::set_cwd(&cwd);
             }
         }
-        let mut project = config::ProjectConfig::default();
+        let mut project = config::data::ProjectConfig::default();
         project.workspace = Some(workspace);
 
         // skip if exists
-        if config::ProjectConfig::is_project_inited(true) {
+        if config::data::ProjectConfig::is_project_inited(true) {
             return false;
         }
 

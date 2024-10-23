@@ -257,7 +257,7 @@ impl NewArgs {
         // create members
         util::fs::set_cwd(name);
         let mut has_error = false;
-        let mut workspace = config::WorkSpaceConfig::default();
+        let mut workspace = config::data::WorkSpaceConfig::default();
         for m in members {
             if workspace.members.insert(m.clone()) {
                 if self.lib {
@@ -271,11 +271,11 @@ impl NewArgs {
                 }
             }
         }
-        let mut project = config::ProjectConfig::default();
+        let mut project = config::data::ProjectConfig::default();
         project.workspace = Some(workspace);
 
         // skip if exists
-        if config::ProjectConfig::is_project_inited(true) {
+        if config::data::ProjectConfig::is_project_inited(true) {
             return false;
         }
 
