@@ -17,7 +17,7 @@ pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOpt
         .map(|s| format!("-I{}", s))
         .collect();
     rs_args.push(format!("-I{}", options.source_dir));
-    rs_args.push(format!("-I{}", options.build_dir));
+    rs_args.push(format!("-I{}", options.target_dir));
     // tracing::info!(arguments = rs_args.join(" "));
     let c_args: Vec<*const std::ffi::c_char> = rs_args
         .iter()
@@ -68,20 +68,20 @@ pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOpt
 
     tracing::info!(
         "{}",
-        util::fs::remove_prefix(source, &options.source_dir, &options.build_dir)
+        util::fs::remove_prefix(source, &options.source_dir, &options.target_dir)
     );
     for include in &include_files {
-        if include.starts_with(&options.source_dir) || include.starts_with(&options.build_dir) {
+        if include.starts_with(&options.source_dir) || include.starts_with(&options.target_dir) {
             tracing::info!(
                 "    {}",
-                util::fs::remove_prefix(include, &options.source_dir, &options.build_dir)
+                util::fs::remove_prefix(include, &options.source_dir, &options.target_dir)
             );
         }
     }
 
     // skip third-party
     include_files
-        .retain(|s| s.starts_with(&options.source_dir) || s.starts_with(&options.build_dir));
+        .retain(|s| s.starts_with(&options.source_dir) || s.starts_with(&options.target_dir));
 
     return include_files;
 }

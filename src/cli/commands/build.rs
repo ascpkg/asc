@@ -23,7 +23,7 @@ impl BuildArgs {
         }
 
         let options = ScanOptions {
-            build_dir: config::path::PROJECT_TARGET_DIR.to_string(),
+            target_dir: config::path::PROJECT_TARGET_DIR.to_string(),
             cmake_config: self.config.as_ref().to_string(),
             ..Default::default()
         };

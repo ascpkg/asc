@@ -12,7 +12,7 @@ use crate::util;
 pub struct ScanOptions {
     pub project: String,
     pub project_dir: String,
-    pub build_dir: String,
+    pub target_dir: String,
     pub source_dir: String,
     pub entry_point_source: String,
     pub include_dirs: Vec<String>,
@@ -77,7 +77,7 @@ impl ScanArgs {
         let options = ScanOptions {
             project: name.to_string(),
             project_dir: cwd.clone(),
-            build_dir: if !is_workspace {
+            target_dir: if !is_workspace {
                 format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR)
             } else {
                 format!(
@@ -99,9 +99,9 @@ impl ScanArgs {
         tracing::info!("{:#?}", options);
 
         // write empty files
-        std::fs::create_dir_all(&options.build_dir).unwrap_or(());
-        std::fs::write(format!("{}/config.h", &options.build_dir), b"").unwrap_or(());
-        std::fs::write(format!("{}/version.h", &options.build_dir), b"").unwrap_or(());
+        std::fs::create_dir_all(&options.target_dir).unwrap_or(());
+        std::fs::write(format!("{}/config.h", &options.target_dir), b"").unwrap_or(());
+        std::fs::write(format!("{}/version.h", &options.target_dir), b"").unwrap_or(());
 
         tracing::warn!("scan source dependencies with clang ir");
         let source_mappings = clang::parser::SourceMappings::scan(&options);
@@ -167,7 +167,7 @@ impl ScanArgs {
         tracing::warn!("generate a build system with cmake");
         let options = ScanOptions {
             project_dir: cwd.clone(),
-            build_dir: format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR),
+            target_dir: format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR),
             shared_lib: self.shared_lib,
             ..Default::default()
         };

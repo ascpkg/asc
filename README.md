@@ -205,7 +205,7 @@ qt5-base = { version = "5.15.14#2", find = ["Qt5", "COMPONENTS", "Core", "Gui", 
 2024-10-22 15:46:17.8218736  INFO asc::cli::commands::scan: 90: ScanOptions {
     project: "test_c_cpp",
     project_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp",
-    build_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/target",
+    target_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/target",
     source_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/src",
     entry_point_source: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/src/main.cpp",
     include_dirs: [],
@@ -358,7 +358,7 @@ asc new workspace
 2024-10-22 15:49:22.1743151  INFO asc::cli::commands::scan: 90: ScanOptions {
     project: "a",
     project_dir: "D:/__develop__/FutureOrientedGB/asc/abc/a",
-    build_dir: "D:/__develop__/FutureOrientedGB/asc/abc/a/target",
+    target_dir: "D:/__develop__/FutureOrientedGB/asc/abc/a/target",
     source_dir: "D:/__develop__/FutureOrientedGB/asc/abc/a/src",
     entry_point_source: "D:/__develop__/FutureOrientedGB/asc/abc/a/src/lib.cpp",
     include_dirs: [],
@@ -383,7 +383,7 @@ flowchart LR;
 2024-10-22 15:49:22.2252  INFO asc::cli::commands::scan: 90: ScanOptions {
     project: "b",
     project_dir: "D:/__develop__/FutureOrientedGB/asc/abc/b",
-    build_dir: "D:/__develop__/FutureOrientedGB/asc/abc/b/target",
+    target_dir: "D:/__develop__/FutureOrientedGB/asc/abc/b/target",
     source_dir: "D:/__develop__/FutureOrientedGB/asc/abc/b/src",
     entry_point_source: "D:/__develop__/FutureOrientedGB/asc/abc/b/src/lib.cpp",
     include_dirs: [],
@@ -408,7 +408,7 @@ flowchart LR;
 2024-10-22 15:49:22.2680657  INFO asc::cli::commands::scan: 90: ScanOptions {
     project: "c",
     project_dir: "D:/__develop__/FutureOrientedGB/asc/abc/c",
-    build_dir: "D:/__develop__/FutureOrientedGB/asc/abc/c/target",
+    target_dir: "D:/__develop__/FutureOrientedGB/asc/abc/c/target",
     source_dir: "D:/__develop__/FutureOrientedGB/asc/abc/c/src",
     entry_point_source: "D:/__develop__/FutureOrientedGB/asc/abc/c/src/lib.cpp",
     include_dirs: [],

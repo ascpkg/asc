@@ -182,16 +182,16 @@ fn group_data(
 
             // prepare install headers's src and dst
             let src = if header.starts_with(&options.source_dir) {
-                util::fs::remove_prefix(header, &options.project_dir, &options.build_dir)
+                util::fs::remove_prefix(header, &options.project_dir, &options.target_dir)
             } else {
                 format!(
                     "${{CMAKE_CURRENT_BINARY_DIR}}/{}",
-                    util::fs::remove_prefix(header, &options.source_dir, &options.build_dir)
+                    util::fs::remove_prefix(header, &options.source_dir, &options.target_dir)
                 )
             };
 
             let dst = if header_locate_dir.starts_with(&options.source_dir) {
-                util::fs::remove_prefix(&header_locate_dir, &options.source_dir, &options.build_dir)
+                util::fs::remove_prefix(&header_locate_dir, &options.source_dir, &options.target_dir)
             } else {
                 String::new()
             };
@@ -201,7 +201,7 @@ fn group_data(
         {
             // group header
             let relative_path: String =
-                util::fs::remove_prefix(header, &options.project_dir, &options.build_dir);
+                util::fs::remove_prefix(header, &options.project_dir, &options.target_dir);
             let dir = std::path::Path::new(&relative_path)
                 .parent()
                 .unwrap()
@@ -219,7 +219,7 @@ fn group_data(
             for src in sources {
                 // group source
                 let relative_path: String =
-                    util::fs::remove_prefix(src, &options.project_dir, &options.build_dir);
+                    util::fs::remove_prefix(src, &options.project_dir, &options.target_dir);
                 let dir = std::path::Path::new(&relative_path)
                     .parent()
                     .unwrap()
