@@ -18,6 +18,7 @@ pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOpt
         .collect();
     rs_args.push(format!("-I{}", options.source_dir));
     rs_args.push(format!("-I{}", options.target_dir));
+    // tracing::info!(source = source);
     // tracing::info!(arguments = rs_args.join(" "));
     let c_args: Vec<*const std::ffi::c_char> = rs_args
         .iter()

@@ -15,13 +15,13 @@ pub struct NewArgs {
     pub lib: bool,
     #[clap(long, default_value_t = false)]
     pub workspace: bool,
-    pub member: Option<Vec<String>>,
+    pub members: Option<Vec<String>>,
 }
 
 impl NewArgs {
     pub fn exec(&self) -> bool {
         if self.name.is_some() {
-            if self.workspace && self.member.is_some() {
+            if self.workspace && self.members.is_some() {
                 return self.new_workspace();
             } else if !self.lib {
                 return self.new_bin(self.name.as_ref().unwrap());
@@ -219,14 +219,14 @@ impl NewArgs {
         let mut args = init::InitArgs::default();
         args.lib = self.lib;
         args.workspace = self.workspace;
-        args.member = self.member.clone();
+        args.members = self.members.clone();
         return args.init_package(name) && util::fs::set_cwd(&cwd);
     }
 
     fn new_workspace(&self) -> bool {
         // validate args
         let name = self.name.as_ref().unwrap();
-        let members = self.member.as_ref().unwrap();
+        let members = self.members.as_ref().unwrap();
         if name.is_empty() || members.is_empty() {
             return false;
         }

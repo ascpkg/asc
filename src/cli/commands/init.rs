@@ -10,12 +10,12 @@ pub struct InitArgs {
     pub lib: bool,
     #[clap(long, default_value_t = false)]
     pub workspace: bool,
-    pub member: Option<Vec<String>>,
+    pub members: Option<Vec<String>>,
 }
 
 impl InitArgs {
     pub fn exec(&self) -> bool {
-        if self.workspace && self.member.is_some() {
+        if self.workspace && self.members.is_some() {
             return self.init_workspace();
         } else if !self.lib {
             return self.init_bin(&self.name());
@@ -69,7 +69,7 @@ impl InitArgs {
         tracing::info!(message = "init workspace", name = util::fs::get_cwd());
 
         // validate args
-        let members = self.member.as_ref().unwrap();
+        let members = self.members.as_ref().unwrap();
         if members.is_empty() {
             tracing::error!(
                 func = "members.is_empty",
