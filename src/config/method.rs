@@ -1,7 +1,7 @@
 use super::path::PROJECT_TARGET_DIR;
 #[allow(unused_imports)]
 use super::{
-    path::PROJECT_BIN_SRC, path::PROJECT_LIB_HDR, path::PROJECT_LIB_SRC, path::PROJECT_SRC_DIR,
+    path::PROJECT_BIN_SRC, path::PROJECT_LIB_HEADER, path::PROJECT_LIB_SRC, path::PROJECT_SRC_DIR,
     path::PROJECT_TOML, DependencyConfig, EntryConfig, PackageConfig, ProjectConfig,
     WorkSpaceConfig,
 };
@@ -129,12 +129,14 @@ impl ProjectConfig {
 
     pub fn is_project_inited(ignore: bool) -> bool {
         if util::fs::is_file_exists(PROJECT_TOML) {
-            tracing::warn!(
-                func = "util::fs::is_file_exists",
-                path = PROJECT_TOML,
-                error_tag = ErrorTag::FileExistsError.as_ref(),
-                message = "skip"
-            );
+            if ignore {
+                tracing::warn!(
+                    func = "util::fs::is_file_exists",
+                    path = PROJECT_TOML,
+                    error_tag = ErrorTag::FileExistsError.as_ref(),
+                    message = "skip"
+                );
+            }
             return true;
         } else {
             if !ignore {

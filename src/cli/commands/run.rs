@@ -10,7 +10,7 @@ pub struct RunArgs {
 
     args: Option<Vec<String>>,
 
-    #[clap(long, default_value = "debug")]
+    #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }
 

@@ -48,7 +48,7 @@ impl NewArgs {
                 config::path::PROJECT_SRC_DIR,
                 config::path::PROJECT_BIN_SRC
             ),
-            template::NEW_BIN_HBS.as_bytes(),
+            template::NEW_BIN_SRC_HBS.as_bytes(),
         )
         .is_ok();
     }
@@ -65,13 +65,13 @@ impl NewArgs {
             // write export.h
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_EXPORT_HBS,
+                template::NEW_LIB_EXPORT_HEADER_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         func = "Handlebars::render_template",
-                        template = template::NEW_LIB_EXPORT_HBS,
+                        template = template::NEW_LIB_EXPORT_HEADER_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );
@@ -103,13 +103,13 @@ impl NewArgs {
             // write lib.hpp
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_HDR_HBS,
+                template::NEW_LIB_HEADER_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         func = "Handlebars::render_template",
-                        template = template::NEW_LIB_HDR_HBS,
+                        template = template::NEW_LIB_HEADER_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );
@@ -121,7 +121,7 @@ impl NewArgs {
                         "{}/{}/{}",
                         name,
                         config::path::PROJECT_SRC_DIR,
-                        config::path::PROJECT_LIB_HDR
+                        config::path::PROJECT_LIB_HEADER
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -141,13 +141,13 @@ impl NewArgs {
             // write lib.cpp
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_MAIN_HBS,
+                template::NEW_LIB_SRC_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         func = "Handlebars::render_template",
-                        template = template::NEW_LIB_MAIN_HBS,
+                        template = template::NEW_LIB_SRC_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );

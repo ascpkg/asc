@@ -40,5 +40,6 @@ pub struct ProjectConfig {
     pub features: Option<BTreeMap<String, BTreeSet<String>>>,
 }
 
+pub mod data;
 pub mod method;
 pub mod path;

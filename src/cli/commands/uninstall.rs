@@ -5,7 +5,7 @@ use crate::{config, util};
 
 #[derive(Args, Debug, Clone)]
 pub struct UninstallArgs {
-    #[clap(long, default_value = "debug")]
+    #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }
 

@@ -18,8 +18,8 @@ pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOpt
         .collect();
     rs_args.push(format!("-I{}", options.source_dir));
     rs_args.push(format!("-I{}", options.target_dir));
-    // tracing::info!(source = source);
-    // tracing::info!(arguments = rs_args.join(" "));
+    // tracing::info!(arguments = rs_args.join(" "), is_dir_exists=util::fs::is_dir_exists(&options.target_dir));
+    // println!("{}", std::fs::read_to_string(source).unwrap());
     let c_args: Vec<*const std::ffi::c_char> = rs_args
         .iter()
         .map(|s| s.as_ptr() as *const std::ffi::c_char)
@@ -41,6 +41,7 @@ pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOpt
                 | clang_sys::CXTranslationUnit_SkipFunctionBodies
                 | clang_sys::CXTranslationUnit_SingleFileParse
                 | clang_sys::CXTranslationUnit_KeepGoing,
+            // | clang_sys::CXTranslationUnit_RetainExcludedConditionalBlocks
         )
     };
     if translation_unit.is_null() {
@@ -111,10 +112,15 @@ extern "C" fn visit_inclusion_directive(
     client_data: clang_sys::CXClientData,
 ) -> clang_sys::CXChildVisitResult {
     if unsafe { clang_sys::clang_getCursorKind(cursor) } == clang_sys::CXCursor_InclusionDirective {
+        // let display_name = unsafe { clang_sys::clang_getCursorDisplayName(cursor) };
+        // let name = cxstring_to_string(display_name);
+
         let include_file = unsafe { clang_sys::clang_getIncludedFile(cursor) };
         if !include_file.is_null() {
             let include_file_name = unsafe { clang_sys::clang_getFileName(include_file) };
             let path = cxstring_to_string(include_file_name).replace(r"\", "/");
+
+            // println!("{name}  // {path}");
 
             let include_paths = unsafe { &mut *(client_data as *mut BTreeSet<String>) };
             include_paths.insert(path);

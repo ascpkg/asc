@@ -5,9 +5,9 @@ use crate::{cmake, config, util};
 
 #[derive(Args, Debug, Clone)]
 pub struct InstallArgs {
-    #[clap(long, default_value = "target/installed")]
+    #[clap(long, default_value = config::path::PROJECT_INSTALL_DIR)]
     pub prefix: String,
-    #[clap(long, default_value = "debug")]
+    #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }
 

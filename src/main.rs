@@ -11,6 +11,7 @@ pub mod cmake;
 pub mod config;
 pub mod errors;
 pub mod graph;
+pub mod types;
 pub mod util;
 
 fn main() {

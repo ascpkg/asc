@@ -22,6 +22,7 @@ pub enum ErrorTag {
     // read write
     ReadFileError,
     WriteFileError,
+    // create
     CreateDirectoryError,
     // remove
     RemoveFileError,

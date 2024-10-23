@@ -1,4 +1,4 @@
-use crate::{cli, config};
+use crate::{cli, config, types::toml::TomlContainer};
 
 pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
     let args = vec![
@@ -23,18 +23,17 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     println!("{}", &stdout);
 
-    let mut installed_files = vec![];
+    let mut data = config::data::InstalledFiles::default();
+    data.prefix = prefix.to_string();
     for line in stdout.split("\n") {
-        installed_files.push(
-            line.replace("-- Installing: ", "")
-                .replace("-- Up-to-date:", "")
-                .trim()
-                .to_string(),
-        );
+        let path = line
+            .replace("-- Installing: ", "")
+            .replace("-- Up-to-date:", "")
+            .trim()
+            .to_string();
+        if !path.is_empty() {
+            data.files.push(path);
+        }
     }
-    std::fs::write(
-        config::path::INSTALL_FILES_PATH,
-        installed_files.join("\n").as_bytes(),
-    )
-    .unwrap()
+    TomlContainer::new(data, config::path::INSTALL_FILES_PATH).dump();
 }

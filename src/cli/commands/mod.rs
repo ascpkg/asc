@@ -52,7 +52,7 @@ pub enum Commands {
 }
 
 #[derive(Clone, Debug, PartialEq, ValueEnum, AsRefStr, FromRepr)]
-#[clap(rename_all = "snake_case")]
+#[clap(rename_all = "PascalCase")]
 pub enum ConfigType {
     Debug = 0,
     Release = 1,

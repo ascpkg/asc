@@ -1,14 +1,14 @@
-pub static NEW_BIN_HBS: &str = r#"#include <iostream>
+pub static NEW_BIN_SRC_HBS: &str = r#"#include <iostream>
 #include "config.h"
 #include "version.h"
 
 
 int main(int argc, char **argv) {
-    std::cout << "Hello, world!" << std::endl;;
+    std::cout << "Hello, world!" << std::endl;
 }
 "#;
 
-pub static NEW_LIB_HDR_HBS: &str = r#"#include "export.h"
+pub static NEW_LIB_HEADER_HBS: &str = r#"#include "export.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +28,7 @@ public:
 
 "#;
 
-pub static NEW_LIB_MAIN_HBS: &str = r#"#include "lib.hpp"
+pub static NEW_LIB_SRC_HBS: &str = r#"#include "lib.hpp"
 #include "config.h"
 #include "version.h"
 
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 }
 "#;
 
-pub static NEW_LIB_EXPORT_HBS: &str = r#"#pragma once
+pub static NEW_LIB_EXPORT_HEADER_HBS: &str = r#"#pragma once
 
 #ifndef BUILD_SHARED_LIBS
     #define {{project_upper}}_API
@@ -66,6 +66,4 @@ pub static NEW_LIB_EXPORT_HBS: &str = r#"#pragma once
         #define {{project_upper}}_API
     #endif
 #endif
-
-
 "#;
