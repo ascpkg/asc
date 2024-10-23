@@ -1,6 +1,6 @@
 # Auto Source Compiler
 - auto scan source dependencies with clang ir
-- auto output mermaid flow chat of source dependencies
+- auto output mermaid flow chart of source dependencies
 - auto output CMakeLists.txt
 - auto generate a build system with cmake
 - auto build with cmake

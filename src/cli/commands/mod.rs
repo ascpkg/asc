@@ -18,6 +18,8 @@ pub mod scan;
 pub use scan::ScanArgs;
 pub mod install;
 pub use install::InstallArgs;
+pub mod uninstall;
+pub use uninstall::UninstallArgs;
 
 use clap::{Parser, Subcommand, ValueEnum};
 
@@ -43,6 +45,7 @@ pub enum Commands {
     Scan(ScanArgs),
     Build(BuildArgs),
     Install(InstallArgs),
+    Uninstall(UninstallArgs),
 
     Run(RunArgs),
     Clean(CleanArgs),

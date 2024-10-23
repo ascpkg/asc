@@ -206,9 +206,9 @@ target_include_directories(
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION {{install_lib_dir}}
+    LIBRARY DESTINATION {{install_lib_dir}}
+    RUNTIME DESTINATION {{install_bin_dir}}
 )
 
 {{#if library}}
@@ -221,14 +221,14 @@ install(FILES "{{header.src}}" DESTINATION include/${PROJECT_NAME}/{{header.dst}
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}-config.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    INSTALL_DESTINATION "share/${PROJECT_NAME}"
+    INSTALL_DESTINATION "{{install_share_dir}}/${PROJECT_NAME}"
 )
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" DESTINATION "share/${PROJECT_NAME}")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" DESTINATION "{{install_share_dir}}/${PROJECT_NAME}")
 
 # install cmake targets
 install(
     EXPORT ${PROJECT_NAME}-targets
-    DESTINATION share/${PROJECT_NAME}
+    DESTINATION {{install_share_dir}}/${PROJECT_NAME}
     NAMESPACE ${PROJECT_NAME}::
 )
 {{/if}}

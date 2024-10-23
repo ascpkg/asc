@@ -61,6 +61,10 @@ fn main() {
         cli::Commands::Install(options) => {
             options.exec();
         }
+        // remove target
+        cli::Commands::Uninstall(options) => {
+            options.exec();
+        }
 
         // clean target
         cli::Commands::Clean(options) => {

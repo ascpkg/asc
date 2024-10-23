@@ -5,7 +5,8 @@ use crate::{cmake, config, util};
 
 #[derive(Args, Debug, Clone)]
 pub struct InstallArgs {
-    pub name: Option<String>,
+    #[clap(long, default_value = "target/installed")]
+    pub prefix: String,
     #[clap(long, default_value = "debug")]
     config: ConfigType,
 }
@@ -27,7 +28,7 @@ impl InstallArgs {
             cmake_config: self.config.as_ref().to_string(),
             ..Default::default()
         };
-        cmake::install::exec(&options);
+        cmake::install::exec(&options, &self.prefix);
 
         return true;
     }

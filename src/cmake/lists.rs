@@ -10,6 +10,7 @@ pub use super::path;
 pub use super::template;
 use crate::clang;
 use crate::cli;
+use crate::config;
 use crate::util;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -35,7 +36,11 @@ struct CMakeListsData {
     build_year: i32,
     build_month: u32,
     build_day: u32,
-    check_cmake_txt: String,
+    user_cmake_txt: String,
+    install_bin_dir: String,
+    install_lib_dir: String,
+    install_include_dir: String,
+    install_share_dir: String,
     executable: bool,
     library: bool,
     shared_library: bool,
@@ -85,8 +90,12 @@ pub fn gen(
     data.build_year = local_date_time.year();
     data.build_month = local_date_time.month();
     data.build_day = local_date_time.day();
-    data.check_cmake_txt =
+    data.user_cmake_txt =
         std::fs::read_to_string(path::USER_CMAKE_PATH).unwrap_or(String::new());
+    data.install_bin_dir = config::path::INSTALL_BIN_DIR.to_string();
+    data.install_lib_dir = config::path::INSTALL_LIB_DIR.to_string();
+    data.install_include_dir = config::path::INSTALL_INCLUDE_DIR.to_string();
+    data.install_share_dir = config::path::INSTALL_SHARE_DIR.to_string();
     data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;
