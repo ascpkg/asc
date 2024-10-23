@@ -25,7 +25,7 @@ impl ProjectConfig {
         if self.workspace.is_none() {
             if self.package.is_none() {
                 tracing::error!(
-                    call = "self.package.is_none",
+                    func = "self.package.is_none",
                     error_tag = ErrorTag::InvalidProjectPackageError.as_ref()
                 );
                 return false;
@@ -50,7 +50,7 @@ impl ProjectConfig {
 
             if !errors.is_empty() {
                 tracing::error!(
-                    call = "!errors.is_empty",
+                    func = "!errors.is_empty",
                     error_tag = ErrorTag::InvalidProjectWorkspaceError.as_ref(),
                     error_str = errors.join(", ") + "conflicts",
                 );
@@ -67,7 +67,7 @@ impl ProjectConfig {
             Ok(text) => Self::loads(&text),
             Err(e) => {
                 tracing::error!(
-                    call = "std::fs::read_to_string",
+                    func = "std::fs::read_to_string",
                     path = path,
                     error_tag = ErrorTag::ReadFileError.as_ref(),
                     error_str = e.to_string(),
@@ -82,7 +82,7 @@ impl ProjectConfig {
             Ok(c) => Some(c),
             Err(e) => {
                 tracing::error!(
-                    call = "toml::from_str",
+                    func = "toml::from_str",
                     error_tag = ErrorTag::TomlDeserializeError.as_ref(),
                     error_str = e.to_string(),
                     message = text,
@@ -102,7 +102,7 @@ impl ProjectConfig {
             Ok(_) => true,
             Err(e) => {
                 tracing::error!(
-                    call = "std::fs::write",
+                    func = "std::fs::write",
                     path = path,
                     error_tag = ErrorTag::WriteFileError.as_ref(),
                     error_str = e.to_string(),
@@ -118,7 +118,7 @@ impl ProjectConfig {
             Ok(text) => text,
             Err(e) => {
                 tracing::error!(
-                    call = "toml::to_string_pretty",
+                    func = "toml::to_string_pretty",
                     error_tag = ErrorTag::TomlSerializeError.as_ref(),
                     error_str = e.to_string(),
                 );
@@ -130,7 +130,7 @@ impl ProjectConfig {
     pub fn is_project_inited(ignore: bool) -> bool {
         if util::fs::is_file_exists(PROJECT_TOML) {
             tracing::warn!(
-                call = "util::fs::is_file_exists",
+                func = "util::fs::is_file_exists",
                 path = PROJECT_TOML,
                 error_tag = ErrorTag::FileExistsError.as_ref(),
                 message = "skip"
@@ -139,7 +139,7 @@ impl ProjectConfig {
         } else {
             if !ignore {
                 tracing::error!(
-                    call = "util::fs::is_file_exists",
+                    func = "util::fs::is_file_exists",
                     path = PROJECT_TOML,
                     error_tag = ErrorTag::FileNotFoundError.as_ref(),
                     message = "please run asc init first"
@@ -164,7 +164,7 @@ impl ProjectConfig {
             return true;
         } else {
             tracing::error!(
-                call = "util::fs::is_file_exists && util::fs::is_dir_exists",
+                func = "util::fs::is_file_exists && util::fs::is_dir_exists",
                 file = cmake::path::CMAKE_LISTS_PATH,
                 dir = PROJECT_TARGET_DIR,
                 error_tag = ErrorTag::PathNotFoundError.as_ref(),

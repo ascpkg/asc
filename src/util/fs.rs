@@ -1,5 +1,7 @@
 use walkdir;
 
+use crate::errors::ErrorTag;
+
 pub fn is_source(ext: &std::ffi::OsStr) -> bool {
     ext == "c" || ext == "cc" || ext == "cpp" || ext == "cxx"
 }
@@ -94,4 +96,40 @@ pub fn is_dir_exists(path: &str) -> bool {
         }
     }
     return false;
+}
+
+pub fn remove_file(path: &str) -> bool {
+    match std::fs::remove_file(path) {
+        Ok(_) => {
+            tracing::info!(func = "std::fs::remove_file", path = path);
+            return true;
+        }
+        Err(e) => {
+            tracing::error!(
+                func = "std::fs::remove_file",
+                path = path,
+                error_tag = ErrorTag::RemoveFileError.as_ref(),
+                error_str = e.to_string()
+            );
+            return false;
+        }
+    }
+}
+
+pub fn remove_dirs(path: &str) -> bool {
+    match std::fs::remove_dir_all(path) {
+        Ok(_) => {
+            tracing::info!(func = "std::fs::remove_dir_all", path = path,);
+            return true;
+        }
+        Err(e) => {
+            tracing::error!(
+                func = "std::fs::remove_dir_all",
+                path = path,
+                error_tag = ErrorTag::RemoveDirectoryError.as_ref(),
+                error_str = e.to_string(),
+            );
+            return false;
+        }
+    }
 }

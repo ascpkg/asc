@@ -98,5 +98,26 @@
             ],
             "cwd": "${workspaceFolder}/abc"
         },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run asc clean",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "clean"
+            ],
+            "cwd": "${workspaceFolder}/test_workspace"
+        },
     ]
 }

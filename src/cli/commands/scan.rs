@@ -61,7 +61,7 @@ impl ScanArgs {
                     project_conf.get_target_name_src(&self.name, self.shared_lib, self.static_lib);
                 if target_name.is_empty() || target_src.is_empty() {
                     tracing::error!(
-                        call = "target_name.is_empty || target_src.is_empty",
+                        func = "target_name.is_empty || target_src.is_empty",
                         error_tag = ErrorTag::InvalidCliArgsError.as_ref()
                     );
                 }
@@ -148,7 +148,7 @@ impl ScanArgs {
                     } else {
                         has_error = true;
                         tracing::error!(
-                            call = "target_name.is_empty || target_src.is_empty",
+                            func = "target_name.is_empty || target_src.is_empty",
                             error_tag = ErrorTag::InvalidCliArgsError.as_ref()
                         );
                     }
@@ -158,7 +158,7 @@ impl ScanArgs {
             util::fs::set_cwd(&cwd);
         }
 
-        cmake::lists::gen_worksapce(
+        cmake::lists::gen_workspace(
             &self.cmake_minimum_version,
             &util::fs::get_cwd_name(),
             &members,

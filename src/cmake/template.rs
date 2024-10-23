@@ -10,7 +10,7 @@ pub static CONFIG_IN_CM_HBS: &str = r#"/* config compiler, os, header, library, 
 #cmakedefine HAVE_O_BINARY 1
 "#;
 
-pub static CHECK_CMAKE_HBS: &str = r#"# check compiler, os, header, library, symbol
+pub static USER_CMAKE_HBS: &str = r#"# check compiler, os, header, library, symbol
 # check headers
 include(CheckIncludeFiles)
 check_include_files("stdlib.h" HAVE_STDLIB_H)

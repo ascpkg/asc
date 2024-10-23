@@ -143,7 +143,7 @@ Options:
   -V, --version      Print version
 ```
 
-# worksapce asc.toml
+# workspace asc.toml
 ```toml
 [workspace]
 members = [
@@ -200,7 +200,7 @@ qt5-base = { version = "5.15.14#2", find = ["Qt5", "COMPONENTS", "Core", "Gui", 
 2024-10-22 15:46:13.8842823  INFO asc::cli::commands::init: 32: init bin
 2024-10-22 15:46:13.884457  INFO asc::cli::commands::init: 42: init package
 > asc.exe scan
-2024-10-22 15:46:17.8208018  WARN asc::config::method: 132: call="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
+2024-10-22 15:46:17.8208018  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:46:17.8216048  INFO asc::cli::commands::scan: 74: scan package
 2024-10-22 15:46:17.8218736  INFO asc::cli::commands::scan: 90: ScanOptions {
     project: "test_c_cpp",
@@ -312,7 +312,7 @@ flowchart LR;
 
 > asc.exe build
 2024-10-22 15:46:28.0284024  INFO asc::cli::commands::build: 15: build
-2024-10-22 15:46:28.0289255  WARN asc::config::method: 132: call="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
+2024-10-22 15:46:28.0289255  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:46:28.0293884  INFO asc::cmake::build: 11: command="cmake" args="--build target --config Debug"
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
@@ -331,7 +331,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
   
 > asc.exe install
 2024-10-22 15:46:34.0671238  INFO asc::cli::commands::install: 15: install
-2024-10-22 15:46:34.0674419  WARN asc::config::method: 132: call="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
+2024-10-22 15:46:34.0674419  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:46:34.0678842  INFO asc::cmake::install: 11: command="cmake" args="--install target --config Debug"
 -- Installing: C:/Program Files (x86)/test_c_cpp/bin/test_c_cpp.exe
 ```
@@ -352,7 +352,7 @@ asc new workspace
 
 > cd abc
 > .asc.exe scan --shared-lib
-2024-10-22 15:49:22.1727416  WARN asc::config::method: 132: call="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
+2024-10-22 15:49:22.1727416  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:49:22.1736892  INFO asc::cli::commands::scan: 115: scan workspace
 2024-10-22 15:49:22.1740476  INFO asc::cli::commands::scan: 74: scan package
 2024-10-22 15:49:22.1743151  INFO asc::cli::commands::scan: 90: ScanOptions {
@@ -460,7 +460,7 @@ CMake Generate step failed.  Build files cannot be regenerated correctly.
 
 > .asc.exe build
 2024-10-22 15:49:37.6684246  INFO asc::cli::commands::build: 15: build
-2024-10-22 15:49:37.6686842  WARN asc::config::method: 132: call="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
+2024-10-22 15:49:37.6686842  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:49:37.6688586  INFO asc::cmake::build: 11: command="cmake" args="--build target --config Debug"
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
@@ -484,7 +484,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
 
 > .asc.exe install
 2024-10-22 15:49:57.4386968  INFO asc::cli::commands::install: 15: install
-2024-10-22 15:49:57.4390542  WARN asc::config::method: 132: call="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
+2024-10-22 15:49:57.4390542  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:49:57.4394497  INFO asc::cmake::install: 11: command="cmake" args="--install target --config Debug"
 -- Installing: C:/Program Files (x86)/abc/lib/a.lib
 -- Installing: C:/Program Files (x86)/abc/bin/a.dll

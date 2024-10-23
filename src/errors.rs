@@ -7,22 +7,32 @@ pub enum ErrorTag {
     // invalid args
     InvalidCliArgsError,
     // invalid data
+    InvalidProjectError,
     InvalidProjectPackageError,
     InvalidProjectWorkspaceError,
     // invalid filesystem
+    // exists
     FileExistsError,
     DirectoryExistsError,
     PathExistsError,
+    // not exists
     FileNotFoundError,
     DirectoryNotFoundError,
     PathNotFoundError,
+    // read write
     ReadFileError,
     WriteFileError,
-    CretaeDirectoryError,
+    CreateDirectoryError,
+    // remove
+    RemoveFileError,
+    RemoveDirectoryError,
     // serialize/seserialize/render error
+    // toml
     TomlSerializeError,
     TomlDeserializeError,
+    // json
     JsonSerializeError,
     JsonDeserializeError,
+    // handlebars
     RenderHandlebarsError,
 }

@@ -70,7 +70,7 @@ impl NewArgs {
             ) {
                 Err(e) => {
                     tracing::error!(
-                        call = "Handlebars::render_template",
+                        func = "Handlebars::render_template",
                         template = template::NEW_LIB_EXPORT_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
@@ -87,7 +87,7 @@ impl NewArgs {
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
-                            call = "std::fs::write",
+                            func = "std::fs::write",
                             path = path,
                             error_tag = ErrorTag::WriteFileError.as_ref(),
                             error_str = e.to_string(),
@@ -108,7 +108,7 @@ impl NewArgs {
             ) {
                 Err(e) => {
                     tracing::error!(
-                        call = "Handlebars::render_template",
+                        func = "Handlebars::render_template",
                         template = template::NEW_LIB_HDR_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
@@ -125,7 +125,7 @@ impl NewArgs {
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
-                            call = "std::fs::write",
+                            func = "std::fs::write",
                             path = path,
                             error_tag = ErrorTag::WriteFileError.as_ref(),
                             error_str = e.to_string(),
@@ -146,7 +146,7 @@ impl NewArgs {
             ) {
                 Err(e) => {
                     tracing::error!(
-                        call = "Handlebars::render_template",
+                        func = "Handlebars::render_template",
                         template = template::NEW_LIB_MAIN_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
@@ -163,7 +163,7 @@ impl NewArgs {
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
-                            call = "std::fs::write",
+                            func = "std::fs::write",
                             path = path,
                             error_tag = ErrorTag::WriteFileError.as_ref(),
                             error_str = e.to_string(),
@@ -184,7 +184,7 @@ impl NewArgs {
         // validate args
         if name.is_empty() {
             tracing::error!(
-                call = "name.is_empty",
+                func = "name.is_empty",
                 error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
             );
             return false;
@@ -193,7 +193,7 @@ impl NewArgs {
         // skip is exists
         if util::fs::is_file_exists(name) {
             tracing::error!(
-                call = "util::fs::is_file_exists",
+                func = "util::fs::is_file_exists",
                 path = name,
                 error_tag = ErrorTag::FileExistsError.as_ref()
             );
@@ -204,9 +204,9 @@ impl NewArgs {
         let src_dir = format!("{name}/{}", config::path::PROJECT_SRC_DIR);
         if let Err(e) = std::fs::create_dir_all(&src_dir) {
             tracing::error!(
-                call = "std::fs::create_dir_all",
+                func = "std::fs::create_dir_all",
                 path = src_dir,
-                error_tag = ErrorTag::CretaeDirectoryError.as_ref(),
+                error_tag = ErrorTag::CreateDirectoryError.as_ref(),
                 error_str = e.to_string()
             );
             return false;
@@ -236,7 +236,7 @@ impl NewArgs {
         // skip is exists
         if util::fs::is_file_exists(name) {
             tracing::error!(
-                call = "util::fs::is_file_exists",
+                func = "util::fs::is_file_exists",
                 path = name,
                 error_tag = ErrorTag::FileExistsError.as_ref()
             );
@@ -247,7 +247,7 @@ impl NewArgs {
 
         if let Err(e) = std::fs::create_dir(name) {
             tracing::info!(
-                call = "std::fs::create_dir",
+                func = "std::fs::create_dir",
                 path = name,
                 error_tag = e.to_string()
             );

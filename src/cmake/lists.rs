@@ -63,11 +63,11 @@ pub fn gen(
         .unwrap();
     }
 
-    // output default check.cmake if not exists
-    if !util::fs::is_file_exists(path::CHECK_CMAKE_PATH) {
+    // output default user.cmake if not exists
+    if !util::fs::is_file_exists(path::USER_CMAKE_PATH) {
         std::fs::write(
-            path::CHECK_CMAKE_PATH,
-            template::CHECK_CMAKE_HBS.as_bytes(),
+            path::USER_CMAKE_PATH,
+            template::USER_CMAKE_HBS.as_bytes(),
         )
         .unwrap()
     }
@@ -86,7 +86,7 @@ pub fn gen(
     data.build_month = local_date_time.month();
     data.build_day = local_date_time.day();
     data.check_cmake_txt =
-        std::fs::read_to_string(path::CHECK_CMAKE_PATH).unwrap_or(String::new());
+        std::fs::read_to_string(path::USER_CMAKE_PATH).unwrap_or(String::new());
     data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;
@@ -118,7 +118,7 @@ pub fn gen(
         let text = reg
             .render_template(template::CMAKE_CONFIG_HBS, &data)
             .unwrap();
-        std::fs::write(path::config_cmake_in_path(options), text.as_bytes()).unwrap();
+        std::fs::write(path::config_cmake_in_path(&options.project), text.as_bytes()).unwrap();
     }
 
     {
@@ -140,7 +140,7 @@ pub fn gen(
     }
 }
 
-pub fn gen_worksapce(cmake_minimum_version: &str, project: &str, members: &Vec<String>) {
+pub fn gen_workspace(cmake_minimum_version: &str, project: &str, members: &Vec<String>) {
     let data = serde_json::json!({
         "cmake_version": cmake_minimum_version,
         "project": project,

@@ -43,7 +43,7 @@ impl InitArgs {
         // validate args
         if name.is_empty() {
             tracing::error!(
-                call = "name.is_empty",
+                func = "name.is_empty",
                 error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
             );
             return false;
@@ -72,7 +72,7 @@ impl InitArgs {
         let members = self.member.as_ref().unwrap();
         if members.is_empty() {
             tracing::error!(
-                call = "members.is_empty",
+                func = "members.is_empty",
                 error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
             );
             return false;
