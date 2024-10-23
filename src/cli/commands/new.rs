@@ -33,7 +33,7 @@ impl NewArgs {
     }
 
     fn new_bin(&self, name: &str) -> bool {
-        tracing::info!("new bin");
+        tracing::info!(message = "new bin", name = name);
 
         // write asc.toml
         if !self.new_package(name) {
@@ -54,7 +54,7 @@ impl NewArgs {
     }
 
     fn new_lib(&self, name: &str) -> bool {
-        tracing::info!("new lib");
+        tracing::info!(message = "new lib", name = name);
 
         // write asc.toml
         if !self.new_package(name) {
@@ -179,7 +179,7 @@ impl NewArgs {
     }
 
     fn new_package(&self, name: &str) -> bool {
-        tracing::info!("new package");
+        tracing::info!(message = "new package", name = name);
 
         // validate args
         if name.is_empty() {
@@ -224,14 +224,14 @@ impl NewArgs {
     }
 
     fn new_workspace(&self) -> bool {
-        tracing::info!("new workspace");
-
         // validate args
         let name = self.name.as_ref().unwrap();
         let members = self.member.as_ref().unwrap();
         if name.is_empty() || members.is_empty() {
             return false;
         }
+
+        tracing::info!(message = "new workspace", name = self.name);
 
         // skip is exists
         if util::fs::is_file_exists(name) {

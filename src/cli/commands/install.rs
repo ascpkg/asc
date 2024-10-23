@@ -1,7 +1,7 @@
 use clap::Args;
 
 use super::{scan::ScanOptions, ConfigType};
-use crate::{cmake, config};
+use crate::{cmake, config, util};
 
 #[derive(Args, Debug, Clone)]
 pub struct InstallArgs {
@@ -12,7 +12,7 @@ pub struct InstallArgs {
 
 impl InstallArgs {
     pub fn exec(&self) -> bool {
-        tracing::info!("install");
+        tracing::info!(message = "install", name = util::fs::get_cwd_name());
 
         if !config::ProjectConfig::is_project_inited(false) {
             return false;

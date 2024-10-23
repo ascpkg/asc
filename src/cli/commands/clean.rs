@@ -9,8 +9,6 @@ pub struct CleanArgs {}
 
 impl CleanArgs {
     pub fn exec(&self) -> bool {
-        tracing::info!("clean");
-
         match config::ProjectConfig::read_project_conf() {
             None => {
                 tracing::error!(error_tag = ErrorTag::InvalidProjectError.as_ref(),);
@@ -44,7 +42,7 @@ impl CleanArgs {
     }
 
     fn clean_workspace(&self, package_conf: &config::ProjectConfig) -> bool {
-        tracing::info!(message = "clean workspace");
+        tracing::info!(message = "clean workspace", name = util::fs::get_cwd_name());
 
         // cmake
         let mut has_error = cmake::path::clean("");

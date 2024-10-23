@@ -8,7 +8,7 @@ pub struct SearchArgs {
 
 impl SearchArgs {
     pub fn exec(&self) -> bool {
-        tracing::info!("search");
+        tracing::info!(message = "search");
 
         false
     }

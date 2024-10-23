@@ -71,7 +71,7 @@ impl ScanArgs {
     }
 
     pub fn scan_package(&self, name: &str, path: &str, is_workspace: bool) -> bool {
-        tracing::info!("scan package");
+        tracing::info!(message = "scan package", name = name);
 
         let cwd = util::fs::get_cwd();
         let options = ScanOptions {
@@ -121,7 +121,7 @@ impl ScanArgs {
     }
 
     pub fn scan_workspace(&self, project_conf: &ProjectConfig) -> bool {
-        tracing::info!("scan workspace");
+        tracing::info!(message = "scan workspace", name = util::fs::get_cwd_name());
 
         let cwd = util::fs::get_cwd();
         let mut has_error = false;

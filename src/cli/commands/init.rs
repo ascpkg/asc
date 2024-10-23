@@ -29,17 +29,17 @@ impl InitArgs {
     }
 
     pub fn init_bin(&self, name: &str) -> bool {
-        tracing::info!("init bin");
+        tracing::info!(message = "init bin", name = name);
         return self.init_package(name);
     }
 
     pub fn init_lib(&self, name: &str) -> bool {
-        tracing::info!("init bin");
+        tracing::info!(message = "init bin", name = name);
         return self.init_package(name);
     }
 
     pub fn init_package(&self, name: &str) -> bool {
-        tracing::info!("init package");
+        tracing::info!(message = "init package", name = name);
         // validate args
         if name.is_empty() {
             tracing::error!(
@@ -66,7 +66,7 @@ impl InitArgs {
     }
 
     pub fn init_workspace(&self) -> bool {
-        tracing::info!("init workspace");
+        tracing::info!(message = "init workspace", name = util::fs::get_cwd());
 
         // validate args
         let members = self.member.as_ref().unwrap();
