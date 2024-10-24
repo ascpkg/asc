@@ -18,13 +18,13 @@ impl RunArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "run");
 
-        if let Some(project_conf) = config::data::ProjectConfig::read_project_conf() {
+        if let Some(project_conf) = config::project::ProjectConfig::read_project_conf() {
             if let Some(workspace) = project_conf.workspace {
                 if let Some(name) = &self.name {
                     return util::shell::run(
                         &format!(
                             "{}/{}/{}/{}",
-                            config::path::PROJECT_TARGET_DIR,
+                            config::project::path::PROJECT_TARGET_DIR,
                             name,
                             self.config.as_ref(),
                             name
@@ -55,7 +55,7 @@ impl RunArgs {
                 return util::shell::run(
                     &format!(
                         "{}/{}/{}",
-                        config::path::PROJECT_TARGET_DIR,
+                        config::project::path::PROJECT_TARGET_DIR,
                         self.config.as_ref(),
                         package.name
                     ),

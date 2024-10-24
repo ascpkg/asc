@@ -1,5 +1,3 @@
-
-
 use crate::{cli, util};
 
 pub fn gen(options: &cli::commands::scan::ScanOptions) {

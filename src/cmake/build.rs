@@ -1,5 +1,3 @@
-
-
 use crate::{cli, util};
 
 pub fn exec(options: &cli::commands::scan::ScanOptions) {

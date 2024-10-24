@@ -9,6 +9,6 @@ impl UninstallArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "uninstall", name = util::fs::get_cwd_name());
 
-        config::path::uninstall()
+        config::project::path::uninstall()
     }
 }

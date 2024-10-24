@@ -17,7 +17,7 @@ pub struct NewArgs {
 
     #[clap(long, default_value_t = false)]
     pub workspace: bool,
-    
+
     pub members: Option<Vec<String>>,
 }
 
@@ -48,8 +48,8 @@ impl NewArgs {
             format!(
                 "{}/{}/{}",
                 name,
-                config::path::PROJECT_SRC_DIR,
-                config::path::PROJECT_BIN_SRC
+                config::project::path::PROJECT_SRC_DIR,
+                config::project::path::PROJECT_BIN_SRC
             ),
             template::NEW_BIN_SRC_HBS.as_bytes(),
         )
@@ -85,8 +85,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::path::PROJECT_SRC_DIR,
-                        config::path::PROJECT_EXPORT_SRC
+                        config::project::path::PROJECT_SRC_DIR,
+                        config::project::path::PROJECT_EXPORT_SRC
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -123,8 +123,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::path::PROJECT_SRC_DIR,
-                        config::path::PROJECT_LIB_HEADER
+                        config::project::path::PROJECT_SRC_DIR,
+                        config::project::path::PROJECT_LIB_HEADER
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -161,8 +161,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::path::PROJECT_SRC_DIR,
-                        config::path::PROJECT_LIB_SRC
+                        config::project::path::PROJECT_SRC_DIR,
+                        config::project::path::PROJECT_LIB_SRC
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -204,7 +204,7 @@ impl NewArgs {
         }
 
         // create src dir
-        let src_dir = format!("{name}/{}", config::path::PROJECT_SRC_DIR);
+        let src_dir = format!("{name}/{}", config::project::path::PROJECT_SRC_DIR);
         if let Err(e) = std::fs::create_dir_all(&src_dir) {
             tracing::error!(
                 func = "std::fs::create_dir_all",
@@ -260,7 +260,7 @@ impl NewArgs {
         // create members
         util::fs::set_cwd(name);
         let mut has_error = false;
-        let mut workspace = config::data::WorkSpaceConfig::default();
+        let mut workspace = config::project::WorkSpaceConfig::default();
         for m in members {
             if workspace.members.insert(m.clone()) {
                 if self.lib {
@@ -274,11 +274,11 @@ impl NewArgs {
                 }
             }
         }
-        let mut project = config::data::ProjectConfig::default();
+        let mut project = config::project::ProjectConfig::default();
         project.workspace = Some(workspace);
 
         // skip if exists
-        if config::data::ProjectConfig::is_project_inited(true) {
+        if config::project::ProjectConfig::is_project_inited(true) {
             return false;
         }
 

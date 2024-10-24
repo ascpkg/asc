@@ -92,10 +92,10 @@ pub fn gen(
     data.build_day = local_date_time.day();
     data.user_cmake_txt =
         std::fs::read_to_string(path::USER_CMAKE_PATH).unwrap_or(String::new());
-    data.install_bin_dir = config::path::INSTALL_BIN_DIR.to_string();
-    data.install_lib_dir = config::path::INSTALL_LIB_DIR.to_string();
-    data.install_include_dir = config::path::INSTALL_INCLUDE_DIR.to_string();
-    data.install_share_dir = config::path::INSTALL_SHARE_DIR.to_string();
+    data.install_bin_dir = config::project::path::INSTALL_BIN_DIR.to_string();
+    data.install_lib_dir = config::project::path::INSTALL_LIB_DIR.to_string();
+    data.install_include_dir = config::project::path::INSTALL_INCLUDE_DIR.to_string();
+    data.install_share_dir = config::project::path::INSTALL_SHARE_DIR.to_string();
     data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;

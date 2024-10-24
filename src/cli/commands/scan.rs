@@ -3,7 +3,7 @@ use clap::Args;
 use crate::clang;
 use crate::cmake;
 use crate::config;
-use crate::config::data::ProjectConfig;
+use crate::config::project::ProjectConfig;
 use crate::errors::ErrorTag;
 use crate::graph;
 use crate::util;
@@ -31,18 +31,18 @@ pub struct ScanArgs {
 
     #[clap(long, default_value_t = false)]
     pub static_lib: bool,
-    
+
     #[clap(long, default_value = "3.20")]
     pub cmake_minimum_version: String,
 }
 
 impl ScanArgs {
     pub fn exec(&self) -> bool {
-        if !config::data::ProjectConfig::is_project_inited(false) {
+        if !config::project::ProjectConfig::is_project_inited(false) {
             return false;
         }
 
-        match config::data::ProjectConfig::read_project_conf() {
+        match config::project::ProjectConfig::read_project_conf() {
             None => false,
             Some(project_conf) => {
                 if project_conf.workspace.is_some() {
@@ -81,16 +81,16 @@ impl ScanArgs {
             project: name.to_string(),
             project_dir: cwd.clone(),
             target_dir: if !is_workspace {
-                format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR)
+                format!("{cwd}/{}", config::project::path::PROJECT_TARGET_DIR)
             } else {
                 format!(
                     "{}/{}/{}",
                     util::fs::get_cwd_parent(),
-                    config::path::PROJECT_TARGET_DIR,
+                    config::project::path::PROJECT_TARGET_DIR,
                     name
                 )
             },
-            source_dir: format!("{cwd}/{}", config::path::PROJECT_SRC_DIR),
+            source_dir: format!("{cwd}/{}", config::project::path::PROJECT_SRC_DIR),
             entry_point_source: format!("{cwd}/{}", path),
             include_dirs: vec![],
             shared_lib: self.shared_lib,
@@ -132,7 +132,7 @@ impl ScanArgs {
         for member in &project_conf.workspace.as_ref().unwrap().members {
             util::fs::set_cwd(member);
 
-            match config::data::ProjectConfig::read_project_conf() {
+            match config::project::ProjectConfig::read_project_conf() {
                 None => {
                     has_error = true;
                 }
@@ -170,7 +170,7 @@ impl ScanArgs {
         tracing::warn!("generate a build system with cmake");
         let options = ScanOptions {
             project_dir: cwd.clone(),
-            target_dir: format!("{cwd}/{}", config::path::PROJECT_TARGET_DIR),
+            target_dir: format!("{cwd}/{}", config::project::path::PROJECT_TARGET_DIR),
             shared_lib: self.shared_lib,
             ..Default::default()
         };
