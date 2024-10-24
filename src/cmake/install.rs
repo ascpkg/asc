@@ -1,4 +1,4 @@
-use crate::{cli, config, types::toml::TomlContainer};
+use crate::{cli, config, types::toml::TomlContainer, util};
 
 pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
     let args = vec![
@@ -9,16 +9,8 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
         "--prefix",
         prefix,
     ];
-
-    tracing::info!(command = "cmake", args = args.join(" "));
-
-    let stdout_pipe = std::process::Stdio::piped();
-    let output = std::process::Command::new("cmake")
-        .args(args)
-        .stdout(stdout_pipe)
-        .stderr(std::process::Stdio::inherit())
-        .output()
-        .unwrap();
+    let output =
+        util::shell::run("cmake", &args, Some(std::process::Stdio::piped()), None).unwrap();
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     println!("{}", &stdout);

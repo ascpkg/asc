@@ -11,10 +11,12 @@ path = "src/tests/hbs.rs"
 name = "test-cli"
 path = "src/tests/cli.rs"
 
+
 [dependencies]
 chrono = { version = "0.4.38" }
 clang-sys = { version = "1.8.1", features = ["clang_10_0"] }
 clap = { version = "4.5.20", features = ["derive"] }
+directories = { version = "5.0.1" }
 handlebars = { version = "6.1.0" }
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.129" }

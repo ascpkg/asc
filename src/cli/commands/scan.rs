@@ -25,10 +25,13 @@ pub struct ScanOptions {
 #[derive(Args, Debug, Clone)]
 pub struct ScanArgs {
     pub name: Option<String>,
+
     #[clap(long, default_value_t = false)]
     pub shared_lib: bool,
+
     #[clap(long, default_value_t = false)]
     pub static_lib: bool,
+    
     #[clap(long, default_value = "3.20")]
     pub cmake_minimum_version: String,
 }

@@ -1,16 +1,16 @@
-use crate::{config, errors::ErrorTag};
+use crate::{config, errors::ErrorTag, util};
 
 use super::ConfigType;
 
 use clap::Args;
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Default, Clone)]
 pub struct RunArgs {
     name: Option<String>,
 
     args: Option<Vec<String>>,
 
-    #[clap(long, default_value = ConfigType::Debug.as_ref())]
+    #[clap(long)]
     config: ConfigType,
 }
 
@@ -21,16 +21,25 @@ impl RunArgs {
         if let Some(project_conf) = config::data::ProjectConfig::read_project_conf() {
             if let Some(workspace) = project_conf.workspace {
                 if let Some(name) = &self.name {
-                    return self.run(
-                        format!(
+                    return util::shell::run(
+                        &format!(
                             "{}/{}/{}/{}",
                             config::path::PROJECT_TARGET_DIR,
                             name,
                             self.config.as_ref(),
                             name
                         ),
-                        self.args.as_ref().unwrap_or(&Vec::<String>::new()),
-                    );
+                        &self
+                            .args
+                            .as_ref()
+                            .unwrap_or(&vec![])
+                            .iter()
+                            .map(|s| s.as_str())
+                            .collect(),
+                        None,
+                        None,
+                    )
+                    .is_ok();
                 } else {
                     tracing::error!(
                         error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
@@ -43,28 +52,27 @@ impl RunArgs {
                 }
             }
             if let Some(package) = project_conf.package {
-                return self.run(
-                    format!(
+                return util::shell::run(
+                    &format!(
                         "{}/{}/{}",
                         config::path::PROJECT_TARGET_DIR,
                         self.config.as_ref(),
                         package.name
                     ),
-                    self.args.as_ref().unwrap_or(&Vec::<String>::new()),
-                );
+                    &self
+                        .args
+                        .as_ref()
+                        .unwrap_or(&vec![])
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect(),
+                    None,
+                    None,
+                )
+                .is_ok();
             }
         }
 
         return false;
-    }
-
-    fn run(&self, command: String, args: &Vec<String>) -> bool {
-        tracing::info!(run = command, args = args.join(" "));
-        return std::process::Command::new(command)
-            .args(args)
-            .stdout(std::process::Stdio::inherit())
-            .stderr(std::process::Stdio::inherit())
-            .output()
-            .is_ok();
     }
 }

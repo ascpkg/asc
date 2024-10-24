@@ -59,8 +59,8 @@ impl ProjectConfig {
         return true;
     }
 
-    pub fn load(path: &str) -> Option<Self> {
-        types::toml::TomlContainer::<Self>::load(path)
+    pub fn load(path: &str, ignore: bool) -> Option<Self> {
+        types::toml::TomlContainer::<Self>::load(path, ignore)
     }
 
     pub fn loads(text: &str) -> Option<Self> {
@@ -101,7 +101,7 @@ impl ProjectConfig {
     }
 
     pub fn read_project_conf() -> Option<Self> {
-        Self::load(PROJECT_TOML)
+        Self::load(PROJECT_TOML, false)
     }
 
     pub fn write_project_conf(&self) -> bool {

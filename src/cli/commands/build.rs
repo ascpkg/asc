@@ -3,10 +3,11 @@ use clap::Args;
 use super::{scan::ScanOptions, ConfigType};
 use crate::{cmake, config, util};
 
-#[derive(Args, Debug, Clone)]
+#[derive(Args, Debug, Default, Clone)]
 pub struct BuildArgs {
     pub name: Option<String>,
-    #[clap(long, default_value = ConfigType::Debug.as_ref())]
+    
+    #[clap(long)]
     config: ConfigType,
 }
 

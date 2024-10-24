@@ -19,16 +19,18 @@ where
         }
     }
 
-    pub fn load(path: &str) -> Option<T> {
+    pub fn load(path: &str, ignore: bool) -> Option<T> {
         match std::fs::read_to_string(path) {
             Ok(text) => Self::loads(&text),
             Err(e) => {
-                tracing::error!(
-                    func = "std::fs::read_to_string",
-                    path = path,
-                    error_tag = ErrorTag::ReadFileError.as_ref(),
-                    error_str = e.to_string(),
-                );
+                if !ignore {
+                    tracing::error!(
+                        func = "std::fs::read_to_string",
+                        path = path,
+                        error_tag = ErrorTag::ReadFileError.as_ref(),
+                        error_str = e.to_string(),
+                    );
+                }
                 None
             }
         }

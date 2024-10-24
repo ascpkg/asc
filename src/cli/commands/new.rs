@@ -11,10 +11,13 @@ use crate::{cli::template, config, util};
 #[derive(Args, Debug, Clone, Default)]
 pub struct NewArgs {
     pub name: Option<String>,
+
     #[clap(long, default_value_t = false)]
     pub lib: bool,
+
     #[clap(long, default_value_t = false)]
     pub workspace: bool,
+    
     pub members: Option<Vec<String>>,
 }
 

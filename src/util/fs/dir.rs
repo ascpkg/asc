@@ -59,6 +59,24 @@ pub fn create_dir(path: &str) -> bool {
     }
 }
 
+pub fn create_dirs(path: &str) -> bool {
+    match std::fs::create_dir_all(path) {
+        Ok(_) => {
+            tracing::info!(func = "std::fs::create_dir_all", path = path,);
+            return true;
+        }
+        Err(e) => {
+            tracing::error!(
+                func = "std::fs::create_dir_all",
+                path = path,
+                error_tag = ErrorTag::CreateDirectoryError.as_ref(),
+                error_str = e.to_string(),
+            );
+            return false;
+        }
+    }
+}
+
 pub fn remove_dirs(path: &str) -> bool {
     match std::fs::remove_dir_all(path) {
         Ok(_) => {

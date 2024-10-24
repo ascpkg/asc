@@ -2,13 +2,15 @@ use clap::Args;
 
 #[derive(Args, Debug, Clone)]
 pub struct RemoveArgs {
-    #[clap(long)]
     name: String,
+    
+    #[clap(long)]
+    recurse: bool,
 }
 
 impl RemoveArgs {
     pub fn exec(&self) -> bool {
-        tracing::info!(message = "remove");
+        tracing::info!(message = "remove", name = self.name);
         
         false
     }

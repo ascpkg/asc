@@ -26,8 +26,8 @@ fn main() {
         .init();
 
     // dispatch commands
-    let cli = cli::Cli::parse();
-    match &cli.command {
+    let mut cli = cli::Cli::parse();
+    match &mut cli.command {
         // new bin/lib/workspace
         cli::Commands::New(options) => {
             options.exec();
@@ -37,6 +37,10 @@ fn main() {
             options.exec();
         }
 
+        // operate vcpkg
+        cli::Commands::Vcpkg(options) => {
+            options.exec();
+        }
         // search lib
         cli::Commands::Search(options) => {
             options.exec();

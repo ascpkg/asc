@@ -20,6 +20,8 @@ pub mod install;
 pub use install::InstallArgs;
 pub mod uninstall;
 pub use uninstall::UninstallArgs;
+pub mod vcpkg;
+pub use vcpkg::VcpkgArgs;
 
 use clap::{Parser, Subcommand, ValueEnum};
 
@@ -38,6 +40,7 @@ pub enum Commands {
     New(NewArgs),
     Init(InitArgs),
 
+    Vcpkg(VcpkgArgs),
     Search(SearchArgs),
     Add(AddArgs),
     Remove(RemoveArgs),
@@ -51,9 +54,21 @@ pub enum Commands {
     Clean(CleanArgs),
 }
 
-#[derive(Clone, Debug, PartialEq, ValueEnum, AsRefStr, FromRepr)]
+#[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]
 #[clap(rename_all = "PascalCase")]
 pub enum ConfigType {
-    Debug = 0,
-    Release = 1,
+    #[default]
+    Debug,
+    Release,
 }
+
+#[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]
+#[clap(rename_all = "snake_case")]
+pub enum VcpkgAction {
+    #[default]
+    Update,
+    Set,
+    Get,
+    Index 
+}
+
