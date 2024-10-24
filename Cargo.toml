@@ -11,6 +11,12 @@ path = "src/tests/hbs.rs"
 name = "test-cli"
 path = "src/tests/cli.rs"
 
+[lib]
+name = "config_file_derive"
+path = "src/config_file_derive/lib.rs"
+proc-macro = true
+
+
 
 [dependencies]
 chrono = { version = "0.4.38" }
@@ -18,10 +24,13 @@ clang-sys = { version = "1.8.1", features = ["clang_10_0"] }
 clap = { version = "4.5.20", features = ["derive"] }
 directories = { version = "5.0.1" }
 handlebars = { version = "6.1.0" }
+proc-macro2 = { version = "1.0.89" }
+quote = { version = "1.0.37" }
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.129" }
 strum = { version = "0.26.3" }
 strum_macros = { version = "0.26.4" }
+syn = { version = "2.0.85" }
 time = { version = "0.3.36", features = ["formatting", "macros"] }
 toml = "0.8.19"
 tracing = { version = "0.1.40" }

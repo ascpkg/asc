@@ -4,8 +4,7 @@ use super::{
     data::{DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig},
     path::{PROJECT_BIN_SRC, PROJECT_LIB_HEADER, PROJECT_LIB_SRC, PROJECT_SRC_DIR, PROJECT_TOML},
 };
-use crate::{types, util};
-use crate::{cmake, errors::ErrorTag};
+use crate::{cmake, errors::ErrorTag, util};
 
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
@@ -59,23 +58,6 @@ impl ProjectConfig {
         return true;
     }
 
-    pub fn load(path: &str, ignore: bool) -> Option<Self> {
-        types::toml::TomlContainer::<Self>::load(path, ignore)
-    }
-
-    pub fn loads(text: &str) -> Option<Self> {
-        types::toml::TomlContainer::<Self>::loads(text)
-    }
-
-    pub fn dump(&self, path: &str) -> bool {
-        types::toml::TomlContainer::new(self.clone(), path).dump()
-    }
-
-    pub fn dumps(&self) -> String {
-        types::toml::TomlContainer::new(self.clone(), "").dumps()
-
-    }
-
     pub fn is_project_inited(ignore: bool) -> bool {
         if util::fs::is_file_exists(PROJECT_TOML) {
             if ignore {
@@ -105,7 +87,7 @@ impl ProjectConfig {
     }
 
     pub fn write_project_conf(&self) -> bool {
-        self.dump(PROJECT_TOML)
+        self.dump_data(PROJECT_TOML, false)
     }
 
     pub fn is_source_scaned() -> bool {
@@ -274,7 +256,7 @@ default = [
 
     #[test]
     fn test_loads() {
-        let data = ProjectConfig::loads(TEXT_CONFLICTS);
+        let data = ProjectConfig::loads(TEXT_CONFLICTS, false);
         assert!(data.is_some());
     }
 
@@ -361,13 +343,13 @@ default = [
             },
         );
 
-        let text = data.dumps();
+        let text = data.dumps(false);
         assert!(text == TEXT_CONFLICTS);
     }
 
     #[test]
     fn test_conflicts_workspace() {
-        let data = ProjectConfig::loads(TEXT_CONFLICTS);
+        let data = ProjectConfig::loads(TEXT_CONFLICTS, false);
         assert_eq!(data.unwrap().validate(), false);
     }
 
@@ -379,13 +361,13 @@ default = [
 
     #[test]
     fn test_valid_workspace() {
-        let data = ProjectConfig::loads(TEXT_WORKSPACE);
+        let data = ProjectConfig::loads(TEXT_WORKSPACE, false);
         assert_eq!(data.unwrap().validate(), true);
     }
 
     #[test]
     fn test_valid_package() {
-        let data = ProjectConfig::loads(TEXT_PACKAGE);
+        let data = ProjectConfig::loads(TEXT_PACKAGE, false);
         assert_eq!(data.unwrap().validate(), true);
     }
 }

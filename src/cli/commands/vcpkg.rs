@@ -2,13 +2,16 @@ use clap::Args;
 
 use directories;
 
+use config_file_derive::ConfigFile;
+
 use serde::{Deserialize, Serialize};
 
-use crate::{errors::ErrorTag, types::toml::TomlContainer, util};
+use crate::{config_file_types, errors::ErrorTag, util};
 
 use super::VcpkgAction;
 
-#[derive(Args, Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Args, Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
+#[config_file_ext("toml")]
 pub struct VcpkgArgs {
     #[serde(skip)]
     action: VcpkgAction,
@@ -23,6 +26,9 @@ pub struct VcpkgArgs {
 
     #[clap(long)]
     directory: Option<String>,
+
+    #[clap(long, default_value = "")]
+    path: String,
 }
 
 impl VcpkgArgs {
@@ -36,9 +42,9 @@ impl VcpkgArgs {
 
         match self.action {
             VcpkgAction::Update => self.update(),
-            VcpkgAction::Set => self.dump(),
+            VcpkgAction::Set => self.set(),
             VcpkgAction::Get => {
-                self.load();
+                self.get();
                 return true;
             }
             VcpkgAction::Index => self.index(),
@@ -46,7 +52,7 @@ impl VcpkgArgs {
     }
 
     fn update(&mut self) -> bool {
-        self.load();
+        self.get();
         if !self.validate() {
             return false;
         }
@@ -88,14 +94,14 @@ impl VcpkgArgs {
         }
     }
 
-    fn dump(&self) -> bool {
+    fn set(&self) -> bool {
         let config_path = self.config_path();
         if config_path.is_empty() {
             return false;
         }
 
         // write conf to file
-        let mut conf = TomlContainer::<VcpkgArgs>::load(&config_path, true).unwrap_or_default();
+        let mut conf = Self::load(&config_path, true).unwrap_or_default();
         if let Some(repo) = &self.repo {
             conf.repo = Some(repo.clone());
         }
@@ -105,20 +111,20 @@ impl VcpkgArgs {
         if let Some(directory) = &self.directory {
             conf.directory = Some(directory.clone());
         }
-        if TomlContainer::new(conf, &config_path).dump() {
+        if Self::from(conf, &config_path).dump(false) {
             return true;
         }
 
         return false;
     }
 
-    fn load(&mut self) {
+    fn get(&mut self) {
         let config_path = self.config_path();
         if config_path.is_empty() {
             return;
         }
 
-        match TomlContainer::<VcpkgArgs>::load(&config_path, false) {
+        match Self::load(&config_path, false) {
             None => {}
             Some(conf) => {
                 // read conf from file

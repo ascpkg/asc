@@ -13,7 +13,7 @@ use crate::cli;
 use crate::config;
 use crate::util;
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Deserialize, Serialize,)]
 struct SourcesGroup {
     dir: String,
     original_dir: String,
@@ -21,13 +21,13 @@ struct SourcesGroup {
     files: Vec<String>,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Deserialize, Serialize,)]
 struct InstallHeader {
     src: String,
     dst: String,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Deserialize, Serialize,)]
 struct CMakeListsData {
     cmake_version: String,
     is_workspace: bool,

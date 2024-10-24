@@ -1,5 +1,5 @@
 use super::data::InstalledFiles;
-use crate::{types::toml::TomlContainer, util};
+use crate::util;
 
 pub static PROJECT_TOML: &str = "asc.toml";
 pub static PROJECT_EDITION: &str = "2024";
@@ -19,7 +19,7 @@ pub static PROJECT_EXPORT_SRC: &str = "export.h";
 pub fn clean() -> bool {
     if util::fs::is_dir_exists(PROJECT_TARGET_DIR) {
         let mut temp = None;
-        if let Some(data) = TomlContainer::<InstalledFiles>::load(INSTALL_FILES_PATH, false) {
+        if let Some(data) = InstalledFiles::load(INSTALL_FILES_PATH, false) {
             if data.prefix != PROJECT_INSTALL_DIR {
                 temp = Some(data);
             }
@@ -29,7 +29,7 @@ pub fn clean() -> bool {
 
         if let Some(data) = temp {
             if util::fs::create_dir(PROJECT_TARGET_DIR) {
-                TomlContainer::new(data, INSTALL_FILES_PATH).dump();
+                InstalledFiles::from(data, INSTALL_FILES_PATH).dump(false);
             }
         }
 
@@ -41,7 +41,7 @@ pub fn clean() -> bool {
 pub fn uninstall() -> bool {
     let mut has_error = false;
 
-    if let Some(data) = TomlContainer::<InstalledFiles>::load(INSTALL_FILES_PATH, false) {
+    if let Some(data) = InstalledFiles::load(INSTALL_FILES_PATH, false) {
         let mut dir_paths = std::collections::HashSet::new();
 
         for path in &data.files {

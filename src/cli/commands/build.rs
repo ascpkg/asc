@@ -7,7 +7,7 @@ use crate::{cmake, config, util};
 pub struct BuildArgs {
     pub name: Option<String>,
     
-    #[clap(long)]
+    #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }
 

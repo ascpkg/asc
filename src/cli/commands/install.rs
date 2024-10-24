@@ -8,7 +8,7 @@ pub struct InstallArgs {
     #[clap(long, default_value = config::project::path::PROJECT_INSTALL_DIR)]
     pub prefix: String,
 
-    #[clap(long)]
+    #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }
 
