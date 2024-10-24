@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use config_file_derive::ConfigFile;
+use config_file_derives::ConfigFile;
 
 use crate::config_file_types;
 

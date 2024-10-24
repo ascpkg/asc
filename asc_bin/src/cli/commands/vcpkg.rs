@@ -2,7 +2,7 @@ use clap::Args;
 
 use directories;
 
-use config_file_derive::ConfigFile;
+use config_file_derives::ConfigFile;
 
 use serde::{Deserialize, Serialize};
 
