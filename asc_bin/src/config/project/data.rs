@@ -22,7 +22,9 @@ pub struct EntryConfig {
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct DependencyConfig {
     pub version: String,
-    pub features: Option<BTreeSet<String>>,
+    pub find_pkg: BTreeSet<String>,
+    pub link_lib: BTreeSet<String>,
+    pub features: BTreeSet<String>,
 }
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
@@ -41,8 +43,8 @@ pub struct ProjectConfig {
     pub bins: Option<BTreeSet<EntryConfig>>,
     #[serde(rename = "lib")]
     pub libs: Option<BTreeSet<EntryConfig>>,
-    pub dependencies: Option<BTreeMap<String, DependencyConfig>>,
-    pub features: Option<BTreeMap<String, BTreeSet<String>>>,
+    pub dependencies: BTreeMap<String, DependencyConfig>,
+    pub features: BTreeMap<String, BTreeSet<String>>,
     pub path: String,
 }
 

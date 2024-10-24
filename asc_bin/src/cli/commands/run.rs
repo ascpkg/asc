@@ -43,11 +43,7 @@ impl RunArgs {
                 } else {
                     tracing::error!(
                         error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
-                        members = workspace
-                            .members
-                            .into_iter()
-                            .collect::<Vec<String>>()
-                            .join(", ")
+                        members = workspace.get_members()
                     );
                 }
             }

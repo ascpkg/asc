@@ -37,10 +37,10 @@ impl ProjectConfig {
             if self.libs.is_some() {
                 errors.push("libs");
             }
-            if self.dependencies.is_some() {
+            if !self.dependencies.is_empty() {
                 errors.push("dependencies");
             }
-            if self.features.is_some() {
+            if !self.features.is_empty() {
                 errors.push("features");
             }
 
@@ -177,6 +177,16 @@ impl ProjectConfig {
     }
 }
 
+impl WorkSpaceConfig {
+    pub fn get_members(&self) -> String {
+        self.members
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>()
+            .join(", ")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,36 +320,40 @@ default = [
             ]
             .into()
         });
-        data.features = Some(features);
+        data.features = features;
 
         let mut dependencies = BTreeMap::new();
         dependencies.insert(
             String::from("chrono"),
             DependencyConfig {
                 version: String::from("0.4.38"),
-                features: None,
+                find_pkg: BTreeSet::new(),
+                link_lib: BTreeSet::new(),
+                features: BTreeSet::new(),
             },
         );
         dependencies.insert(
             String::from("clang-sys"),
             DependencyConfig {
                 version: String::from("1.8.1"),
-                features: Some([String::from("derive")].into()),
+                find_pkg: BTreeSet::new(),
+                link_lib: BTreeSet::new(),
+                features: [String::from("derive")].into(),
             },
         );
         dependencies.insert(
             String::from("tracing-subscriber"),
             DependencyConfig {
                 version: String::from("clang_10_0"),
-                features: Some(
-                    [
-                        String::from("env-filter"),
-                        String::from("time"),
-                        String::from("local-time"),
-                        String::from("json"),
-                    ]
-                    .into(),
-                ),
+                find_pkg: BTreeSet::new(),
+                link_lib: BTreeSet::new(),
+                features: [
+                    String::from("env-filter"),
+                    String::from("time"),
+                    String::from("local-time"),
+                    String::from("json"),
+                ]
+                .into(),
             },
         );
 
