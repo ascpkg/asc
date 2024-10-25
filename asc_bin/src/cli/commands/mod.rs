@@ -46,11 +46,12 @@ pub enum Commands {
 
     Scan(ScanArgs),
     Build(BuildArgs),
-    Install(InstallArgs),
-    Uninstall(UninstallArgs),
 
     Run(RunArgs),
     Clean(CleanArgs),
+    
+    Install(InstallArgs),
+    Uninstall(UninstallArgs),
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]

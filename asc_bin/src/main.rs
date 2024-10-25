@@ -12,6 +12,7 @@ pub mod config;
 pub mod errors;
 pub mod graph;
 pub mod util;
+pub mod vcpkg;
 
 fn main() {
     // init stdout tracing log
@@ -61,21 +62,22 @@ fn main() {
         cli::Commands::Build(options) => {
             options.exec();
         }
+        
+        // run target
+        cli::Commands::Run(options) => {
+            options.exec();
+        }
+        // clean target
+        cli::Commands::Clean(options) => {
+            options.exec();
+        }
+
         // install target
         cli::Commands::Install(options) => {
             options.exec();
         }
         // remove target
         cli::Commands::Uninstall(options) => {
-            options.exec();
-        }
-
-        // clean target
-        cli::Commands::Clean(options) => {
-            options.exec();
-        }
-        // run target
-        cli::Commands::Run(options) => {
             options.exec();
         }
     }
