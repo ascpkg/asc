@@ -49,7 +49,7 @@ pub enum Commands {
 
     Run(RunArgs),
     Clean(CleanArgs),
-    
+
     Install(InstallArgs),
     Uninstall(UninstallArgs),
 }

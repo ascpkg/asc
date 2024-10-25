@@ -62,7 +62,7 @@ fn main() {
         cli::Commands::Build(options) => {
             options.exec();
         }
-        
+
         // run target
         cli::Commands::Run(options) => {
             options.exec();

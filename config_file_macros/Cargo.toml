@@ -1,6 +1,6 @@
 [package]
 name = "config_file_macros"
-version = "2024.10.19"
+version = "2024.10.25"
 edition = "2021"
 
 
