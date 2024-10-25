@@ -1,8 +1,16 @@
-pub mod add;
 pub mod config;
 pub mod index;
-pub mod remove;
 pub mod search;
 pub mod update;
 
-pub struct VcpkgManager {}
+use crate::cli::commands::vcpkg::VcpkgArgs;
+
+pub struct VcpkgManager {
+    args: VcpkgArgs,
+}
+
+impl VcpkgManager {
+    pub fn new(args: VcpkgArgs) -> Self {
+        Self { args: args }
+    }
+}

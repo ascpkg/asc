@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::vcpkg;
+use crate::dependency;
 
 #[derive(Args, Debug, Clone)]
 pub struct RemoveArgs {
@@ -17,6 +17,6 @@ impl RemoveArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "remove", dependency = self.dependency);
 
-        return vcpkg::remove::dependency_from_config_file(self);
+        return dependency::remove::dependency_from_config_file(self);
     }
 }

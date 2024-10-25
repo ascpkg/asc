@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::vcpkg;
+use crate::dependency;
 
 #[derive(Args, Debug, Clone)]
 pub struct AddArgs {
@@ -26,6 +26,6 @@ impl AddArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "add", dependency = self.dependency);
 
-        return vcpkg::add::dependency_to_config_file(self);
+        return dependency::add::dependency_to_config_file(self);
     }
 }
