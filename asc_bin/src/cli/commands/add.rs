@@ -6,27 +6,27 @@ use crate::{config, errors::ErrorTag, util};
 
 #[derive(Args, Debug, Clone)]
 pub struct AddArgs {
-    name: String,
+    dependency: String,
 
     #[clap(long)]
-    member: Option<String>,
+    package: Option<String>,
 
-    #[clap(long)]
-    ver: String,
+    #[clap(long, default_value = "")]
+    version: String,
 
-    #[clap(long)]
-    pub find_pkg: Vec<String>,
+    #[clap(long, help = "--find-package=a --find-package=b")]
+    pub find_package: Vec<String>,
 
-    #[clap(long)]
-    pub link_lib: Vec<String>,
+    #[clap(long, help = "--find-library=c --find-library=d")]
+    pub link_library: Vec<String>,
 
-    #[clap(long)]
-    features: Vec<String>,
+    #[clap(long, help = "--feature=a --feature=b")]
+    feature: Vec<String>,
 }
 
 impl AddArgs {
     pub fn exec(&self) -> bool {
-        tracing::info!(message = "add", name = self.name);
+        tracing::info!(message = "add", dependency = self.dependency);
 
         match config::project::ProjectConfig::read_project_conf() {
             None => {
@@ -36,11 +36,11 @@ impl AddArgs {
                 None => {
                     return self.add_for_pakcage(&mut project_conf);
                 }
-                Some(workspace) => match &self.member {
+                Some(workspace) => match &self.package {
                     None => {
                         tracing::error!(
                             error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
-                            members = workspace.get_members()
+                            packages = workspace.get_members()
                         );
                         return false;
                     }
@@ -48,7 +48,7 @@ impl AddArgs {
                         if !workspace.members.contains(member) {
                             tracing::error!(
                                 error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
-                                members = workspace.get_members()
+                                packages = workspace.get_members()
                             );
                             return false;
                         } else {
@@ -68,25 +68,25 @@ impl AddArgs {
     }
 
     fn add_for_pakcage(&self, project_conf: &mut config::project::ProjectConfig) -> bool {
-        if self.name.is_empty() {
+        if self.dependency.is_empty() {
             return false;
         } else {
             project_conf.dependencies.insert(
-                self.name.clone(),
+                self.dependency.clone(),
                 config::project::DependencyConfig {
-                    version: self.ver.clone(),
-                    find_pkg: self
-                        .find_pkg
+                    version: self.version.clone(),
+                    find_packages: self
+                        .find_package
                         .iter()
                         .map(|s| s.clone())
                         .collect::<BTreeSet<String>>(),
-                    link_lib: self
-                        .link_lib
+                    link_libraries: self
+                        .link_library
                         .iter()
                         .map(|s| s.clone())
                         .collect::<BTreeSet<String>>(),
                     features: self
-                        .features
+                        .feature
                         .iter()
                         .map(|s| s.clone())
                         .collect::<BTreeSet<String>>(),

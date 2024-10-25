@@ -6,7 +6,7 @@ use crate::{cmake, config, util};
 #[derive(Args, Debug, Default, Clone)]
 pub struct BuildArgs {
     pub name: Option<String>,
-    
+
     #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }

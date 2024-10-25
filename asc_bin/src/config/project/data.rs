@@ -22,8 +22,8 @@ pub struct EntryConfig {
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct DependencyConfig {
     pub version: String,
-    pub find_pkg: BTreeSet<String>,
-    pub link_lib: BTreeSet<String>,
+    pub find_packages: BTreeSet<String>,
+    pub link_libraries: BTreeSet<String>,
     pub features: BTreeSet<String>,
 }
 

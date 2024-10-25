@@ -28,8 +28,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use strum_macros::{AsRefStr, FromRepr};
 
 #[derive(Parser)]
-#[command(version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(version)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -69,6 +68,5 @@ pub enum VcpkgAction {
     Update,
     Set,
     Get,
-    Index 
+    Index,
 }
-

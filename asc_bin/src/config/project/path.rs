@@ -18,18 +18,17 @@ pub static PROJECT_EXPORT_SRC: &str = "export.h";
 
 pub fn clean() -> bool {
     if util::fs::is_dir_exists(PROJECT_TARGET_DIR) {
-        let mut temp = None;
+        let mut config = None;
         if let Some(data) = InstalledFiles::load(INSTALL_FILES_PATH, false) {
             if data.prefix != PROJECT_INSTALL_DIR {
-                temp = Some(data);
+                config = Some(data);
             }
         }
 
         let result = util::fs::remove_dirs(PROJECT_TARGET_DIR);
 
-        if let Some(mut data) = temp {
+        if let Some(data) = config {
             if util::fs::create_dir(PROJECT_TARGET_DIR) {
-                data.path = INSTALL_FILES_PATH.to_string();
                 data.dump(false);
             }
         }

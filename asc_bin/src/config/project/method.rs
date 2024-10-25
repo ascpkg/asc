@@ -87,7 +87,9 @@ impl ProjectConfig {
     }
 
     pub fn write_project_conf(&mut self) -> bool {
-        self.path = PROJECT_TOML.to_string();
+        if self.path.is_empty() {
+            self.path = PROJECT_TOML.to_string();
+        }
         self.dump(false)
     }
 
@@ -328,8 +330,8 @@ default = [
             String::from("chrono"),
             DependencyConfig {
                 version: String::from("0.4.38"),
-                find_pkg: BTreeSet::new(),
-                link_lib: BTreeSet::new(),
+                find_packages: BTreeSet::new(),
+                link_libraries: BTreeSet::new(),
                 features: BTreeSet::new(),
             },
         );
@@ -337,8 +339,8 @@ default = [
             String::from("clang-sys"),
             DependencyConfig {
                 version: String::from("1.8.1"),
-                find_pkg: BTreeSet::new(),
-                link_lib: BTreeSet::new(),
+                find_packages: BTreeSet::new(),
+                link_libraries: BTreeSet::new(),
                 features: [String::from("derive")].into(),
             },
         );
@@ -346,8 +348,8 @@ default = [
             String::from("tracing-subscriber"),
             DependencyConfig {
                 version: String::from("clang_10_0"),
-                find_pkg: BTreeSet::new(),
-                link_lib: BTreeSet::new(),
+                find_packages: BTreeSet::new(),
+                link_libraries: BTreeSet::new(),
                 features: [
                     String::from("env-filter"),
                     String::from("time"),

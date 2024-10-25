@@ -46,7 +46,13 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
         impl #name {
             // read from file
             pub fn load(path: &str, ignore_error: bool) -> Option<Self> {
-                #wrapper_type::<Self>::load(path, ignore_error)
+                match #wrapper_type::<Self>::load(path, ignore_error) {
+                    None => None,
+                    Some(mut c) => {
+                        c.path = path.to_string();
+                        Some(c)
+                    }
+                }
             }
 
             // read from str

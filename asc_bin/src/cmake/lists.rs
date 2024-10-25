@@ -13,7 +13,7 @@ use crate::cli;
 use crate::config;
 use crate::util;
 
-#[derive(Default, Debug, Deserialize, Serialize,)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 struct SourcesGroup {
     dir: String,
     original_dir: String,
@@ -21,13 +21,13 @@ struct SourcesGroup {
     files: Vec<String>,
 }
 
-#[derive(Default, Debug, Deserialize, Serialize,)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 struct InstallHeader {
     src: String,
     dst: String,
 }
 
-#[derive(Default, Debug, Deserialize, Serialize,)]
+#[derive(Default, Debug, Deserialize, Serialize)]
 struct CMakeListsData {
     cmake_version: String,
     is_workspace: bool,
@@ -70,11 +70,7 @@ pub fn gen(
 
     // output default user.cmake if not exists
     if !util::fs::is_file_exists(path::USER_CMAKE_PATH) {
-        std::fs::write(
-            path::USER_CMAKE_PATH,
-            template::USER_CMAKE_HBS.as_bytes(),
-        )
-        .unwrap()
+        std::fs::write(path::USER_CMAKE_PATH, template::USER_CMAKE_HBS.as_bytes()).unwrap()
     }
 
     // group data
@@ -90,8 +86,7 @@ pub fn gen(
     data.build_year = local_date_time.year();
     data.build_month = local_date_time.month();
     data.build_day = local_date_time.day();
-    data.user_cmake_txt =
-        std::fs::read_to_string(path::USER_CMAKE_PATH).unwrap_or(String::new());
+    data.user_cmake_txt = std::fs::read_to_string(path::USER_CMAKE_PATH).unwrap_or(String::new());
     data.install_bin_dir = config::project::path::INSTALL_BIN_DIR.to_string();
     data.install_lib_dir = config::project::path::INSTALL_LIB_DIR.to_string();
     data.install_include_dir = config::project::path::INSTALL_INCLUDE_DIR.to_string();
@@ -127,7 +122,11 @@ pub fn gen(
         let text = reg
             .render_template(template::CMAKE_CONFIG_HBS, &data)
             .unwrap();
-        std::fs::write(path::config_cmake_in_path(&options.project), text.as_bytes()).unwrap();
+        std::fs::write(
+            path::config_cmake_in_path(&options.project),
+            text.as_bytes(),
+        )
+        .unwrap();
     }
 
     {
@@ -161,11 +160,7 @@ pub fn gen_workspace(cmake_minimum_version: &str, project: &str, members: &Vec<S
     let text = reg
         .render_template(template::CMKAE_WORKSPACE_HBS, &data)
         .unwrap();
-    std::fs::write(
-        path::CMAKE_LISTS_PATH,
-        text.as_bytes(),
-    )
-    .unwrap();
+    std::fs::write(path::CMAKE_LISTS_PATH, text.as_bytes()).unwrap();
 }
 
 fn group_data(
@@ -200,7 +195,11 @@ fn group_data(
             };
 
             let dst = if header_locate_dir.starts_with(&options.source_dir) {
-                util::fs::remove_prefix(&header_locate_dir, &options.source_dir, &options.target_dir)
+                util::fs::remove_prefix(
+                    &header_locate_dir,
+                    &options.source_dir,
+                    &options.target_dir,
+                )
             } else {
                 String::new()
             };
