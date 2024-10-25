@@ -27,9 +27,10 @@ pub fn clean() -> bool {
 
         let result = util::fs::remove_dirs(PROJECT_TARGET_DIR);
 
-        if let Some(data) = temp {
+        if let Some(mut data) = temp {
             if util::fs::create_dir(PROJECT_TARGET_DIR) {
-                InstalledFiles::from(data, INSTALL_FILES_PATH).dump(false);
+                data.path = INSTALL_FILES_PATH.to_string();
+                data.dump(false);
             }
         }
 

@@ -58,9 +58,9 @@ impl ProjectConfig {
         return true;
     }
 
-    pub fn is_project_inited(ignore: bool) -> bool {
+    pub fn is_project_inited(ignore_error: bool) -> bool {
         if util::fs::is_file_exists(PROJECT_TOML) {
-            if ignore {
+            if ignore_error {
                 tracing::warn!(
                     func = "util::fs::is_file_exists",
                     path = PROJECT_TOML,
@@ -70,7 +70,7 @@ impl ProjectConfig {
             }
             return true;
         } else {
-            if !ignore {
+            if !ignore_error {
                 tracing::error!(
                     func = "util::fs::is_file_exists",
                     path = PROJECT_TOML,
@@ -86,8 +86,9 @@ impl ProjectConfig {
         Self::load(PROJECT_TOML, false)
     }
 
-    pub fn write_project_conf(&self) -> bool {
-        self.dump_data(PROJECT_TOML, false)
+    pub fn write_project_conf(&mut self) -> bool {
+        self.path = PROJECT_TOML.to_string();
+        self.dump(false)
     }
 
     pub fn is_source_scaned() -> bool {

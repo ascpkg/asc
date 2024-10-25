@@ -44,28 +44,24 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
 
     Ok(quote! {
         impl #name {
-            pub fn from(data: Self, path: &str) -> #wrapper_type<Self> {
-                #wrapper_type::<Self>::new(data, path)
+            // read from file
+            pub fn load(path: &str, ignore_error: bool) -> Option<Self> {
+                #wrapper_type::<Self>::load(path, ignore_error)
             }
 
-            pub fn load(path: &str, ignore: bool) -> Option<Self> {
-                #wrapper_type::<Self>::load(path, ignore)
+            // read from str
+            pub fn loads(text: &str, ignore_error: bool) -> Option<Self> {
+                #wrapper_type::<Self>::loads(text, ignore_error)
             }
 
-            pub fn loads(text: &str, ignore: bool) -> Option<Self> {
-                #wrapper_type::<Self>::loads(text, ignore)
+            // write to file
+            pub fn dump(&self, ignore_error: bool) -> bool {
+                #wrapper_type::<Self>::dump_data(self, &self.path, ignore_error)
             }
 
-            pub fn dump(&self, ignore: bool) -> bool {
-                #wrapper_type::<Self>::dump_data(self, &self.path, ignore)
-            }
-
-            pub fn dump_data(&self, path: &str, ignore: bool) -> bool {
-                #wrapper_type::<Self>::dump_data(self, path, ignore)
-            }
-
-            pub fn dumps(&self, ignore: bool) -> String {
-                #wrapper_type::<Self>::dumps_data(self, ignore)
+            // write to str
+            pub fn dumps(&self, ignore_error: bool) -> String {
+                #wrapper_type::<Self>::dumps_data(self, ignore_error)
             }
         }
     })

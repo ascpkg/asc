@@ -102,6 +102,7 @@ impl VcpkgArgs {
 
         // write conf to file
         let mut conf = Self::load(&config_path, true).unwrap_or_default();
+        conf.path = config_path;
         if let Some(repo) = &self.repo {
             conf.repo = Some(repo.clone());
         }
@@ -111,11 +112,8 @@ impl VcpkgArgs {
         if let Some(directory) = &self.directory {
             conf.directory = Some(directory.clone());
         }
-        if Self::from(conf, &config_path).dump(false) {
-            return true;
-        }
 
-        return false;
+        return conf.dump(false);
     }
 
     fn get(&mut self) {
