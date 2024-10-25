@@ -36,8 +36,8 @@ impl RunArgs {
                             .iter()
                             .map(|s| s.as_str())
                             .collect(),
-                        None,
-                        None,
+                        false,
+                        false,
                     )
                     .is_ok();
                 } else {
@@ -62,8 +62,8 @@ impl RunArgs {
                         .iter()
                         .map(|s| s.as_str())
                         .collect(),
-                    None,
-                    None,
+                        false,
+                        false,
                 )
                 .is_ok();
             }
