@@ -32,8 +32,8 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
         .unwrap_or_else(|| "toml".to_string());
 
     let wrapper_type = match config_file_ext.as_str() {
-        "json" => quote! { config_file_types::json::JsonWrapper },
-        "toml" => quote! { config_file_types::toml::Wrapper },
+        "json" => quote! { config::types::json::JsonWrapper },
+        "toml" => quote! { config::types::toml::Wrapper },
         _ => {
             return Err(Error::new_spanned(
                 input,

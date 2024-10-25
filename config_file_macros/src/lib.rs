@@ -5,13 +5,6 @@ macro_rules! generate_wrapper_methods {
         where
             T: DeserializeOwned + Serialize,
         {
-            pub fn new(data: T, path: &str) -> Self {
-                Self {
-                    inner: data,
-                    path: path.to_string(),
-                }
-            }
-
             // read from file
             pub fn load(path: &str, ignore_error: bool) -> Option<T> {
                 match std::fs::read_to_string(path) {

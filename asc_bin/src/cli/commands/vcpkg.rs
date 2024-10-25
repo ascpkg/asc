@@ -6,7 +6,7 @@ use config_file_derives::ConfigFile;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{config_file_types, errors::ErrorTag, util};
+use crate::{config, errors::ErrorTag, util};
 
 use super::VcpkgAction;
 

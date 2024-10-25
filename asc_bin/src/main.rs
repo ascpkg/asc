@@ -9,7 +9,6 @@ pub mod clang;
 pub mod cli;
 pub mod cmake;
 pub mod config;
-pub mod config_file_types;
 pub mod errors;
 pub mod graph;
 pub mod util;
