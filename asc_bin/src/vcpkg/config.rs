@@ -7,7 +7,7 @@ impl VcpkgManager {
         let config_path = config::dir::ConfigDir::vcpkg();
 
         // write conf to file
-        let mut conf = VcpkgArgs::load(&config_path, true).unwrap_or_default();
+        let mut conf = VcpkgArgs::load(&config_path, true).unwrap();
         if let Some(repo) = &self.args.repo {
             conf.repo = Some(repo.clone());
         }

@@ -9,7 +9,7 @@ impl DataDir {
         if let Some(dir) = directories::ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION) {
             let data_dir = dir.data_dir().to_str().unwrap().replace(r"\", "/");
             if !util::fs::is_dir_exists(&data_dir) {
-                if !util::fs::create_dir(&data_dir) {
+                if !util::fs::create_dirs(&data_dir) {
                     return String::new();
                 }
             }
@@ -22,20 +22,21 @@ impl DataDir {
         build(&Self::prefix(), "vcpkg")
     }
 
-    pub fn vcpkg_search_prefix_index_file() -> String {
-        build(&Self::prefix(), "vcpkg.index/search_prefix.json")
+    pub fn vcpkg_search_index_json() -> String {
+        build(&Self::prefix(), "vcpkg.index/search_index.json")
     }
 
-    pub fn vcpkg_search_postfix_index_file() -> String {
-        build(&Self::prefix(), "vcpkg.index/search_postfix.json")
-    }
-
-    pub fn vcpkg_search_baseline_file() -> String {
+    pub fn vcpkg_search_baseline_json() -> String {
         build(&Self::prefix(), "vcpkg.index/baseline.json")
     }
 
-    pub fn vcpkg_port_versions_file() -> String {
-        build(&Self::prefix(), "vcpkg.index/port_versions.dat")
+    pub fn vcpkg_search_version_index_json() -> String {
+        // port name <-> index
+        // commit hash <-> index
+        // commit date time <-> index
+        // port version <-> index
+        // port name index -> (port version index, commit hash index)
+        build(&Self::prefix(), "vcpkg.index/version_index.json")
     }
 
     pub fn vcpkg_check_point_file() -> String {
