@@ -4,7 +4,7 @@ use super::VcpkgManager;
 
 impl VcpkgManager {
     pub fn update(&mut self) -> bool {
-        self.get();
+        self.config_get(true);
         if !self.validate() {
             return false;
         }

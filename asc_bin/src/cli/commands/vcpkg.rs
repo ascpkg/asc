@@ -26,6 +26,7 @@ pub struct VcpkgArgs {
     pub directory: Option<String>,
 
     #[clap(long, default_value = "")]
+    #[serde(skip)]
     path: String,
 }
 
@@ -41,9 +42,9 @@ impl VcpkgArgs {
         let mut manager = VcpkgManager::new(self.clone());
         match self.action {
             VcpkgAction::Update => manager.update(),
-            VcpkgAction::Set => manager.set(),
+            VcpkgAction::Set => manager.config_set(),
             VcpkgAction::Get => {
-                manager.get();
+                manager.config_get(false);
                 true
             }
             VcpkgAction::Index => manager.index(),

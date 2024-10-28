@@ -9,6 +9,7 @@ path = "src/tests/cli.rs"
 
 
 [dependencies]
+basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
 config_file_derives  = { path = "../config_file_derives" }
 config_file_macros  = { path = "../config_file_macros" }
 chrono = { version = "0.4.38" }

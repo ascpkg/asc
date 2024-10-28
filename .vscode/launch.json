@@ -142,5 +142,49 @@
             ],
             "cwd": "${workspaceFolder}"
         },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run asc vcpkg index",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "vcpkg",
+                "index"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run asc search",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "search",
+                "*log"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
     ]
 }

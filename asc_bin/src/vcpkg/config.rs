@@ -1,15 +1,10 @@
-use directories;
-
-use crate::{cli::commands::VcpkgArgs, errors::ErrorTag, util};
+use crate::{cli::commands::VcpkgArgs, config, errors::ErrorTag};
 
 use super::VcpkgManager;
 
 impl VcpkgManager {
-    pub fn set(&self) -> bool {
-        let config_path = self.config_path();
-        if config_path.is_empty() {
-            return false;
-        }
+    pub fn config_set(&self) -> bool {
+        let config_path = config::dir::ConfigDir::vcpkg();
 
         // write conf to file
         let mut conf = VcpkgArgs::load(&config_path, true).unwrap_or_default();
@@ -26,11 +21,8 @@ impl VcpkgManager {
         return conf.dump(false);
     }
 
-    pub fn get(&mut self) {
-        let config_path = self.config_path();
-        if config_path.is_empty() {
-            return;
-        }
+    pub fn config_get(&mut self, silent: bool) {
+        let config_path = config::dir::ConfigDir::vcpkg();
 
         match VcpkgArgs::load(&config_path, false) {
             None => {}
@@ -53,12 +45,14 @@ impl VcpkgManager {
                 }
                 // default directory
                 if self.args.directory.is_none() {
-                    self.args.directory = Some(format!("{}/vcpkg", self.data_directory()))
+                    self.args.directory = Some(config::dir::DataDir::vcpkg_clone_dir())
                 }
             }
         }
 
-        tracing::info!("{:#?}", self.args);
+        if !silent {
+            tracing::info!("{:#?}", self.args);
+        }
     }
 
     pub fn validate(&self) -> bool {
@@ -70,31 +64,5 @@ impl VcpkgManager {
             return false;
         }
         return true;
-    }
-
-    fn config_path(&self) -> String {
-        if let Some(dir) = directories::ProjectDirs::from("", "", "asc") {
-            let config_dir = dir.config_dir().to_str().unwrap().replace(r"\", "/");
-            if !util::fs::is_dir_exists(&config_dir) {
-                if !util::fs::create_dirs(&config_dir) {
-                    return String::new();
-                }
-            }
-            return format!("{config_dir}/vcpkg.toml");
-        }
-        return String::new();
-    }
-
-    fn data_directory(&self) -> String {
-        if let Some(dir) = directories::ProjectDirs::from("", "", "asc") {
-            let data_dir = dir.data_dir().to_str().unwrap().replace(r"\", "/");
-            if !util::fs::is_dir_exists(&data_dir) {
-                if !util::fs::create_dirs(&data_dir) {
-                    return String::new();
-                }
-            }
-            return data_dir;
-        }
-        return String::new();
     }
 }

@@ -53,7 +53,7 @@ macro_rules! generate_wrapper_methods {
                     return false;
                 }
 
-                match std::fs::write(&path, text.as_bytes()) {
+                match std::fs::write(path, text.as_bytes()) {
                     Ok(_) => true,
                     Err(e) => {
                         if !ignore_error {

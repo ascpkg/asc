@@ -6,6 +6,8 @@ pub enum ErrorTag {
     Ok,
     // invalid args
     InvalidCliArgsError,
+    // invliad config
+    InvalidConfigError,
     // invalid data
     InvalidProjectError,
     InvalidProjectPackageError,
