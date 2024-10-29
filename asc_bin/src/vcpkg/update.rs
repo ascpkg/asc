@@ -22,13 +22,13 @@ impl VcpkgManager {
                 args.push(&a);
             }
 
-            return util::shell::run("git", &args, false, false).is_ok();
+            return util::shell::run("git", &args, false, false, false).is_ok();
         } else {
             // fetch and reset
             let cwd = util::fs::get_cwd();
             util::fs::set_cwd(self.args.directory.as_ref().unwrap());
 
-            let result = util::shell::run("git", &vec!["fetch"], false, false).is_ok()
+            let result = util::shell::run("git", &vec!["fetch"], false, false, false).is_ok()
                 && util::shell::run(
                     "git",
                     &vec![
@@ -36,6 +36,7 @@ impl VcpkgManager {
                         "--hard",
                         &format!("origin/{}", self.args.branch.as_ref().unwrap()),
                     ],
+                    false,
                     false,
                     false,
                 )

@@ -3,8 +3,11 @@ pub fn run(
     args: &Vec<&str>,
     capture_stdout: bool,
     capture_stderr: bool,
+    silent: bool,
 ) -> std::io::Result<std::process::Output> {
-    tracing::info!("command: {}, args: {}", command, args.join(" "));
+    if !silent {
+        tracing::info!("command: {}, args: {}", command, args.join(" "));
+    }
 
     return std::process::Command::new(command)
         .args(args)

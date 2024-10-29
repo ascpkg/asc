@@ -23,6 +23,9 @@ pub struct SearchArgs {
 
     // same as version
     pub date: Option<String>,
+
+    #[clap(long, default_value_t = false)]
+    pub list: bool,
 }
 
 impl SearchArgs {

@@ -45,6 +45,7 @@ pub struct ProjectConfig {
     pub libs: Option<BTreeSet<EntryConfig>>,
     pub dependencies: BTreeMap<String, DependencyConfig>,
     pub features: BTreeMap<String, BTreeSet<String>>,
+
     #[serde(skip)]
     pub path: String,
 }

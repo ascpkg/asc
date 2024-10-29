@@ -13,9 +13,9 @@ pub struct Wrapper<T> {
 generate_wrapper_methods!(
     serde_json,
     from_str,
-    to_string_pretty,
+    to_string,
     "from_str",
-    "to_string_pretty",
+    "to_string",
     ErrorTag::JsonDeserializeError.as_ref(),
     ErrorTag::JsonSerializeError.as_ref()
 );

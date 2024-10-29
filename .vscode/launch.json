@@ -182,7 +182,8 @@
             },
             "args": [
                 "search",
-                "*log"
+                "spdlog",
+                "--list"
             ],
             "cwd": "${workspaceFolder}"
         },

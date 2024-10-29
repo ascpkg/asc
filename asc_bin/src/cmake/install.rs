@@ -9,7 +9,7 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
         "--prefix",
         prefix,
     ];
-    let output = util::shell::run("cmake", &args, true, false).unwrap();
+    let output = util::shell::run("cmake", &args, true, false, false).unwrap();
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     println!("{}", &stdout);
