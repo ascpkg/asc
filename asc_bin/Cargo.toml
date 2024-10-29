@@ -26,4 +26,3 @@ toml = { version = "0.8.19" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "time", "local-time", "json"] }
 walkdir = { version = "2.5.0" }
-zstd = "0.13.2"

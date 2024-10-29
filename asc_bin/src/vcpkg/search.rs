@@ -1,4 +1,7 @@
-use super::index::{VcpkgPortVersion, VcpkgSearchIndex, VcpkgVersionIndex};
+use super::{
+    index::{VcpkgPortVersion, VcpkgSearchIndex},
+    VcpkgManager,
+};
 
 use crate::{cli::commands::search::SearchArgs, config, util};
 
@@ -46,8 +49,7 @@ pub fn from_index_file(args: &SearchArgs) -> Vec<String> {
                         if !args.list {
                             results.push(format_port_version(&args.name, version));
                         } else {
-                            let x = VcpkgVersionIndex::read();
-                            for (v, c, d) in x.get_versions(&args.name) {
+                            for (v, c, d) in VcpkgManager::get_port_versions(&args.name) {
                                 results.push(format!("{}  {}  {}", v, c, d));
                             }
                         }

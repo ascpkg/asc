@@ -18,7 +18,7 @@ impl ConfigDir {
         return String::new();
     }
 
-    pub fn vcpkg() -> String {
+    pub fn vcpkg_toml() -> String {
         build(&Self::prefix(), "vcpkg.toml")
     }
 }

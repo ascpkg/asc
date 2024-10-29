@@ -26,16 +26,7 @@ impl DataDir {
         build(&Self::prefix(), "vcpkg.index/search_index.json")
     }
 
-    pub fn vcpkg_search_version_index_json() -> String {
-        // port name <-> index
-        // commit hash <-> index
-        // commit date time <-> index
-        // port version <-> index
-        // port name index -> (port version index, commit hash index)
-        build(&Self::prefix(), "vcpkg.index/version_index.json")
-    }
-
-    pub fn vcpkg_git_tree_json() -> String {
-        build(&Self::prefix(), "vcpkg.index/git_tree.json")
+    pub fn vcpkg_tree_index_json() -> String {
+        build(&Self::prefix(), "vcpkg.index/tree_index.json")
     }
 }
