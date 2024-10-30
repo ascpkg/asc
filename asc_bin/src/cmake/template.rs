@@ -98,7 +98,7 @@ configure_file(${CMAKE_SOURCE_DIR}/{{project}}/version.h.in ${CMAKE_BINARY_DIR}/
 configure_file(${CMAKE_SOURCE_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
 {{/if}}
 
-{{{check_cmake_txt}}}
+{{{user_cmake_txt}}}
 {{#if is_workspace}}
 configure_file(${CMAKE_SOURCE_DIR}/{{project}}/config.h.cm ${CMAKE_BINARY_DIR}/{{project}}/config.h)
 {{else}}

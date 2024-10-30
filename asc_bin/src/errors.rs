@@ -38,4 +38,7 @@ pub enum ErrorTag {
     JsonDeserializeError,
     // handlebars
     RenderHandlebarsError,
+    // vcpkg
+    VcpkgPortNotFound,
+    VcpkgPortVersionNotFound,
 }

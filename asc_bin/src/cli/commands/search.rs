@@ -32,7 +32,7 @@ impl SearchArgs {
     pub fn exec(&self) -> bool {
         tracing::info!(message = "search", name = self.name);
 
-        let results = vcpkg::search::from_index_file(self);
+        let results = vcpkg::search::from_index_file(&self.name, self.list);
         for res in &results {
             tracing::info!("{}", res);
         }

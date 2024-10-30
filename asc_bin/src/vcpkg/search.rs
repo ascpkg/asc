@@ -3,26 +3,26 @@ use super::{
     VcpkgManager,
 };
 
-use crate::{cli::commands::search::SearchArgs, config, util};
+use crate::{config, util};
 
-pub fn from_index_file(args: &SearchArgs) -> Vec<String> {
+pub fn from_index_file(port_name: &str, list_all: bool) -> Vec<String> {
     let mut results = vec![];
 
     match VcpkgSearchIndex::load(&config::dir::DataDir::vcpkg_search_index_json(), false) {
         None => return results,
         Some(index) => {
-            if args.name.starts_with("*") && args.name.ends_with("*") {
+            if port_name.starts_with("*") && port_name.ends_with("*") {
                 // contains
-                let mut query = args.name.split_at(1).1;
+                let mut query = port_name.split_at(1).1;
                 query = query.split_at(query.len() - 1).0;
                 for (name, version) in &index.baseline.default {
                     if name.contains(query) {
                         results.push(format_port_version(name, version));
                     }
                 }
-            } else if args.name.ends_with("*") {
+            } else if port_name.ends_with("*") {
                 // prefix
-                let query = args.name.split_at(args.name.len() - 1).0;
+                let query = port_name.split_at(port_name.len() - 1).0;
                 if let Some(mut data) = index.prefix_trie.get_data(&query, true) {
                     data.sort();
                     for name in data {
@@ -31,9 +31,9 @@ pub fn from_index_file(args: &SearchArgs) -> Vec<String> {
                         }
                     }
                 }
-            } else if args.name.starts_with("*") {
+            } else if port_name.starts_with("*") {
                 // postfix
-                let query = util::str::reverse_string(&args.name.split_at(1).1);
+                let query = util::str::reverse_string(port_name.split_at(1).1);
                 if let Some(mut data) = index.postfix_trie.get_data(&query, true) {
                     data.sort();
                     for name in data {
@@ -44,12 +44,12 @@ pub fn from_index_file(args: &SearchArgs) -> Vec<String> {
                 }
             } else {
                 // extract match
-                if index.baseline.default.contains_key(&args.name) {
-                    if let Some(version) = index.baseline.default.get(&args.name) {
-                        if !args.list {
-                            results.push(format_port_version(&args.name, version));
+                if index.baseline.default.contains_key(port_name) {
+                    if let Some(version) = index.baseline.default.get(port_name) {
+                        if !list_all {
+                            results.push(format_port_version(port_name, version));
                         } else {
-                            for (v, c, d) in VcpkgManager::get_port_versions(&args.name) {
+                            for (v, c, d) in VcpkgManager::get_port_versions(port_name) {
                                 results.push(format!("{}  {}  {}", v, c, d));
                             }
                         }

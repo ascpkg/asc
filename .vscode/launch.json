@@ -187,5 +187,27 @@
             ],
             "cwd": "${workspaceFolder}"
         },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run asc add",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "add",
+                "spdlog"
+            ],
+            "cwd": "${workspaceFolder}/test_c_cpp"
+        },
     ]
 }

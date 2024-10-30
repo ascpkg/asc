@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use crate::{cli::commands::add::AddArgs, config, errors::ErrorTag, util};
+use crate::{cli::commands::add::AddArgs, config, errors::ErrorTag, util, vcpkg};
 
 pub fn dependency_to_config_file(args: &AddArgs) -> bool {
     match config::project::ProjectConfig::read_project_conf() {
@@ -50,10 +50,45 @@ fn add_for_pakcage(args: &AddArgs, project_conf: &mut config::project::ProjectCo
         );
         return false;
     } else {
+        let mut version = args.version.clone();
+        if version.is_empty() {
+            let results = vcpkg::search::from_index_file(&args.dependency, true);
+            if results.is_empty() {
+                tracing::error!(
+                    call = "vcpkg::search::from_index_file",
+                    port = args.dependency,
+                    error_tag = ErrorTag::VcpkgPortNotFound.as_ref(),
+                    message = "try to run asc vcpkg update, asc vcpkg index"
+                );
+                return false;
+            }
+            version = results[0].split_once("  ").unwrap().0.to_string();
+        } else {
+            let mut found = false;
+            let results = vcpkg::search::from_index_file(&args.dependency, true);
+            for v in &results {
+                if v.starts_with(&format!("{}  ", &version)) {
+                    found = true;
+                }
+            }
+            if !found {
+                tracing::error!(
+                    call = "vcpkg::search::from_index_file",
+                    port = args.dependency,
+                    error_tag = ErrorTag::VcpkgPortVersionNotFound.as_ref(),
+                    message = format!(
+                        "try to run asc vcpkg update, asc vcpkg index\n{}",
+                        results.join("\n")
+                    )
+                );
+                return false;
+            }
+        }
+
         project_conf.dependencies.insert(
             args.dependency.clone(),
             config::project::DependencyConfig {
-                version: args.version.clone(),
+                version: version,
                 find_packages: args
                     .find_package
                     .iter()
