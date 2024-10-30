@@ -55,6 +55,41 @@ pub struct ProjectConfig {
 pub struct InstalledFiles {
     pub prefix: String,
     pub files: Vec<String>,
+
     #[serde(skip)]
     pub path: String,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, ConfigFile)]
+#[config_file_ext("json")]
+pub struct VcpkgDependency {
+    pub port_names: Vec<String>,
+
+    #[serde(skip)]
+    pub path: String,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, ConfigFile)]
+#[config_file_ext("json")]
+#[serde(rename_all = "kebab-case")]
+pub struct VcpkgConfiguration {
+    pub default_registry: VcpkgDefaultRegistry,
+    pub registries: Vec<VcpkgRegistry>,
+
+    #[serde(skip)]
+    pub path: String,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct VcpkgRegistry {
+    pub kind: String,
+    pub location: String,
+    pub name: String,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct VcpkgDefaultRegistry {
+    pub kind: String,
+    pub baseline: String,
+    pub repository: String,
 }
