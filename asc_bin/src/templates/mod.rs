@@ -3,7 +3,6 @@ pub static LIB_HPP_HBS: &str = include_str!("lib.hpp.hbs");
 pub static LIB_CPP_HBS: &str = include_str!("lib.cpp.hbs");
 pub static EXPORT_H_HBS: &str = include_str!("export.h.hbs");
 
-
 pub static CONFIG_H_CM_HBS: &str = include_str!("config.h.cm.hbs");
 pub static USER_CMAKE_HBS: &str = include_str!("user.cmake.hbs");
 pub static PROJECT_CONFIG_CMAKE_IN_HBS: &str = include_str!("config.cmake.in.hbs");

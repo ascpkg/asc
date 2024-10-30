@@ -1,4 +1,4 @@
-use crate::{cli, config, util};
+use crate::{cli, config, paths, util};
 
 pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
     let args = vec![
@@ -15,7 +15,7 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
     println!("{}", &stdout);
 
     let mut data = config::project::InstalledFiles::default();
-    data.path = config::project::path::INSTALL_FILES_PATH.to_string();
+    data.path = paths::ASC_TARGET_INSTALLED_FILES_TOML_PATH.to_string();
     data.prefix = prefix.to_string();
     for line in stdout.split("\n") {
         let path = line

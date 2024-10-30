@@ -5,7 +5,7 @@ use config_file_derives::ConfigFile;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-use crate::{cli::commands::VcpkgArgs, config, errors::ErrorTag, util};
+use crate::{cli::commands::VcpkgArgs, config, errors::ErrorTag, paths, util};
 
 use super::VcpkgManager;
 
@@ -140,7 +140,7 @@ impl VcpkgManager {
         let path = format!(
             "{}/{}/{}-/{}.json",
             vcpkg_clone_dir,
-            super::path::VERSION_DIR,
+            paths::VCPKG_VERSIONS_DIR_NAME,
             port.chars().nth(0).unwrap(),
             port
         );
@@ -170,7 +170,7 @@ impl VcpkgManager {
         let baseline_json_path = format!(
             "{}/{}",
             self.args.directory.as_ref().unwrap(),
-            super::path::BASELINE_JSON
+            paths::VCPKG_VERSIONS_BASELINE_JSON_PATH
         );
         match VcpkgBaseline::load(&baseline_json_path, false) {
             None => return false,

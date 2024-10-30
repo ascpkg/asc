@@ -1,11 +1,11 @@
 use clap::Args;
 
 use super::{scan::ScanOptions, ConfigType};
-use crate::{cmake, config, util};
+use crate::{cmake, config, paths, util};
 
 #[derive(Args, Debug, Default, Clone)]
 pub struct InstallArgs {
-    #[clap(long, default_value = config::project::path::PROJECT_INSTALL_DIR)]
+    #[clap(long, default_value = paths::ASC_TARGET_INSTALLED_DIR)]
     pub prefix: String,
 
     #[clap(long, default_value = ConfigType::Debug.as_ref())]
@@ -25,7 +25,7 @@ impl InstallArgs {
         }
 
         let options = ScanOptions {
-            target_dir: config::project::path::PROJECT_TARGET_DIR.to_string(),
+            target_dir: paths::ASC_TARGET_DIR_NAME.to_string(),
             cmake_config: self.config.as_ref().to_string(),
             ..Default::default()
         };

@@ -6,7 +6,7 @@ use serde_json;
 
 use super::init;
 use crate::errors::ErrorTag;
-use crate::{templates, config, util};
+use crate::{config, paths, templates, util};
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct NewArgs {
@@ -48,8 +48,8 @@ impl NewArgs {
             format!(
                 "{}/{}/{}",
                 name,
-                config::project::path::PROJECT_SRC_DIR,
-                config::project::path::PROJECT_BIN_SRC
+                paths::SRC_DIR_NAME,
+                paths::MAIN_CPP_FILE_NAME
             ),
             templates::MAIN_CPP_HBS.as_bytes(),
         )
@@ -85,8 +85,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::project::path::PROJECT_SRC_DIR,
-                        config::project::path::PROJECT_EXPORT_SRC
+                        paths::SRC_DIR_NAME,
+                        paths::EXPORT_H_FILE_NAME
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -123,8 +123,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::project::path::PROJECT_SRC_DIR,
-                        config::project::path::PROJECT_LIB_HEADER
+                        paths::SRC_DIR_NAME,
+                        paths::LIB_HPP_FILE_NAME
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -161,8 +161,8 @@ impl NewArgs {
                     let path = format!(
                         "{}/{}/{}",
                         name,
-                        config::project::path::PROJECT_SRC_DIR,
-                        config::project::path::PROJECT_LIB_SRC
+                        paths::SRC_DIR_NAME,
+                        paths::LIB_CPP_FILE_NAME
                     );
                     if let Err(e) = std::fs::write(&path, text.as_bytes()) {
                         tracing::error!(
@@ -204,7 +204,7 @@ impl NewArgs {
         }
 
         // create src dir
-        let src_dir = format!("{name}/{}", config::project::path::PROJECT_SRC_DIR);
+        let src_dir = format!("{name}/{}", paths::SRC_DIR_NAME);
         if let Err(e) = std::fs::create_dir_all(&src_dir) {
             tracing::error!(
                 func = "std::fs::create_dir_all",

@@ -12,6 +12,7 @@ pub mod config;
 pub mod dependency;
 pub mod errors;
 pub mod graph;
+pub mod paths;
 pub mod templates;
 pub mod util;
 pub mod vcpkg;

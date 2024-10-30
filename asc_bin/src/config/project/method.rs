@@ -1,10 +1,9 @@
-use super::path::PROJECT_TARGET_DIR;
 #[allow(unused_imports)]
-use super::{
-    data::{DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig},
-    path::{PROJECT_BIN_SRC, PROJECT_LIB_HEADER, PROJECT_LIB_SRC, PROJECT_SRC_DIR, PROJECT_TOML},
+use super::data::{DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig};
+use crate::paths::{
+    ASC_TARGET_DIR_NAME, ASC_TOML_FILE_NAME, LIB_CPP_FILE_NAME, MAIN_CPP_FILE_NAME, SRC_DIR_NAME,
 };
-use crate::{cmake, errors::ErrorTag, util};
+use crate::{errors::ErrorTag, paths, util};
 
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
@@ -59,11 +58,11 @@ impl ProjectConfig {
     }
 
     pub fn is_project_inited(ignore_error: bool) -> bool {
-        if util::fs::is_file_exists(PROJECT_TOML) {
+        if util::fs::is_file_exists(ASC_TOML_FILE_NAME) {
             if ignore_error {
                 tracing::warn!(
                     func = "util::fs::is_file_exists",
-                    path = PROJECT_TOML,
+                    path = ASC_TOML_FILE_NAME,
                     error_tag = ErrorTag::FileExistsError.as_ref(),
                     message = "skip"
                 );
@@ -73,7 +72,7 @@ impl ProjectConfig {
             if !ignore_error {
                 tracing::error!(
                     func = "util::fs::is_file_exists",
-                    path = PROJECT_TOML,
+                    path = ASC_TOML_FILE_NAME,
                     error_tag = ErrorTag::FileNotFoundError.as_ref(),
                     message = "please run asc init first"
                 );
@@ -83,26 +82,26 @@ impl ProjectConfig {
     }
 
     pub fn read_project_conf() -> Option<Self> {
-        Self::load(PROJECT_TOML, false)
+        Self::load(ASC_TOML_FILE_NAME, false)
     }
 
     pub fn write_project_conf(&mut self) -> bool {
         if self.path.is_empty() {
-            self.path = PROJECT_TOML.to_string();
+            self.path = ASC_TOML_FILE_NAME.to_string();
         }
         self.dump(false)
     }
 
     pub fn is_source_scaned() -> bool {
-        if util::fs::is_file_exists(cmake::path::CMAKE_LISTS_PATH)
-            && util::fs::is_dir_exists(PROJECT_TARGET_DIR)
+        if util::fs::is_file_exists(paths::CMAKE_LISTS_TXT_FILE_NAME)
+            && util::fs::is_dir_exists(ASC_TARGET_DIR_NAME)
         {
             return true;
         } else {
             tracing::error!(
                 func = "util::fs::is_file_exists && util::fs::is_dir_exists",
-                file = cmake::path::CMAKE_LISTS_PATH,
-                dir = PROJECT_TARGET_DIR,
+                file = paths::CMAKE_LISTS_TXT_FILE_NAME,
+                dir = ASC_TARGET_DIR_NAME,
                 error_tag = ErrorTag::PathNotFoundError.as_ref(),
                 message = "please run asc scan first"
             );
@@ -127,7 +126,7 @@ impl ProjectConfig {
                 name,
                 &self.bins,
                 &package_name,
-                &format!("{}/{}", PROJECT_SRC_DIR, PROJECT_BIN_SRC),
+                &format!("{}/{}", SRC_DIR_NAME, MAIN_CPP_FILE_NAME),
             );
         } else {
             // lib
@@ -135,7 +134,7 @@ impl ProjectConfig {
                 name,
                 &self.libs,
                 &package_name,
-                &format!("{}/{}", PROJECT_SRC_DIR, PROJECT_LIB_SRC),
+                &format!("{}/{}", SRC_DIR_NAME, LIB_CPP_FILE_NAME),
             );
         }
     }

@@ -1,8 +1,8 @@
 use clap::Args;
 
-use crate::config;
 use crate::errors::ErrorTag;
 use crate::util;
+use crate::{config, paths};
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct InitArgs {
@@ -60,7 +60,7 @@ impl InitArgs {
         let mut package = config::project::PackageConfig::default();
         package.name = name.to_string();
         package.version = config::project::ProjectConfig::version_date();
-        package.edition = config::project::path::PROJECT_EDITION.to_string();
+        package.edition = paths::ASC_EDITION.to_string();
         project.package = Some(package);
 
         // write asc.toml

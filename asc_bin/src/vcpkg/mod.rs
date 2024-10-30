@@ -1,6 +1,5 @@
 pub mod config;
 pub mod index;
-pub mod path;
 pub mod search;
 pub mod update;
 
