@@ -2,9 +2,9 @@ use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
 use crate::util;
 
-pub struct ConfigDir {}
+pub struct ConfigPath {}
 
-impl ConfigDir {
+impl ConfigPath {
     fn prefix() -> String {
         if let Some(dir) = directories::ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION) {
             let config_dir = dir.config_dir().to_str().unwrap().replace(r"\", "/");

@@ -18,7 +18,7 @@ fn build(prefix: &str, name: &str) -> String {
 }
 
 pub mod conf;
-pub use conf::ConfigDir;
+pub use conf::ConfigPath;
 
 pub mod data;
-pub use data::DataDir;
+pub use data::DataPath;

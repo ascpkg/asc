@@ -2,9 +2,9 @@ use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
 use crate::util;
 
-pub struct DataDir {}
+pub struct DataPath {}
 
-impl DataDir {
+impl DataPath {
     fn prefix() -> String {
         if let Some(dir) = directories::ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION) {
             let data_dir = dir.data_dir().to_str().unwrap().replace(r"\", "/");

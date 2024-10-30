@@ -8,7 +8,7 @@ use crate::{config, util};
 pub fn from_index_file(port_name: &str, list_all: bool) -> Vec<String> {
     let mut results = vec![];
 
-    match VcpkgSearchIndex::load(&config::dir::DataDir::vcpkg_search_index_json(), false) {
+    match VcpkgSearchIndex::load(&config::dir::DataPath::vcpkg_search_index_json(), false) {
         None => return results,
         Some(index) => {
             if port_name.starts_with("*") && port_name.ends_with("*") {

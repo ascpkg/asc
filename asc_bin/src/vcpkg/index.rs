@@ -130,10 +130,10 @@ impl VcpkgManager {
     }
 
     pub fn get_port_versions(port: &str) -> Vec<(String, String, String)> {
-        let vcpkg_clone_dir = VcpkgArgs::load(&config::dir::ConfigDir::vcpkg_toml(), true)
+        let vcpkg_clone_dir = VcpkgArgs::load(&config::dir::ConfigPath::vcpkg_toml(), true)
             .unwrap()
             .directory
-            .unwrap_or(config::dir::DataDir::vcpkg_clone_dir());
+            .unwrap_or(config::dir::DataPath::vcpkg_clone_dir());
 
         let mut results = vec![];
 
@@ -146,7 +146,7 @@ impl VcpkgManager {
         );
         if let Some(versions) = VcpkgPortVersions::load(&path, false) {
             if let Some(git_tree_index) =
-                VcpkgGitTreeIndex::load(&config::dir::DataDir::vcpkg_tree_index_json(), false)
+                VcpkgGitTreeIndex::load(&config::dir::DataPath::vcpkg_tree_index_json(), false)
             {
                 for v in versions.versions {
                     if let Some(info) = git_tree_index.index.get(&v.git_tree) {
@@ -176,7 +176,7 @@ impl VcpkgManager {
             None => return false,
             Some(baseline_data) => {
                 let mut search_index =
-                    VcpkgSearchIndex::load(&config::dir::DataDir::vcpkg_search_index_json(), true)
+                    VcpkgSearchIndex::load(&config::dir::DataPath::vcpkg_search_index_json(), true)
                         .unwrap();
                 if latest_commit.hash <= search_index.check_point.hash {
                     return true;
@@ -199,7 +199,7 @@ impl VcpkgManager {
 
     fn build_git_tree_index(&self, commits: &Vec<GitCommitInfo>) -> VcpkgGitTreeIndex {
         let mut results =
-            VcpkgGitTreeIndex::load(&config::dir::DataDir::vcpkg_tree_index_json(), true).unwrap();
+            VcpkgGitTreeIndex::load(&config::dir::DataPath::vcpkg_tree_index_json(), true).unwrap();
 
         let mut next_index = 0;
         if let Some(index) = commits
