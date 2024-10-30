@@ -1,9 +1,9 @@
 #[allow(unused_imports)]
 use super::data::{DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig};
-use crate::paths::{
+use crate::config::relative_paths::{
     ASC_TARGET_DIR_NAME, ASC_TOML_FILE_NAME, LIB_CPP_FILE_NAME, MAIN_CPP_FILE_NAME, SRC_DIR_NAME,
 };
-use crate::{errors::ErrorTag, paths, util};
+use crate::{config::relative_paths, errors::ErrorTag, util};
 
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
@@ -93,14 +93,14 @@ impl ProjectConfig {
     }
 
     pub fn is_source_scaned() -> bool {
-        if util::fs::is_file_exists(paths::CMAKE_LISTS_TXT_FILE_NAME)
+        if util::fs::is_file_exists(relative_paths::CMAKE_LISTS_TXT_FILE_NAME)
             && util::fs::is_dir_exists(ASC_TARGET_DIR_NAME)
         {
             return true;
         } else {
             tracing::error!(
                 func = "util::fs::is_file_exists && util::fs::is_dir_exists",
-                file = paths::CMAKE_LISTS_TXT_FILE_NAME,
+                file = relative_paths::CMAKE_LISTS_TXT_FILE_NAME,
                 dir = ASC_TARGET_DIR_NAME,
                 error_tag = ErrorTag::PathNotFoundError.as_ref(),
                 message = "please run asc scan first"

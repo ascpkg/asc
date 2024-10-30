@@ -5,7 +5,7 @@ use config_file_derives::ConfigFile;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-use crate::{cli::commands::VcpkgArgs, config, errors::ErrorTag, paths, util};
+use crate::{cli::commands::VcpkgArgs, config, config::relative_paths, errors::ErrorTag, util};
 
 use super::VcpkgManager;
 
@@ -130,24 +130,26 @@ impl VcpkgManager {
     }
 
     pub fn get_port_versions(port: &str) -> Vec<(String, String, String)> {
-        let vcpkg_clone_dir = VcpkgArgs::load(&config::dir::ConfigPath::vcpkg_toml(), true)
-            .unwrap()
-            .directory
-            .unwrap_or(config::dir::DataPath::vcpkg_clone_dir());
+        let vcpkg_clone_dir =
+            VcpkgArgs::load(&config::system_paths::ConfigPath::vcpkg_toml(), true)
+                .unwrap()
+                .directory
+                .unwrap_or(config::system_paths::DataPath::vcpkg_clone_dir());
 
         let mut results = vec![];
 
         let path = format!(
             "{}/{}/{}-/{}.json",
             vcpkg_clone_dir,
-            paths::VCPKG_VERSIONS_DIR_NAME,
+            relative_paths::VCPKG_VERSIONS_DIR_NAME,
             port.chars().nth(0).unwrap(),
             port
         );
         if let Some(versions) = VcpkgPortVersions::load(&path, false) {
-            if let Some(git_tree_index) =
-                VcpkgGitTreeIndex::load(&config::dir::DataPath::vcpkg_tree_index_json(), false)
-            {
+            if let Some(git_tree_index) = VcpkgGitTreeIndex::load(
+                &config::system_paths::DataPath::vcpkg_tree_index_json(),
+                false,
+            ) {
                 for v in versions.versions {
                     if let Some(info) = git_tree_index.index.get(&v.git_tree) {
                         results.push((
@@ -170,14 +172,16 @@ impl VcpkgManager {
         let baseline_json_path = format!(
             "{}/{}",
             self.args.directory.as_ref().unwrap(),
-            paths::VCPKG_VERSIONS_BASELINE_JSON_PATH
+            relative_paths::VCPKG_VERSIONS_BASELINE_JSON_PATH
         );
         match VcpkgBaseline::load(&baseline_json_path, false) {
             None => return false,
             Some(baseline_data) => {
-                let mut search_index =
-                    VcpkgSearchIndex::load(&config::dir::DataPath::vcpkg_search_index_json(), true)
-                        .unwrap();
+                let mut search_index = VcpkgSearchIndex::load(
+                    &config::system_paths::DataPath::vcpkg_search_index_json(),
+                    true,
+                )
+                .unwrap();
                 if latest_commit.hash <= search_index.check_point.hash {
                     return true;
                 }
@@ -198,8 +202,11 @@ impl VcpkgManager {
     }
 
     fn build_git_tree_index(&self, commits: &Vec<GitCommitInfo>) -> VcpkgGitTreeIndex {
-        let mut results =
-            VcpkgGitTreeIndex::load(&config::dir::DataPath::vcpkg_tree_index_json(), true).unwrap();
+        let mut results = VcpkgGitTreeIndex::load(
+            &config::system_paths::DataPath::vcpkg_tree_index_json(),
+            true,
+        )
+        .unwrap();
 
         let mut next_index = 0;
         if let Some(index) = commits

@@ -4,7 +4,7 @@ use super::VcpkgManager;
 
 impl VcpkgManager {
     pub fn config_set(&self) -> bool {
-        let config_path = config::dir::ConfigPath::vcpkg_toml();
+        let config_path = config::system_paths::ConfigPath::vcpkg_toml();
 
         // write conf to file
         let mut conf = VcpkgArgs::load(&config_path, true).unwrap();
@@ -22,7 +22,7 @@ impl VcpkgManager {
     }
 
     pub fn config_get(&mut self, silent: bool) {
-        let config_path = config::dir::ConfigPath::vcpkg_toml();
+        let config_path = config::system_paths::ConfigPath::vcpkg_toml();
 
         match VcpkgArgs::load(&config_path, false) {
             None => {}
@@ -45,7 +45,7 @@ impl VcpkgManager {
                 }
                 // default directory
                 if self.args.directory.is_none() {
-                    self.args.directory = Some(config::dir::DataPath::vcpkg_clone_dir())
+                    self.args.directory = Some(config::system_paths::DataPath::vcpkg_clone_dir())
                 }
             }
         }

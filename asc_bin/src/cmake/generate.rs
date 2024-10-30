@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::clang;
 use crate::cli;
-use crate::paths;
+use crate::config::relative_paths;
 use crate::templates;
 use crate::util;
 
@@ -59,18 +59,18 @@ pub fn gen(
     is_workspace: bool,
 ) {
     // output default config.in.cm if not exists
-    if !util::fs::is_file_exists(paths::CONFIG_H_CM_FILE_NAME) {
+    if !util::fs::is_file_exists(relative_paths::CONFIG_H_CM_FILE_NAME) {
         std::fs::write(
-            paths::CONFIG_H_CM_FILE_NAME,
+            relative_paths::CONFIG_H_CM_FILE_NAME,
             templates::CONFIG_H_CM_HBS.as_bytes(),
         )
         .unwrap();
     }
 
     // output default user.cmake if not exists
-    if !util::fs::is_file_exists(paths::USER_CMAKE_FILE_NAME) {
+    if !util::fs::is_file_exists(relative_paths::USER_CMAKE_FILE_NAME) {
         std::fs::write(
-            paths::USER_CMAKE_FILE_NAME,
+            relative_paths::USER_CMAKE_FILE_NAME,
             templates::USER_CMAKE_HBS.as_bytes(),
         )
         .unwrap()
@@ -90,11 +90,11 @@ pub fn gen(
     data.build_month = local_date_time.month();
     data.build_day = local_date_time.day();
     data.user_cmake_txt =
-        std::fs::read_to_string(paths::USER_CMAKE_FILE_NAME).unwrap_or(String::new());
-    data.install_bin_dir = paths::INSTALL_BIN_DIR_NAME.to_string();
-    data.install_lib_dir = paths::INSTALL_LIB_DIR_NAME.to_string();
-    data.install_include_dir = paths::INSTALL_INCLUDE_DIR_NAME.to_string();
-    data.install_share_dir = paths::INSTALL_SHARE_DIR_NAME.to_string();
+        std::fs::read_to_string(relative_paths::USER_CMAKE_FILE_NAME).unwrap_or(String::new());
+    data.install_bin_dir = relative_paths::INSTALL_BIN_DIR_NAME.to_string();
+    data.install_lib_dir = relative_paths::INSTALL_LIB_DIR_NAME.to_string();
+    data.install_include_dir = relative_paths::INSTALL_INCLUDE_DIR_NAME.to_string();
+    data.install_share_dir = relative_paths::INSTALL_SHARE_DIR_NAME.to_string();
     data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;
@@ -127,7 +127,7 @@ pub fn gen(
             .render_template(templates::PROJECT_CONFIG_CMAKE_IN_HBS, &data)
             .unwrap();
         std::fs::write(
-            paths::get_config_cmake_in_file_name(&options.project),
+            relative_paths::get_config_cmake_in_file_name(&options.project),
             text.as_bytes(),
         )
         .unwrap();
@@ -139,7 +139,7 @@ pub fn gen(
         let text = reg
             .render_template(templates::VERSION_H_IN_HBS, &data)
             .unwrap();
-        std::fs::write(paths::VERSION_H_IN_FILE_NAME, text.as_bytes()).unwrap();
+        std::fs::write(relative_paths::VERSION_H_IN_FILE_NAME, text.as_bytes()).unwrap();
     }
 
     {
@@ -148,7 +148,7 @@ pub fn gen(
         let text = reg
             .render_template(templates::PROJECT_CMAKELISTS_TXT_HBS, &data)
             .unwrap();
-        std::fs::write(paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
+        std::fs::write(relative_paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
     }
 }
 
@@ -164,7 +164,7 @@ pub fn gen_workspace(cmake_minimum_version: &str, project: &str, members: &Vec<S
     let text = reg
         .render_template(templates::WORKSPACE_CMAKELISTS_TXT_HBS, &data)
         .unwrap();
-    std::fs::write(paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
+    std::fs::write(relative_paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
 }
 
 fn group_data(

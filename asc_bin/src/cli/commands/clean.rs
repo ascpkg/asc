@@ -2,7 +2,7 @@ use clap::Args;
 
 use tracing;
 
-use crate::{config, errors::ErrorTag, paths, util};
+use crate::{config, config::relative_paths, errors::ErrorTag, util};
 
 #[derive(Args, Debug, Clone)]
 pub struct CleanArgs {}
@@ -33,10 +33,10 @@ impl CleanArgs {
         tracing::info!(message = "clean package", name = name);
 
         // cmake
-        let mut has_error = paths::clean_cmake_files(name);
+        let mut has_error = relative_paths::clean_cmake_files(name);
 
         // target
-        has_error &= paths::clean_asc_files();
+        has_error &= relative_paths::clean_asc_files();
 
         return has_error;
     }
@@ -45,10 +45,10 @@ impl CleanArgs {
         tracing::info!(message = "clean workspace", name = util::fs::get_cwd_name());
 
         // cmake
-        let mut has_error = paths::clean_cmake_files("");
+        let mut has_error = relative_paths::clean_cmake_files("");
 
         // target
-        has_error &= paths::clean_asc_files();
+        has_error &= relative_paths::clean_asc_files();
 
         // members
         let cwd = util::fs::get_cwd();

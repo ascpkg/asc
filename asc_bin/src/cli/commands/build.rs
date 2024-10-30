@@ -1,7 +1,7 @@
 use clap::Args;
 
 use super::{scan::ScanOptions, ConfigType};
-use crate::{cmake, config, paths, util};
+use crate::{cmake, config, config::relative_paths, util};
 
 #[derive(Args, Debug, Default, Clone)]
 pub struct BuildArgs {
@@ -24,7 +24,7 @@ impl BuildArgs {
         }
 
         let options = ScanOptions {
-            target_dir: paths::ASC_TARGET_DIR_NAME.to_string(),
+            target_dir: relative_paths::ASC_TARGET_DIR_NAME.to_string(),
             cmake_config: self.config.as_ref().to_string(),
             ..Default::default()
         };

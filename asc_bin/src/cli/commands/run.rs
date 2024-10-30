@@ -1,4 +1,4 @@
-use crate::{config, errors::ErrorTag, paths, util};
+use crate::{config, config::relative_paths, errors::ErrorTag, util};
 
 use super::ConfigType;
 
@@ -24,7 +24,7 @@ impl RunArgs {
                     return util::shell::run(
                         &format!(
                             "{}/{}/{}/{}",
-                            paths::ASC_TARGET_DIR_NAME,
+                            relative_paths::ASC_TARGET_DIR_NAME,
                             name,
                             self.config.as_ref(),
                             name
@@ -52,7 +52,7 @@ impl RunArgs {
                 return util::shell::run(
                     &format!(
                         "{}/{}/{}",
-                        paths::ASC_TARGET_DIR_NAME,
+                        relative_paths::ASC_TARGET_DIR_NAME,
                         self.config.as_ref(),
                         package.name
                     ),

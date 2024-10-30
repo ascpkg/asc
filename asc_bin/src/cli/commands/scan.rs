@@ -4,9 +4,9 @@ use crate::clang;
 use crate::cmake;
 use crate::config;
 use crate::config::project::ProjectConfig;
+use crate::config::relative_paths;
 use crate::errors::ErrorTag;
 use crate::graph;
-use crate::paths;
 use crate::util;
 
 #[derive(Clone, Debug, Default)]
@@ -82,16 +82,16 @@ impl ScanArgs {
             project: name.to_string(),
             project_dir: cwd.clone(),
             target_dir: if !is_workspace {
-                format!("{cwd}/{}", paths::ASC_TARGET_DIR_NAME)
+                format!("{cwd}/{}", relative_paths::ASC_TARGET_DIR_NAME)
             } else {
                 format!(
                     "{}/{}/{}",
                     util::fs::get_cwd_parent(),
-                    paths::ASC_TARGET_DIR_NAME,
+                    relative_paths::ASC_TARGET_DIR_NAME,
                     name
                 )
             },
-            source_dir: format!("{cwd}/{}", paths::SRC_DIR_NAME),
+            source_dir: format!("{cwd}/{}", relative_paths::SRC_DIR_NAME),
             entry_point_source: format!("{cwd}/{}", path),
             include_dirs: vec![],
             shared_lib: self.shared_lib,
@@ -114,7 +114,7 @@ impl ScanArgs {
         let mermaid_flowchart = graph::flowchart::gen(&options, &source_mappings);
         tracing::info!("\n{mermaid_flowchart}");
 
-        tracing::warn!("output {}", paths::CMAKE_LISTS_TXT_FILE_NAME);
+        tracing::warn!("output {}", relative_paths::CMAKE_LISTS_TXT_FILE_NAME);
         cmake::generate::gen(&options, &source_mappings, is_workspace);
 
         if !is_workspace {
@@ -171,7 +171,7 @@ impl ScanArgs {
         tracing::warn!("generate a build system with cmake");
         let options = ScanOptions {
             project_dir: cwd.clone(),
-            target_dir: format!("{cwd}/{}", paths::ASC_TARGET_DIR_NAME),
+            target_dir: format!("{cwd}/{}", relative_paths::ASC_TARGET_DIR_NAME),
             shared_lib: self.shared_lib,
             ..Default::default()
         };
