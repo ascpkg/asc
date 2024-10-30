@@ -6,7 +6,7 @@ use serde_json;
 
 use super::init;
 use crate::errors::ErrorTag;
-use crate::{cli::template, config, util};
+use crate::{templates, config, util};
 
 #[derive(Args, Debug, Clone, Default)]
 pub struct NewArgs {
@@ -51,7 +51,7 @@ impl NewArgs {
                 config::project::path::PROJECT_SRC_DIR,
                 config::project::path::PROJECT_BIN_SRC
             ),
-            template::NEW_BIN_SRC_HBS.as_bytes(),
+            templates::MAIN_CPP_HBS.as_bytes(),
         )
         .is_ok();
     }
@@ -68,13 +68,13 @@ impl NewArgs {
             // write export.h
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_EXPORT_HEADER_HBS,
+                templates::EXPORT_H_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         func = "Handlebars::render_template",
-                        template = template::NEW_LIB_EXPORT_HEADER_HBS,
+                        template = templates::EXPORT_H_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );
@@ -106,13 +106,13 @@ impl NewArgs {
             // write lib.hpp
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_HEADER_HBS,
+                templates::LIB_HPP_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         func = "Handlebars::render_template",
-                        template = template::NEW_LIB_HEADER_HBS,
+                        template = templates::LIB_HPP_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );
@@ -144,13 +144,13 @@ impl NewArgs {
             // write lib.cpp
             let reg = Handlebars::new();
             match reg.render_template(
-                template::NEW_LIB_SRC_HBS,
+                templates::LIB_CPP_HBS,
                 &serde_json::json!({"project_upper": name.to_uppercase()}),
             ) {
                 Err(e) => {
                     tracing::error!(
                         func = "Handlebars::render_template",
-                        template = template::NEW_LIB_SRC_HBS,
+                        template = templates::LIB_CPP_HBS,
                         error_tag = ErrorTag::RenderHandlebarsError.as_ref(),
                         error_str = e.to_string()
                     );

@@ -1,68 +1,4 @@
-pub static CONFIG_IN_CM_HBS: &str = r#"/* config compiler, os, header, library, symbol */
-
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine HAVE_STDLIB_H 1
-
-/* Define to 1 if you have the `gettimeofday' function. */
-#cmakedefine HAVE_GETTIMEOFDAY 1
-
-/* Define to 1 if you have the `O_BINARY' symbol. */
-#cmakedefine HAVE_O_BINARY 1
-"#;
-
-pub static USER_CMAKE_HBS: &str = r#"# check compiler, os, header, library, symbol
-# check headers
-include(CheckIncludeFiles)
-check_include_files("stdlib.h" HAVE_STDLIB_H)
-
-# check types
-include(CheckTypeSize)
-# check_type_size(size_t SIZE_T)
-
-# check functions
-include(CheckFunctionExists)
-check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
-
-# check symbols
-include(CheckSymbolExists)
-check_symbol_exists(O_BINARY "fcntl.h" HAVE_O_BINARY)
-"#;
-
-pub static CMAKE_CONFIG_HBS: &str = r#"@PACKAGE_INIT@
-
-include("${CMAKE_CURRENT_LIST_DIR}/{{project}}-targets.cmake")
-
-check_required_components({{project}})
-"#;
-
-pub static VERSION_IN_HBS: &str = r#"
-#pragma once
-
-#define {{project_upper}}_VERSION_CODE(major, minor, micro) (((major) * 10000) + ((minor) * 100) + ((micro) * 1))
-
-#define {{project_upper}}_VERSION_MAJOR @{{project_upper}}_VERSION_MAJOR@
-#define {{project_upper}}_VERSION_MINOR @{{project_upper}}_VERSION_MINOR@
-#define {{project_upper}}_VERSION_MICRO @{{project_upper}}_VERSION_MICRO@
-
-#define {{project_upper}}_VERSION_STRING "@{{project_upper}}_VERSION_MAJOR@.@{{project_upper}}_VERSION_MINOR@.@{{project_upper}}_VERSION_MICRO@"
-
-#define {{project_upper}}_VERSION {{project_upper}}_VERSION_CODE({{project_upper}}_VERSION_MAJOR, {{project_upper}}_VERSION_MINOR, {{project_upper}}_VERSION_MICRO)
-"#;
-
-pub static CMKAE_WORKSPACE_HBS: &str = r#"
 # set cmake version required
-cmake_minimum_required(VERSION {{cmake_version}})
-
-# set project name
-project ({{project}} C CXX)
-
-# add workspace members
-{{#each members as |member|}}
-add_subdirectory({{member}})
-{{/each}}
-"#;
-
-pub static CMAKE_LISTS_HBS: &str = r#"# set cmake version required
 cmake_minimum_required(VERSION {{cmake_version}})
 
 # set project name
@@ -232,4 +168,3 @@ install(
     NAMESPACE ${PROJECT_NAME}::
 )
 {{/if}}
-"#;

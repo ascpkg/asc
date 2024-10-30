@@ -1,6 +1,5 @@
+use crate::templates;
 use crate::util;
-
-use super::template;
 
 pub static CMAKE_LISTS_PATH: &str = "CMakeLists.txt";
 pub static VERSION_H_IN_PATH: &str = "version.h.in";
@@ -25,13 +24,13 @@ pub fn clean(name: &str) -> bool {
     }
 
     if let Ok(text) = std::fs::read_to_string(CONFIG_H_CM_PATH) {
-        if text == template::CONFIG_IN_CM_HBS {
+        if text == templates::CONFIG_H_CM_HBS {
             has_error &= util::fs::remove_file(CONFIG_H_CM_PATH);
         }
     }
 
     if let Ok(text) = std::fs::read_to_string(USER_CMAKE_PATH) {
-        if text == template::USER_CMAKE_HBS {
+        if text == templates::USER_CMAKE_HBS {
             has_error &= util::fs::remove_file(USER_CMAKE_PATH);
         }
     }

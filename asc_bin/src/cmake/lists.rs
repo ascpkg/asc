@@ -7,10 +7,10 @@ use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 
 pub use super::path;
-pub use super::template;
 use crate::clang;
 use crate::cli;
 use crate::config;
+use crate::templates;
 use crate::util;
 
 #[derive(Default, Debug, Deserialize, Serialize)]
@@ -63,14 +63,14 @@ pub fn gen(
     if !util::fs::is_file_exists(path::CONFIG_H_CM_PATH) {
         std::fs::write(
             path::CONFIG_H_CM_PATH,
-            template::CONFIG_IN_CM_HBS.as_bytes(),
+            templates::CONFIG_H_CM_HBS.as_bytes(),
         )
         .unwrap();
     }
 
     // output default user.cmake if not exists
     if !util::fs::is_file_exists(path::USER_CMAKE_PATH) {
-        std::fs::write(path::USER_CMAKE_PATH, template::USER_CMAKE_HBS.as_bytes()).unwrap()
+        std::fs::write(path::USER_CMAKE_PATH, templates::USER_CMAKE_HBS.as_bytes()).unwrap()
     }
 
     // group data
@@ -120,7 +120,7 @@ pub fn gen(
         // write project-config.cmake.in
         let reg = Handlebars::new();
         let text = reg
-            .render_template(template::CMAKE_CONFIG_HBS, &data)
+            .render_template(templates::PROJECT_CONFIG_CMAKE_IN_HBS, &data)
             .unwrap();
         std::fs::write(
             path::config_cmake_in_path(&options.project),
@@ -133,7 +133,7 @@ pub fn gen(
         // write version.h.in
         let reg = Handlebars::new();
         let text = reg
-            .render_template(template::VERSION_IN_HBS, &data)
+            .render_template(templates::VERSION_H_IN_HBS, &data)
             .unwrap();
         std::fs::write(path::VERSION_H_IN_PATH, text.as_bytes()).unwrap();
     }
@@ -142,7 +142,7 @@ pub fn gen(
         // write CMakeLists.txt
         let reg = Handlebars::new();
         let text = reg
-            .render_template(template::CMAKE_LISTS_HBS, &data)
+            .render_template(templates::PROJECT_CMAKELISTS_TXT_HBS, &data)
             .unwrap();
         std::fs::write(path::CMAKE_LISTS_PATH, text.as_bytes()).unwrap();
     }
@@ -158,7 +158,7 @@ pub fn gen_workspace(cmake_minimum_version: &str, project: &str, members: &Vec<S
     // write CMakeLists.txt
     let reg = Handlebars::new();
     let text = reg
-        .render_template(template::CMKAE_WORKSPACE_HBS, &data)
+        .render_template(templates::WORKSPACE_CMAKELISTS_TXT_HBS, &data)
         .unwrap();
     std::fs::write(path::CMAKE_LISTS_PATH, text.as_bytes()).unwrap();
 }

@@ -1,0 +1,11 @@
+#pragma once
+
+#define {{project_upper}}_VERSION_CODE(major, minor, micro) (((major) * 10000) + ((minor) * 100) + ((micro) * 1))
+
+#define {{project_upper}}_VERSION_MAJOR @{{project_upper}}_VERSION_MAJOR@
+#define {{project_upper}}_VERSION_MINOR @{{project_upper}}_VERSION_MINOR@
+#define {{project_upper}}_VERSION_MICRO @{{project_upper}}_VERSION_MICRO@
+
+#define {{project_upper}}_VERSION_STRING "@{{project_upper}}_VERSION_MAJOR@.@{{project_upper}}_VERSION_MINOR@.@{{project_upper}}_VERSION_MICRO@"
+
+#define {{project_upper}}_VERSION {{project_upper}}_VERSION_CODE({{project_upper}}_VERSION_MAJOR, {{project_upper}}_VERSION_MINOR, {{project_upper}}_VERSION_MICRO)
