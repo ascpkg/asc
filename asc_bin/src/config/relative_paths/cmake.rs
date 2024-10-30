@@ -1,10 +1,10 @@
 use crate::templates;
 use crate::util;
 
-pub static INSTALL_BIN_DIR_NAME: &str = "bin";
-pub static INSTALL_LIB_DIR_NAME: &str = "lib";
-pub static INSTALL_INCLUDE_DIR_NAME: &str = "include";
-pub static INSTALL_SHARE_DIR_NAME: &str = "share";
+pub static CMAKE_INSTALL_BIN_DIR_NAME: &str = "bin";
+pub static CMAKE_INSTALL_LIB_DIR_NAME: &str = "lib";
+pub static CMAKE_INSTALL_INCLUDE_DIR_NAME: &str = "include";
+pub static CMAKE_INSTALL_SHARE_DIR_NAME: &str = "share";
 
 pub static CMAKE_LISTS_TXT_FILE_NAME: &str = "CMakeLists.txt";
 pub static VERSION_H_IN_FILE_NAME: &str = "version.h.in";

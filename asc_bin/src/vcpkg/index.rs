@@ -5,7 +5,7 @@ use config_file_derives::ConfigFile;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-use crate::{cli::commands::VcpkgArgs, config, config::relative_paths, errors::ErrorTag, util};
+use crate::{cli::commands::VcpkgArgs, config, errors::ErrorTag, util};
 
 use super::VcpkgManager;
 
@@ -138,13 +138,7 @@ impl VcpkgManager {
 
         let mut results = vec![];
 
-        let path = format!(
-            "{}/{}/{}-/{}.json",
-            vcpkg_clone_dir,
-            relative_paths::VCPKG_VERSIONS_DIR_NAME,
-            port.chars().nth(0).unwrap(),
-            port
-        );
+        let path = config::relative_paths::get_versions_port_json_path(&vcpkg_clone_dir, port);
         if let Some(versions) = VcpkgPortVersions::load(&path, false) {
             if let Some(git_tree_index) = VcpkgGitTreeIndex::load(
                 &config::system_paths::DataPath::vcpkg_tree_index_json(),
@@ -169,10 +163,8 @@ impl VcpkgManager {
 
     fn build_search_index(&mut self, latest_commit: &GitCommitInfo) -> bool {
         self.config_get(true);
-        let baseline_json_path = format!(
-            "{}/{}",
+        let baseline_json_path = config::relative_paths::get_versions_baseline_json_path(
             self.args.directory.as_ref().unwrap(),
-            relative_paths::VCPKG_VERSIONS_BASELINE_JSON_PATH
         );
         match VcpkgBaseline::load(&baseline_json_path, false) {
             None => return false,

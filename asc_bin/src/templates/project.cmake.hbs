@@ -86,6 +86,13 @@ add_library(
     {{/each}}
 )
 
+{{#if link_libraries}}
+# find package
+{{#each find_packages as |package|}}
+find_package({{package}} CONFIG REQUIRED)
+{{/each}}
+{{/if}}
+
 # set include dirs
 target_include_directories(
     ${PROJECT_NAME}

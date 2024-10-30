@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::clang;
 use crate::cli;
+use crate::config::project::DependencyConfig;
 use crate::config::relative_paths;
 use crate::templates;
 use crate::util;
@@ -45,6 +46,7 @@ struct CMakeListsData {
     shared_library: bool,
     sources_group_by_dir: Vec<SourcesGroup>,
     include_dirs: Vec<String>,
+    find_packages: Vec<String>,
     link_libraries: bool,
     link_public_libraries: bool,
     public_libraries: Vec<String>,
@@ -57,6 +59,7 @@ pub fn gen(
     options: &cli::commands::scan::ScanOptions,
     source_mappings: &clang::parser::SourceMappings,
     is_workspace: bool,
+    dependencies: &BTreeMap<String, DependencyConfig>,
 ) {
     // output default config.in.cm if not exists
     if !util::fs::is_file_exists(relative_paths::CONFIG_H_CM_FILE_NAME) {
@@ -91,17 +94,37 @@ pub fn gen(
     data.build_day = local_date_time.day();
     data.user_cmake_txt =
         std::fs::read_to_string(relative_paths::USER_CMAKE_FILE_NAME).unwrap_or(String::new());
-    data.install_bin_dir = relative_paths::INSTALL_BIN_DIR_NAME.to_string();
-    data.install_lib_dir = relative_paths::INSTALL_LIB_DIR_NAME.to_string();
-    data.install_include_dir = relative_paths::INSTALL_INCLUDE_DIR_NAME.to_string();
-    data.install_share_dir = relative_paths::INSTALL_SHARE_DIR_NAME.to_string();
+    data.install_bin_dir = relative_paths::CMAKE_INSTALL_BIN_DIR_NAME.to_string();
+    data.install_lib_dir = relative_paths::CMAKE_INSTALL_LIB_DIR_NAME.to_string();
+    data.install_include_dir = relative_paths::CMAKE_INSTALL_INCLUDE_DIR_NAME.to_string();
+    data.install_share_dir = relative_paths::CMAKE_INSTALL_SHARE_DIR_NAME.to_string();
     data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;
     data.include_dirs = options.include_dirs.clone();
-    data.link_libraries = false;
+    data.link_libraries = !dependencies.is_empty();
     data.link_public_libraries = false;
-    data.link_private_libraries = false;
+    data.link_private_libraries = !dependencies.is_empty();
+    for (_, dep) in dependencies {
+        if !dep.find_packages.is_empty() {
+            data.find_packages.push(
+                dep.find_packages
+                    .iter()
+                    .map(|s| s.clone())
+                    .collect::<Vec<String>>()
+                    .join(" "),
+            );
+        }
+        if !dep.link_libraries.is_empty() {
+            data.private_libraries.push(
+                dep.link_libraries
+                    .iter()
+                    .map(|s| s.clone())
+                    .collect::<Vec<String>>()
+                    .join(" "),
+            );
+        }
+    }
 
     for (dir, sources) in &group_sources {
         let mut group = SourcesGroup::default();
@@ -146,7 +169,7 @@ pub fn gen(
         // write CMakeLists.txt
         let reg = Handlebars::new();
         let text = reg
-            .render_template(templates::PROJECT_CMAKELISTS_TXT_HBS, &data)
+            .render_template(templates::PROJECT_CMAKE_LISTS_TXT_HBS, &data)
             .unwrap();
         std::fs::write(relative_paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
     }
@@ -162,7 +185,7 @@ pub fn gen_workspace(cmake_minimum_version: &str, project: &str, members: &Vec<S
     // write CMakeLists.txt
     let reg = Handlebars::new();
     let text = reg
-        .render_template(templates::WORKSPACE_CMAKELISTS_TXT_HBS, &data)
+        .render_template(templates::WORKSPACE_CMAKE_LISTS_TXT_HBS, &data)
         .unwrap();
     std::fs::write(relative_paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
 }

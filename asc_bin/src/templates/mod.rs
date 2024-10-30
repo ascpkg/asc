@@ -7,5 +7,5 @@ pub static CONFIG_H_CM_HBS: &str = include_str!("config.h.cm.hbs");
 pub static USER_CMAKE_HBS: &str = include_str!("user.cmake.hbs");
 pub static PROJECT_CONFIG_CMAKE_IN_HBS: &str = include_str!("config.cmake.in.hbs");
 pub static VERSION_H_IN_HBS: &str = include_str!("version.h.in.hbs");
-pub static WORKSPACE_CMAKELISTS_TXT_HBS: &str = include_str!("workspace.cmake.hbs");
-pub static PROJECT_CMAKELISTS_TXT_HBS: &str = include_str!("project.cmake.hbs");
+pub static WORKSPACE_CMAKE_LISTS_TXT_HBS: &str = include_str!("workspace.cmake.hbs");
+pub static PROJECT_CMAKE_LISTS_TXT_HBS: &str = include_str!("project.cmake.hbs");

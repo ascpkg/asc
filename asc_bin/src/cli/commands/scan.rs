@@ -1,8 +1,11 @@
+use std::collections::BTreeMap;
+
 use clap::Args;
 
 use crate::clang;
 use crate::cmake;
 use crate::config;
+use crate::config::project::DependencyConfig;
 use crate::config::project::ProjectConfig;
 use crate::config::relative_paths;
 use crate::errors::ErrorTag;
@@ -69,12 +72,23 @@ impl ScanArgs {
                         error_tag = ErrorTag::InvalidCliArgsError.as_ref()
                     );
                 }
-                return self.scan_package(&target_name, &target_src, false);
+                return self.scan_package(
+                    &target_name,
+                    &target_src,
+                    false,
+                    &project_conf.dependencies,
+                );
             }
         }
     }
 
-    pub fn scan_package(&self, name: &str, path: &str, is_workspace: bool) -> bool {
+    pub fn scan_package(
+        &self,
+        name: &str,
+        path: &str,
+        is_workspace: bool,
+        dependencies: &BTreeMap<String, DependencyConfig>,
+    ) -> bool {
         tracing::info!(message = "scan package", name = name);
 
         let cwd = util::fs::get_cwd();
@@ -115,7 +129,7 @@ impl ScanArgs {
         tracing::info!("\n{mermaid_flowchart}");
 
         tracing::warn!("output {}", relative_paths::CMAKE_LISTS_TXT_FILE_NAME);
-        cmake::generate::gen(&options, &source_mappings, is_workspace);
+        cmake::lists::gen(&options, &source_mappings, is_workspace, dependencies);
 
         if !is_workspace {
             tracing::warn!("generate a build system with cmake");
@@ -144,7 +158,12 @@ impl ScanArgs {
                         self.static_lib,
                     );
                     if !target_name.is_empty() && !target_src.is_empty() {
-                        if self.scan_package(&target_name, &target_src, true) {
+                        if self.scan_package(
+                            &target_name,
+                            &target_src,
+                            true,
+                            &project_conf.dependencies,
+                        ) {
                             members.push(member.clone());
                         } else {
                             has_error = true;
@@ -162,7 +181,7 @@ impl ScanArgs {
             util::fs::set_cwd(&cwd);
         }
 
-        cmake::generate::gen_workspace(
+        cmake::lists::gen_workspace(
             &self.cmake_minimum_version,
             &util::fs::get_cwd_name(),
             &members,

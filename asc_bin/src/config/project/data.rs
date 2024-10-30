@@ -43,8 +43,8 @@ pub struct ProjectConfig {
     pub bins: Option<BTreeSet<EntryConfig>>,
     #[serde(rename = "lib")]
     pub libs: Option<BTreeSet<EntryConfig>>,
-    pub dependencies: BTreeMap<String, DependencyConfig>,
     pub features: BTreeMap<String, BTreeSet<String>>,
+    pub dependencies: BTreeMap<String, DependencyConfig>,
 
     #[serde(skip)]
     pub path: String,

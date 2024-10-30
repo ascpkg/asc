@@ -1,6 +1,6 @@
 use crate::{config::project::InstalledFiles, util};
 
-use super::{INSTALL_INCLUDE_DIR_NAME, INSTALL_SHARE_DIR_NAME};
+use super::{CMAKE_INSTALL_INCLUDE_DIR_NAME, CMAKE_INSTALL_SHARE_DIR_NAME};
 
 pub static ASC_TOML_FILE_NAME: &str = "asc.toml";
 pub static ASC_EDITION: &str = "2024";
@@ -54,7 +54,7 @@ pub fn uninstall_installed_files() -> bool {
             has_error &= util::fs::remove_file(path);
         }
 
-        for dir_name in [INSTALL_INCLUDE_DIR_NAME, INSTALL_SHARE_DIR_NAME] {
+        for dir_name in [CMAKE_INSTALL_INCLUDE_DIR_NAME, CMAKE_INSTALL_SHARE_DIR_NAME] {
             for dir_path in dir_paths.iter() {
                 if dir_path.contains(&format!("/{dir_name}")) {
                     if util::fs::remove_dirs(dir_path) {
