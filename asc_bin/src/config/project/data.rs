@@ -63,8 +63,8 @@ pub struct InstalledFiles {
 #[derive(Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
 pub struct VcpkgDependency {
-    #[serde(rename = "dependencies")]
-    pub port_names: Vec<String>,
+    pub dependencies: Vec<String>,
+    pub overrides: Vec<BTreeMap<String, String>>,
 
     #[serde(skip)]
     pub path: String,

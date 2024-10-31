@@ -79,13 +79,5 @@ pub fn from_index_file(port_name: &str, list_all: bool) -> Vec<String> {
 }
 
 fn format_port_version(name: &str, version: &VcpkgPortVersion) -> String {
-    format!(
-        "{}  {}",
-        name,
-        if version.port_version == 0 {
-            version.baseline.clone()
-        } else {
-            format!("{}#{}", version.baseline, version.port_version)
-        }
-    )
+    format!("{}  {}", name, version.format_version_text())
 }

@@ -58,6 +58,16 @@ pub struct VcpkgPortVersion {
     pub port_version: u32,
 }
 
+impl VcpkgPortVersion {
+    pub fn format_version_text(&self) -> String {
+        if self.port_version == 0 {
+            self.baseline.clone()
+        } else {
+            format!("{}#{}", self.baseline, self.port_version)
+        }
+    }
+}
+
 // from vcpkg
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
@@ -100,7 +110,7 @@ pub struct VcpkgGitTreeInfo {
 }
 
 impl VcpkgPortTreeVersion {
-    fn format_version_text(&self) -> String {
+    pub fn format_version_text(&self) -> String {
         let mut s = String::new();
         if let Some(v) = &self.version {
             s = v.clone();
@@ -287,6 +297,44 @@ impl VcpkgManager {
         }
 
         return results;
+    }
+
+    pub fn get_latest_commit() -> GitCommitInfo {
+        let cwd = util::fs::get_cwd();
+        util::fs::set_cwd(&Self::get_vcpkg_root_dir());
+        let output = util::shell::run(
+            "git",
+            &vec![
+                "log",
+                "-n 1",
+                "--date=iso",
+                r#"--pretty=format:{"hash": "%H", "date_time": "%ad"}"#,
+            ],
+            true,
+            false,
+            false,
+        )
+        .unwrap();
+        util::fs::set_cwd(&cwd);
+
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        for line in stdout.split("\n") {
+            match serde_json::from_str(line) {
+                Err(e) => {
+                    tracing::error!(
+                        call = "serde_json::from_str",
+                        line = line,
+                        error_tag = ErrorTag::JsonDeserializeError.as_ref(),
+                        message = e.to_string()
+                    );
+                }
+                Ok(info) => {
+                    return info;
+                }
+            }
+        }
+
+        return GitCommitInfo::default();
     }
 
     fn get_commits(&mut self) -> Vec<GitCommitInfo> {

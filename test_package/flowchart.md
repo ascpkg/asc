@@ -21,13 +21,12 @@ flowchart LR;
     b/b.hpp ---> export.h;
     c/c.h ---> export.h;
     c/c.hpp ---> export.h;
-    d/d.h ---> export.h;
     d/d.hpp ---> export.h;
     lib.cpp ---> lib.hpp;
     lib.hpp ---> wrapping.hpp;
     main.cpp ---> wrapping.hpp;
     lib.cpp ---> config.h;
-    lib.hpp ---> config.h;
+    main.cpp ---> config.h;
     lib.cpp ---> version.h;
-    lib.hpp ---> version.h;
+    main.cpp ---> version.h;
 ```
