@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-void TEST_C_CPP_API fa();
+void TEST_PACKAGE_API fa();
 
 #ifdef __cplusplus
 }

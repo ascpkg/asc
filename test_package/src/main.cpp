@@ -21,7 +21,7 @@
 
 int main(int argc, char **argv)
 {
-    printf("%s\n", TEST_C_CPP_VERSION_STRING);
+    printf("%s\n", TEST_PACKAGE_VERSION_STRING);
 
     #if defined(HAVE_GETTIMEOFDAY)
     printf("HAVE_GETTIMEOFDAY\n");

@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-int TEST_C_CPP_API fd();
+char TEST_PACKAGE_API *fc(int i);
 
 #ifdef __cplusplus
 }

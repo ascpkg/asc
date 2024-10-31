@@ -2,7 +2,7 @@
 
 #include "export.h"
 
-class TEST_C_CPP_API CA
+class TEST_PACKAGE_API CA
 {
 public:
     CA();

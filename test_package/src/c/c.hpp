@@ -2,7 +2,7 @@
 
 #include "export.h"
 
-class TEST_C_CPP_API CC
+class TEST_PACKAGE_API CC
 {
 public:
     CC();

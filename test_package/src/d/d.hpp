@@ -2,7 +2,7 @@
 
 #include "export.h"
 
-class TEST_C_CPP_API CD
+class TEST_PACKAGE_API CD
 {
 public:
     CD();

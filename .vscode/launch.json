@@ -13,7 +13,7 @@
             "justMyCode": false,
             "args": [
                 "--clang-lib-dir=C:/Program Files/LLVM/bin",
-                "--source=test_c_cpp/src/a/a.h"
+                "--source=test_package/src/a/a.h"
             ]
         },
         {
@@ -32,7 +32,7 @@
                 }
             },
             "args": [
-                "--source-dir=test_c_cpp/src",
+                "--source-dir=test_package/src",
                 "--entry-point-source=main.cpp",
                 "--action-type=all",
                 "--cmake-target-type=library",
@@ -207,7 +207,7 @@
                 "add",
                 "spdlog"
             ],
-            "cwd": "${workspaceFolder}/test_c_cpp"
+            "cwd": "${workspaceFolder}/test_package"
         },
     ]
 }

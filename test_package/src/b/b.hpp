@@ -2,7 +2,7 @@
 
 #include "export.h"
 
-class TEST_C_CPP_API CB
+class TEST_PACKAGE_API CB
 {
 public:
     CB();

@@ -14,10 +14,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             &template,
             &json!({
                 "cmake_version": "3.20",
-                "project": "test_c_cpp",
+                "project": "test_package",
                 "executable": false,
                 "library": true,
-                "project_exports": "TEST_C_CPP_EXPORTS",
+                "project_exports": "TEST_PACKAGE_EXPORTS",
                 "sources_group_by_dir": [
                     {
                         "dir": "src",

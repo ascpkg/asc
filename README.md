@@ -157,7 +157,7 @@ members = [
 # simple project asc.toml
 ```toml
 [package]
-name = "test_c_cpp"
+name = "test_package"
 version = "2024.10.22"
 edition = "2024"
 ```
@@ -192,7 +192,7 @@ qt5-base = { version = "5.15.14#2", find = ["Qt5", "COMPONENTS", "Core", "Gui", 
 
 # asc exists sources
 ```
-> cd test_c_cpp
+> cd test_package
 > asc.exe init --lib
 2024-10-22 15:45:59.2468421  INFO asc::cli::commands::init: 37: init bin
 2024-10-22 15:45:59.2469928  INFO asc::cli::commands::init: 42: init package
@@ -203,11 +203,11 @@ qt5-base = { version = "5.15.14#2", find = ["Qt5", "COMPONENTS", "Core", "Gui", 
 2024-10-22 15:46:17.8208018  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:46:17.8216048  INFO asc::cli::commands::scan: 74: scan package
 2024-10-22 15:46:17.8218736  INFO asc::cli::commands::scan: 90: ScanOptions {
-    project: "test_c_cpp",
-    project_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp",
-    target_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/target",
-    source_dir: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/src",
-    entry_point_source: "D:/__develop__/FutureOrientedGB/asc/test_c_cpp/src/main.cpp",
+    project: "test_package",
+    project_dir: "D:/__develop__/FutureOrientedGB/asc/test_package",
+    target_dir: "D:/__develop__/FutureOrientedGB/asc/test_package/target",
+    source_dir: "D:/__develop__/FutureOrientedGB/asc/test_package/src",
+    entry_point_source: "D:/__develop__/FutureOrientedGB/asc/test_package/src/main.cpp",
     include_dirs: [],
     shared_lib: false,
     static_lib: false,
@@ -285,7 +285,7 @@ flowchart LR;
     main.cpp ---> wrapping.hpp;
 2024-10-22 15:46:18.0840313  WARN asc::cli::commands::scan: 104: output CMakeLists.txt
 2024-10-22 15:46:18.0942631  WARN asc::cli::commands::scan: 108: generate a build system with cmake
-2024-10-22 15:46:18.0948647  INFO asc::cmake::project: 12: command="cmake" args="-S D:/__develop__/FutureOrientedGB/asc/test_c_cpp -B D:/__develop__/FutureOrientedGB/asc/test_c_cpp/target"
+2024-10-22 15:46:18.0948647  INFO asc::cmake::project: 12: command="cmake" args="-S D:/__develop__/FutureOrientedGB/asc/test_package -B D:/__develop__/FutureOrientedGB/asc/test_package/target"
 -- Building for: Visual Studio 17 2022
 -- Selecting Windows SDK version 10.0.18362.0 to target Windows 10.0.22631.
 -- The C compiler identification is MSVC 19.41.34120.0
@@ -308,7 +308,7 @@ flowchart LR;
 -- Looking for O_BINARY - found
 -- Configuring done (5.1s)
 -- Generating done (0.0s)
--- Build files have been written to: D:/__develop__/FutureOrientedGB/asc/test_c_cpp/target
+-- Build files have been written to: D:/__develop__/FutureOrientedGB/asc/test_package/target
 
 > asc.exe build
 2024-10-22 15:46:28.0284024  INFO asc::cli::commands::build: 15: build
@@ -317,7 +317,7 @@ flowchart LR;
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
-  Building Custom Rule D:/__develop__/FutureOrientedGB/asc/test_c_cpp/CMakeLists.txt
+  Building Custom Rule D:/__develop__/FutureOrientedGB/asc/test_package/CMakeLists.txt
   main.cpp
   a.c
   a.cpp
@@ -325,15 +325,15 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
   b.cpp
   c.c
   c.cpp
-LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification [D:\__develop__\FutureOrientedGB\asc\test_c_cpp\target\test_c_cpp.vcxproj]
-  test_c_cpp.vcxproj -> D:\__develop__\FutureOrientedGB\asc\test_c_cpp\target\Debug\test_c_cpp.exe
-  Building Custom Rule D:/__develop__/FutureOrientedGB/asc/test_c_cpp/CMakeLists.txt
+LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification [D:\__develop__\FutureOrientedGB\asc\test_package\target\test_package.vcxproj]
+  test_package.vcxproj -> D:\__develop__\FutureOrientedGB\asc\test_package\target\Debug\test_package.exe
+  Building Custom Rule D:/__develop__/FutureOrientedGB/asc/test_package/CMakeLists.txt
   
 > asc.exe install
 2024-10-22 15:46:34.0671238  INFO asc::cli::commands::install: 15: install
 2024-10-22 15:46:34.0674419  WARN asc::config::method: 132: func="util::fs::is_file_exists" path="asc.toml" error_tag="file_exists_error" skip
 2024-10-22 15:46:34.0678842  INFO asc::cmake::install: 11: command="cmake" args="--install target --config Debug"
--- Installing: C:/Program Files (x86)/test_c_cpp/bin/test_c_cpp.exe
+-- Installing: C:/Program Files (x86)/test_package/bin/test_package.exe
 ```
 
 asc new workspace
