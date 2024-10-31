@@ -1,6 +1,9 @@
 use crate::templates;
 use crate::util;
 
+use super::VCPKG_CONFIGURATION_JSON_FILE_NAME;
+use super::VCPKG_JSON_FILE_NAME;
+
 pub static CMAKE_INSTALL_BIN_DIR_NAME: &str = "bin";
 pub static CMAKE_INSTALL_LIB_DIR_NAME: &str = "lib";
 pub static CMAKE_INSTALL_INCLUDE_DIR_NAME: &str = "include";
@@ -18,7 +21,12 @@ pub fn get_config_cmake_in_file_name(project: &str) -> String {
 pub fn clean_cmake_files(name: &str) -> bool {
     let mut has_error = false;
 
-    for path in [CMAKE_LISTS_TXT_FILE_NAME, VERSION_H_IN_FILE_NAME] {
+    for path in [
+        CMAKE_LISTS_TXT_FILE_NAME,
+        VERSION_H_IN_FILE_NAME,
+        VCPKG_JSON_FILE_NAME,
+        VCPKG_CONFIGURATION_JSON_FILE_NAME,
+    ] {
         if util::fs::is_file_exists(path) {
             has_error &= util::fs::remove_file(path);
         }

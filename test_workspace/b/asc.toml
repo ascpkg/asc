@@ -1,0 +1,12 @@
+[package]
+name = "b"
+version = "2024.10.31"
+edition = "2024"
+
+[features]
+
+[dependencies.spdlog]
+version = "1.14.1"
+find_packages = ["spdlog"]
+link_libraries = ["spdlog::spdlog"]
+features = []

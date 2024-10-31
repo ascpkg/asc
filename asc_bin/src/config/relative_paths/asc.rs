@@ -1,4 +1,4 @@
-use crate::{config::project::InstalledFiles, util};
+use crate::{cmake::project::default_vcpkg_triplet, config::project::InstalledFiles, util};
 
 use super::{CMAKE_INSTALL_INCLUDE_DIR_NAME, CMAKE_INSTALL_SHARE_DIR_NAME};
 
@@ -18,7 +18,7 @@ pub fn clean_asc_files() -> bool {
     if util::fs::is_dir_exists(ASC_TARGET_DIR_NAME) {
         let mut config = None;
         if let Some(data) = InstalledFiles::load(ASC_TARGET_INSTALLED_FILES_TOML_PATH, false) {
-            if data.prefix != ASC_TARGET_INSTALLED_DIR {
+            if data.prefix != format!("{}/{}", ASC_TARGET_INSTALLED_DIR, default_vcpkg_triplet()) {
                 config = Some(data);
             }
         }

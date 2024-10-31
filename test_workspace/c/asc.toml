@@ -1,0 +1,12 @@
+[package]
+name = "c"
+version = "2024.10.31"
+edition = "2024"
+
+[features]
+
+[dependencies.fmt]
+version = "11.0.2#1"
+find_packages = ["fmt"]
+link_libraries = ["fmt::fmt"]
+features = []

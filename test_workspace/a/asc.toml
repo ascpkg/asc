@@ -1,0 +1,12 @@
+[package]
+name = "a"
+version = "2024.10.31"
+edition = "2024"
+
+[features]
+
+[dependencies.cli11]
+version = "2.4.2#1"
+find_packages = ["CLI11"]
+link_libraries = ["CLI11::CLI11"]
+features = []

@@ -1,7 +1,8 @@
 use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
 use crate::config::relative_paths::{
-    VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
+    VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_BUILD_SYSTEMS_DIR_NAME, VCPKG_CMAKE_FILE_NAME,
+    VCPKG_DIR_NAME, VCPKG_SCRIPTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
 };
 use crate::util;
 
@@ -39,6 +40,16 @@ impl DataPath {
         format!(
             "{}/{}/{}",
             vcpkg_clone_dir, VCPKG_VERSIONS_DIR_NAME, VCPKG_BASELINE_JSON_FILE_NAME
+        )
+    }
+
+    pub fn vcpkg_scripts_build_systems_cmake_path(vcpkg_clone_dir: &str) -> String {
+        format!(
+            "{}/{}/{}/{}",
+            vcpkg_clone_dir,
+            VCPKG_SCRIPTS_DIR_NAME,
+            VCPKG_BUILD_SYSTEMS_DIR_NAME,
+            VCPKG_CMAKE_FILE_NAME
         )
     }
 
