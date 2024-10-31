@@ -11,6 +11,7 @@ use crate::config::relative_paths;
 use crate::errors::ErrorTag;
 use crate::graph;
 use crate::util;
+use crate::vcpkg;
 
 #[derive(Clone, Debug, Default)]
 pub struct ScanOptions {
@@ -132,6 +133,9 @@ impl ScanArgs {
         cmake::lists::gen(&options, &source_mappings, is_workspace, dependencies);
 
         if !is_workspace {
+            tracing::warn!("generate vcpkg manifest");
+            vcpkg::json::gen(&dependencies);
+
             tracing::warn!("generate a build system with cmake");
             cmake::project::gen(&options);
         }
@@ -144,6 +148,7 @@ impl ScanArgs {
         let cwd = util::fs::get_cwd();
         let mut has_error = false;
         let mut members = vec![];
+        let mut dependencies = BTreeMap::new();
         for member in &project_conf.workspace.as_ref().unwrap().members {
             util::fs::set_cwd(member);
 
@@ -165,6 +170,7 @@ impl ScanArgs {
                             &project_conf.dependencies,
                         ) {
                             members.push(member.clone());
+                            dependencies.extend(project_conf.dependencies);
                         } else {
                             has_error = true;
                         }
@@ -186,6 +192,9 @@ impl ScanArgs {
             &util::fs::get_cwd_name(),
             &members,
         );
+
+        tracing::warn!("generate vcpkg manifest");
+        vcpkg::json::gen(&dependencies);
 
         tracing::warn!("generate a build system with cmake");
         let options = ScanOptions {

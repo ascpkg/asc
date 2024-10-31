@@ -1,5 +1,8 @@
 use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
+use crate::config::relative_paths::{
+    VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
+};
 use crate::util;
 
 pub struct DataPath {}
@@ -19,7 +22,24 @@ impl DataPath {
     }
 
     pub fn vcpkg_clone_dir() -> String {
-        build(&Self::prefix(), "vcpkg")
+        build(&Self::prefix(), VCPKG_DIR_NAME)
+    }
+
+    pub fn vcpkg_versions_port_json_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
+        format!(
+            "{}/{}/{}-/{}.json",
+            vcpkg_clone_dir,
+            VCPKG_VERSIONS_DIR_NAME,
+            port_name.chars().nth(0).unwrap(),
+            port_name
+        )
+    }
+
+    pub fn vcpkg_versions_baseline_json_path(vcpkg_clone_dir: &str) -> String {
+        format!(
+            "{}/{}/{}",
+            vcpkg_clone_dir, VCPKG_VERSIONS_DIR_NAME, VCPKG_BASELINE_JSON_FILE_NAME
+        )
     }
 
     pub fn vcpkg_search_index_json() -> String {

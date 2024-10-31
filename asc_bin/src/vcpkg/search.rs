@@ -1,9 +1,22 @@
 use super::{
-    index::{VcpkgPortVersion, VcpkgSearchIndex},
+    index::{GitCommitInfo, VcpkgPortVersion, VcpkgSearchIndex},
     VcpkgManager,
 };
 
 use crate::{config, util};
+
+pub fn get_port_version_commit_info(port_name: &str, version: &str) -> Option<GitCommitInfo> {
+    for (v, c, d) in VcpkgManager::get_port_versions(port_name) {
+        if v == version {
+            return Some(GitCommitInfo {
+                hash: c,
+                date_time: d,
+                path: String::new(),
+            });
+        }
+    }
+    None
+}
 
 pub fn from_index_file(port_name: &str, list_all: bool) -> Vec<String> {
     let mut results = vec![];
