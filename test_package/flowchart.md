@@ -15,18 +15,7 @@ flowchart LR;
     c/c.cpp ---> c/c.hpp;
     c/mod.hpp ---> c/c.hpp;
     wrapping.hpp ---> c/mod.hpp;
-    a/a.h ---> export.h;
-    a/a.hpp ---> export.h;
-    b/b.h ---> export.h;
-    b/b.hpp ---> export.h;
-    c/c.h ---> export.h;
-    c/c.hpp ---> export.h;
-    d/d.hpp ---> export.h;
     lib.cpp ---> lib.hpp;
     lib.hpp ---> wrapping.hpp;
     main.cpp ---> wrapping.hpp;
-    lib.cpp ---> config.h;
-    main.cpp ---> config.h;
-    lib.cpp ---> version.h;
-    main.cpp ---> version.h;
 ```

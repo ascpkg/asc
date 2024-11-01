@@ -96,7 +96,7 @@
                 "scan",
                 "--shared-lib"
             ],
-            "cwd": "${workspaceFolder}/abc"
+            "cwd": "${workspaceFolder}/test_package"
         },
         
         {
@@ -205,7 +205,9 @@
             },
             "args": [
                 "add",
-                "spdlog"
+                "arrow",
+                "--feature=json",
+                "--feature=mimalloc@windows"
             ],
             "cwd": "${workspaceFolder}/test_package"
         },

@@ -63,11 +63,21 @@ pub struct InstalledFiles {
 #[derive(Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
 pub struct VcpkgDependency {
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<VcpkgDependencyDesc>,
     pub overrides: Vec<BTreeMap<String, String>>,
 
     #[serde(skip)]
     pub path: String,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct VcpkgDependencyDesc {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_features: Option<bool>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub features: Vec<BTreeMap<String, String>>,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, ConfigFile)]

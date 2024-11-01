@@ -7,7 +7,7 @@ use crate::{
     config::{
         project::{
             DependencyConfig, VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgDependency,
-            VcpkgRegistry,
+            VcpkgDependencyDesc, VcpkgRegistry,
         },
         relative_paths, system_paths,
     },
@@ -16,6 +16,8 @@ use crate::{
 
 static VCPKG_PORT_NAME_KEY: &str = "name";
 static VCPKG_PORT_VERSION_KEY: &str = "version";
+static VCPKG_PORT_PLATFORM_KEY: &str = "platform";
+static VCPKG_FEATURE_PLATFORM_DELIMITER: &str = "@";
 static VCPKG_REGISTRY_KIND_GIT: &str = "git";
 static VCPKG_REGISTRY_DEFAULT_KIND: &str = "artifact";
 static VCPKG_REGISTRY_DEFAULT_NAME: &str = "microsoft";
@@ -30,7 +32,28 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
     vcpkg_data.dependencies.clear();
 
     for (port_name, desc) in dependencies {
-        vcpkg_data.dependencies.push(port_name.clone());
+        let mut dep = VcpkgDependencyDesc::default();
+        dep.name = port_name.clone();
+        if !desc.features.is_empty() {
+            dep.default_features = Some(false);
+        }
+        for f in &desc.features {
+            match f.split_once(VCPKG_FEATURE_PLATFORM_DELIMITER) {
+                None => {
+                    dep.features.push(BTreeMap::from([(
+                        String::from(VCPKG_PORT_NAME_KEY),
+                        f.clone(),
+                    )]));
+                }
+                Some((n, p)) => {
+                    dep.features.push(BTreeMap::from([
+                        (String::from(VCPKG_PORT_NAME_KEY), n.to_string()),
+                        (String::from(VCPKG_PORT_PLATFORM_KEY), p.to_string()),
+                    ]));
+                }
+            };
+        }
+        vcpkg_data.dependencies.push(dep);
         vcpkg_data.overrides.push(BTreeMap::from([
             (String::from(VCPKG_PORT_NAME_KEY), port_name.clone()),
             (String::from(VCPKG_PORT_VERSION_KEY), desc.version.clone()),
@@ -83,10 +106,10 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
 
             // search baseline
             let mut found = true;
-            for name in &vcpkg_data.dependencies {
-                if !baseline_data.default.contains_key(name) {
+            for desc in &vcpkg_data.dependencies {
+                if !baseline_data.default.contains_key(&desc.name) {
                     found = false;
-                    tracing::warn!("can't found {name} in {hash} @ {date_time}");
+                    tracing::warn!("can't found {} in {hash} @ {date_time}", desc.name);
                     break;
                 }
             }
