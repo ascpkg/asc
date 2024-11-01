@@ -1,41 +1,41 @@
-# C/C++ package manager and auto source build （like Rust Cargo)
+# C/C++ 包管理和源码树自动编译工具 (类似 Rust Cargo)
 
-[简体中文](README.zh-CN.md)
+[英文](README.md)
 
-# 1. Features
-- new asc package/workspace or init exits sources to asc package/workspace
-- search/add/remove/install dependencies with vcpkg
-- auto scan source tree with libclang and output mermaid flowchart of source dependencies
-- auto generate cmake and vcpkg configurations for building
-- build/run/install/uninstall/clean targets
+# 1. 特性
+- 创建 asc包/工作区 或者将现有源码树初始化为 asc包/工作区
+- 通过 vcpkg 搜索/添加/移除/安装依赖
+- 使用 libclang 自动扫描源码树，并输入依赖图
+- 自动生成 cmake 和 vcpkg 配置
+- 编译/运行/安装/卸载/清理 目标
 
 
 
-# 2. Usage
+# 2. 使用指定
 > asc --help
 ```bash
 Usage: asc <COMMAND>
 
 Commands:
-  vcpkg      # get or set vcpkg config, update vcpkg repo, index for searching
-  search     # search package or list package versions
-  new        # new asc package or workspace which contains multiple sub packages
-  init       # init exists source to asc package or workspace
-  add        # add dependency to asc.toml
-  remove     # remove dependency from asc.toml
-  scan       # auto scan source tree, generate cmake and vcpkg configurations, install dependencies
-  build      # build source tree
-  run        # run target
-  install    # install build target
-  uninstall  # uninstall installed files
-  clean      # clean target and generated configurations
-  help       # print this message or the help of the given subcommand
+  vcpkg      # 打印或者设置 vcpkg, 更新 vcpkg 源码, 生成查找索引
+  search     # 搜索包或者列出包的所有版本
+  new        # 创建 asc包/工作区
+  init       # 将现有源码树初始化为 asc包/工作区
+  add        # 将依赖库添加到 asc.toml
+  remove     # 从 asc.toml 移除依赖库
+  scan       # 自动扫描源码树, 生成 cmake 和 vcpkg 配置, 并安装依赖
+  build      # 编译
+  run        # 运行
+  install    # 安装
+  uninstall  # 卸载
+  clean      # 清理
+  help       # 说明
 ```
 
 
-# 3. Command manual
+# 3. 子命令指南
 ## 3.1. vcpkg
-### 3.1.1. help
+### 3.1.1. 说明
 > asc vcpkg --help
 ```bash
 Usage: asc vcpkg [OPTIONS] <ACTION> [ARGS]...
@@ -51,12 +51,12 @@ Options:
       --path <PATH>            [default: ]
   -h, --help                   Print help
 ```
-### 3.1.2. configure vcpkg
+### 3.1.2. 配置 vcpkg
 > asc vcpkg set --repo="https://github.com/microsoft/vcpkg.git" --branch="master"
 ```bash
 2024-11-01 11:56:20.953362  INFO asc::cli::commands::vcpkg: 35: vcpkg repo="https://github.com/microsoft/vcpkg.git" branch="master"
 ```
-### 3.1.3. print vcpkg config
+### 3.1.3. 打印 vcpkg 配置
 > asc vcpkg get
 ```bash
 2024-11-01 11:54:20.6019443  INFO asc::cli::commands::vcpkg: 35: vcpkg
@@ -75,7 +75,7 @@ Options:
     path: "",
 }
 ```
-### 3.1.4. update vcpkg source
+### 3.1.4. 更新 vcpkg 源码
 > asc vcpkg update
 ```bash
 2024-11-01 11:57:46.6303125  INFO asc::cli::commands::vcpkg: 35: vcpkg
@@ -91,7 +91,7 @@ From https://github.com/microsoft/vcpkg
 2024-11-01 11:57:49.8008798  INFO asc::util::shell: 9: command: git, args: reset --hard origin/master
 HEAD is now at d221c5d2c Bot: Close more low quality issues (#41817)
 ```
-### 3.1.5. build search index
+### 3.1.5. 构建 vcpkg 查找索引
 > asc vcpkg index
 ```bash
 2024-11-01 13:11:15.851461  INFO asc::cli::commands::vcpkg: 35: vcpkg
@@ -115,13 +115,13 @@ Options:
       --list
   -h, --help  Print help
 ```
-### 3.2.2. search exact package
+### 3.2.2. 搜索完全匹配的包
 > asc search spdlog
 ```bash
 2024-11-01 11:59:09.8075094  INFO asc::cli::commands::search: 33: search name="spdlog"
 2024-11-01 11:59:09.8733259  INFO asc::cli::commands::search: 37: spdlog  1.14.1
 ```
-### 3.2.3. search package startswith
+### 3.2.3. 用前缀搜索包
 > asc search log*
 ```bash
 2024-11-01 12:01:16.2747683  INFO asc::cli::commands::search: 33: search name="log*"
@@ -134,7 +134,7 @@ Options:
 2024-11-01 12:01:16.3391528  INFO asc::cli::commands::search: 37: loguru  2.1.0#4
 2024-11-01 12:01:16.3393477  INFO asc::cli::commands::search: 37: loguru  2.1.0#4
 ```
-### 3.2.4. search package endswith
+### 3.2.4. 用后缀搜索包
 > asc search *log
 ```bash
 2024-11-01 12:01:40.6537929  INFO asc::cli::commands::search: 33: search name="*log"
@@ -153,7 +153,7 @@ Options:
 2024-11-01 12:01:40.7212863  INFO asc::cli::commands::search: 37: spdlog  1.14.1
 2024-11-01 12:01:40.7215186  INFO asc::cli::commands::search: 37: spdlog  1.14.1
 ```
-### 3.2.5. search package contains
+### 3.2.5. 搜索包含特征的包
 > asc search \*log\*
 ```bash
 2024-11-01 12:02:29.1520598  INFO asc::cli::commands::search: 33: search name="*log*"
@@ -174,7 +174,7 @@ Options:
 2024-11-01 12:02:29.2200787  INFO asc::cli::commands::search: 37: tinyfiledialogs  3.10.8#4
 2024-11-01 12:02:29.2203594  INFO asc::cli::commands::search: 37: log4cplus  2.1.1
 ```
-### 3.2.6. list package versions
+### 3.2.6. 列出指定包的所有版本
 > asc search spdlog --list
 ```bash
 2024-11-01 12:02:57.9698138  INFO asc::cli::commands::search: 33: search name="spdlog"
@@ -220,7 +220,7 @@ Options:
 ```
 
 ## 3.3. new
-### 3.3.1. help
+### 3.3.1. 说明
 > asc new --help
 ```bash
 Usage: asc new [OPTIONS] [NAME] [MEMBERS]...
@@ -234,8 +234,8 @@ Options:
       --workspace
   -h, --help       Print help
 ```
-### 3.3.2. new package
-#### 3.3.2.1. new binary package
+### 3.3.2. 创建包
+#### 3.3.2.1. 创建二进制包
 > asc new test_pkg_bin
 ```bash
 2024-11-01 13:21:43.4893593  INFO asc::cli::commands::new: 39: new bin name="test_pkg_bin"
@@ -251,7 +251,7 @@ Options:
 └─src
         main.cpp
 ```
-#### 3.3.2.2. new library package
+#### 3.3.2.2. 创建库
 > asc new --lib test_pkg_lib
 ```bash
 2024-11-01 13:23:24.8902102  INFO asc::cli::commands::new: 60: new lib name="test_pkg_lib"
@@ -269,8 +269,8 @@ Options:
         lib.cpp
         lib.hpp
 ```
-### 3.3.3. new workspace
-#### 3.3.3.1. new binary package
+### 3.3.3. 创建工作区
+#### 3.3.3.1. 创建包含二进制的工作区
 > asc new test_ws_bin --workspace a b c
 ```bash
 2024-11-01 13:25:39.7343758  INFO asc::cli::commands::new: 237: new workspace name="test_ws_bin"
@@ -308,7 +308,7 @@ Options:
     └─src
             main.cpp
 ```
-#### 3.3.3.2. new library package
+#### 3.3.3.2. 创建包含库的工作区
 > asc new --lib test_ws_lib --workspace a b c
 ```bash
 2024-11-01 13:26:55.2823825  INFO asc::cli::commands::new: 237: new workspace name="test_ws_lib"
@@ -355,7 +355,7 @@ Options:
 
 
 ## 3.4. init
-### 3.4.1. help
+### 3.4.1. 说明
 > asc init --help
 ```bash
 Usage: asc init [OPTIONS] [MEMBERS]...
@@ -368,8 +368,8 @@ Options:
       --workspace
   -h, --help       Print help
 ```
-### 3.4.2. init package
-#### 3.4.2.1. init binary package
+### 3.4.2. 将现在源码目录初始化为包
+#### 3.4.2.1. 将现在源码目录初始化为二进制包
 > cd exists_pkg_bin
 
 > tree /f
@@ -389,7 +389,7 @@ Options:
 └─src
         main.cpp
 ```
-#### 3.4.2.2. init library package
+#### 3.4.2.2. 将现在源码目录初始化为库
 > cd exists_pkg_lib
 
 > tree /f
@@ -413,8 +413,8 @@ Options:
         lib.cpp
         lib.hpp
 ```
-### 3.4.3. init workspace
-#### 3.4.3.1. init binary workspace
+### 3.4.3. 将现在源码目录初始化为工作区
+#### 3.4.3.1. 将现在源码目录初始化为二进制工作区
 > cd exists_ws_bin
 
 > tree /f
@@ -460,7 +460,7 @@ Options:
     └─src
             main.cpp
 ```
-#### 3.4.3.2. init library workspace
+#### 3.4.3.2. 将现在源码目录初始化为库工作区
 > cd exists_ws_lib
 
 > tree /f
@@ -521,7 +521,7 @@ Options:
 
 
 ## 3.5. add
-### 3.5.1. help
+### 3.5.1. 说明
 > asc add --help
 ```
 Usage: asc add [OPTIONS] <DEPENDENCY>
@@ -537,7 +537,7 @@ Options:
       --feature <FEATURE>            --feature=a --feature=b
   -h, --help                         Print help
 ```
-### 3.5.2. add latest version of package dependency to package configuration
+### 3.5.2. 将最新版本的包添加到工程依赖描述
 > cd test_package
 
 > cat asc.toml
@@ -583,7 +583,7 @@ link_libraries = [
 ]
 features = []
 ```
-### 3.5.3. add specific version of package dependency to workspace's sub package configuration
+### 3.5.3. 将指定版本的包添加到工作区的子工程的依赖描述
 > cd test_workspace
 
 > asc add cli11 --version="2.4.2#1" --find-package="CLI11" --link-library="CLI11::CLI11" --package=a
@@ -643,7 +643,7 @@ find_packages = ["spdlog"]
 link_libraries = ["spdlog::spdlog"]
 features = []
 ```
-### 3.5.6. add package dependency with features to workspace's sub package configuration
+### 3.5.6. 将指定版本指定特性的包添加到工作区的子工程的依赖描述
 > asc add arrow --feature=json --feature=mimalloc@windows --package=c
 ```bash
 2024-11-01 14:21:32.3342819  INFO asc::cli::commands::add: 27: add dependency="arrow"
@@ -680,7 +680,7 @@ features = []
 ```
 
 ## 3.6. remove
-### 3.6.1. help
+### 3.6.1. 说明
 > asc remove --help
 ```
 Usage: asc remove [OPTIONS] <DEPENDENCY>
@@ -692,7 +692,7 @@ Options:
       --package <PACKAGE>
   -h, --help               Print help
 ```
-### 3.6.2. remove specific package dependency
+### 3.6.2. 移除指定依赖
 > asc remove cli11
 ```bash
 2024-11-01 14:08:46.1405413  INFO asc::cli::commands::remove: 18: remove dependency="cli11"
@@ -717,7 +717,7 @@ edition = "2024"
 
 
 ## 3.7. scan
-### 3.7.1. help
+### 3.7.1. 说明
 > asc scan --help
 ```
 Usage: asc scan [OPTIONS] [NAME]
@@ -731,7 +731,7 @@ Options:
       --cmake-minimum-version <CMAKE_MINIMUM_VERSION>  [default: 3.20]
   -h, --help                                           Print help
 ```
-### 3.7.2. scan package as binary
+### 3.7.2. 扫描二进制包
 > cd test_package
 
 > asc scan
@@ -926,7 +926,7 @@ The package spdlog provides CMake targets:
 -- Generating done (0.0s)
 -- Build files have been written to: D:/sources/asc/test_package/target
 ```
-### 3.7.3. scan workspace as shared library
+### 3.7.3. 将工作区扫描库动态库
 > cd test_workspace
 
 > asc scan --shared-lib
@@ -1109,7 +1109,7 @@ CMake Generate step failed.  Build files cannot be regenerated correctly.
 
 
 ## 3.8. build
-### 3.8.1. help
+### 3.8.1. 说明
 > asc build --help
 ```
 Usage: asc build [OPTIONS] [NAME]
@@ -1121,7 +1121,7 @@ Options:
       --config <CONFIG>  [default: Debug] [possible values: Debug, Release]
   -h, --help             Print help
 ```
-### 3.8.2. build package
+### 3.8.2. 编译包
 > cd test_package
 
 > asc build
@@ -1143,7 +1143,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
   test_package.vcxproj -> D:\__develop__\FutureOrientedGB\asc\test_package\target\Debug\test_package.exe
   Building Custom Rule D:/sources/asc/test_package/CMakeLists.txt
 ```
-### 3.8.3. build workspace
+### 3.8.3. 编译工作区
 > cd test_workspace
 
 > asc build
@@ -1170,7 +1170,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
   c.vcxproj -> D:\__develop__\FutureOrientedGB\asc\test_workspace\target\c\Debug\c.dll
   Building Custom Rule D:/sources/asc/test_workspace/CMakeLists.txt
 ```
-### 3.8.4. build release mode
+### 3.8.4. release 模式编译工作区
 > asc build --config=Release
 ```bash
 2024-11-01 14:35:47.3051576  INFO asc::cli::commands::build: 16: build name="test_workspace"
@@ -1195,7 +1195,7 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
 
 ## 3.9. run
-### 3.9.1. help
+### 3.9.1. 说明
 > asc vcpkg run --help
 ```
 Usage: asc run --config <CONFIG> [NAME] [ARGS]...
@@ -1208,7 +1208,7 @@ Options:
       --config <CONFIG>  [possible values: Debug, Release]
   -h, --help             Print help
 ```
-### 3.9.2. run package target
+### 3.9.2. 运行包
 > asc run --config=Debug
 ```bash
 2024-11-01 14:37:41.1921068  INFO asc::cli::commands::run: 19: run
@@ -1216,7 +1216,7 @@ Options:
 2024.11.1
 NOT HAVE_GETTIMEOFDAY
 ```
-### 3.9.3. run workspace member package
+### 3.9.3. 运行工作区指定包
 > asc new abc --workspace a b c
 
 > cd abc
@@ -1233,7 +1233,7 @@ Hello, world!
 ```
 
 ## 3.10. install
-### 3.10.1. help
+### 3.10.1. 说明
 > asc install --help
 ```
 Usage: asc install [OPTIONS]
@@ -1243,7 +1243,7 @@ Options:
       --config <CONFIG>  [default: Debug] [possible values: Debug, Release]
   -h, --help             Print help
 ```
-### 3.10.2. install files to default directory
+### 3.10.2. 安装到默认路径
 > asc install
 ```bash
 2024-11-01 14:43:13.4602646  INFO asc::cli::commands::install: 17: install name="test_workspace"
@@ -1264,7 +1264,7 @@ Options:
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/include/c/lib.hpp
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/share/c/c-config.cmake
 ```
-### 3.10.2. install files to specific directory
+### 3.10.2. 安装到指定路径
 > asc install --prefix=d:/test_dir
 ```bash
 2024-11-01 14:44:34.2393421  INFO asc::cli::commands::install: 17: install name="test_workspace"
@@ -1287,7 +1287,7 @@ Options:
 ```
 
 ## 3.11. uninstall
-### 3.11.1. help
+### 3.11.1. 说明
 > asc vcpkg uninstall --help
 ```
 Usage: asc uninstall
@@ -1295,7 +1295,7 @@ Usage: asc uninstall
 Options:
   -h, --help  Print help
 ```
-### 3.11.2. uninstall installed files
+### 3.11.2. 卸载已安装的文件
 > asc uninstall
 ```bash
 2024-11-01 14:46:06.0361699  INFO asc::cli::commands::uninstall: 10: uninstall name="test_workspace"
@@ -1330,7 +1330,7 @@ Options:
 ```
 
 ## 3.12. clean
-### 3.12.1. help
+### 3.12.1. 说明
 > asc vcpkg clean --help
 ```
 PS D:\__develop__\FutureOrientedGB\asc\test_workspace> ..\target\debug\asc clean --help
@@ -1339,7 +1339,7 @@ Usage: asc clean
 Options:
   -h, --help  Print help
 ```
-### 3.12.2. remove target and generated configurations
+### 3.12.2. 清理编译输出和自动生成的配置
 ```bash
 2024-11-01 14:46:40.2707949  INFO asc::cli::commands::clean: 45: clean workspace name="test_workspace"
 2024-11-01 14:46:40.2715091  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="CMakeLists.txt"
@@ -1367,8 +1367,8 @@ Options:
 2024-11-01 14:46:40.3197923  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="user.cmake"
 ```
 
-# 4. asc.toml manual
-## 4.1. workspace
+# 4. asc.toml 说明
+## 4.1. 工作区配置描述
 ```toml
 [workspace]
 members = [
@@ -1377,7 +1377,7 @@ members = [
     "c",
 ]
 ```
-## 4.2. package
+## 4.2. 包配置描述
 ```toml
 [package]
 name = "test_package"
@@ -1424,12 +1424,12 @@ features = []
 ```
 
 
-# 5. build
+# 5. 编译
 ## 5.1. cargo
 > cargo build
 
 > cargo build --release
-## 5.2. environment
+## 5.2. 依赖环境
 ### 5.2.1. libclang
 * install libclang >= 10.0 and add it's bin directory to PATH
 > clang --version
