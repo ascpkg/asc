@@ -1,6 +1,6 @@
 [package]
 name = "config_file_derives"
-version = "2024.10.25"
+version = "2024.11.1"
 edition = "2021"
 
 [lib]

@@ -24,6 +24,7 @@ features = []
 version = "10.0.0"
 find_packages = ["fmt"]
 link_libraries = ["fmt::fmt"]
+features = []
 
 [dependencies.openssl]
 version = "3.3.2#1"
