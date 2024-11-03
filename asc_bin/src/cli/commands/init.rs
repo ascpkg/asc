@@ -1,5 +1,8 @@
+use std::collections::BTreeSet;
+
 use clap::Args;
 
+use crate::config::project::EntryConfig;
 use crate::errors::ErrorTag;
 use crate::util;
 use crate::{config, config::relative_paths};
@@ -10,14 +13,18 @@ pub struct InitArgs {
     pub lib: bool,
 
     #[clap(long, default_value_t = false)]
+    pub shared: bool,
+
+    #[clap(long, default_value_t = false)]
     pub workspace: bool,
 
-    pub members: Option<Vec<String>>,
+    #[clap(long)]
+    pub member: Vec<String>,
 }
 
 impl InitArgs {
     pub fn exec(&self) -> bool {
-        if self.workspace && self.members.is_some() {
+        if self.workspace {
             return self.init_workspace();
         } else if !self.lib {
             return self.init_bin(&self.name());
@@ -63,6 +70,28 @@ impl InitArgs {
         package.edition = relative_paths::ASC_EDITION.to_string();
         project.package = Some(package);
 
+        if self.lib {
+            project.libs = Some(BTreeSet::from([EntryConfig {
+                name: name.to_string(),
+                path: format!(
+                    "{}/{}",
+                    relative_paths::SRC_DIR_NAME,
+                    relative_paths::LIB_CPP_FILE_NAME
+                ),
+                shared: if self.shared { Some(true) } else { Some(false) },
+            }]));
+        } else {
+            project.bins = Some(BTreeSet::from([EntryConfig {
+                name: name.to_string(),
+                path: format!(
+                    "{}/{}",
+                    relative_paths::SRC_DIR_NAME,
+                    relative_paths::MAIN_CPP_FILE_NAME
+                ),
+                shared: None,
+            }]));
+        }
+
         // write asc.toml
         return project.write_project_conf();
     }
@@ -71,10 +100,9 @@ impl InitArgs {
         tracing::info!(message = "init workspace", name = util::fs::get_cwd());
 
         // validate args
-        let members = self.members.as_ref().unwrap();
-        if members.is_empty() {
+        if self.member.is_empty() {
             tracing::error!(
-                func = "members.is_empty",
+                func = "self.member.is_empty",
                 error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
             );
             return false;
@@ -85,7 +113,7 @@ impl InitArgs {
         // init members
         let mut has_error = false;
         let mut workspace = config::project::WorkSpaceConfig::default();
-        for m in members {
+        for m in &self.member {
             if workspace.members.insert(m.clone()) {
                 let mut args = Self::default();
                 args.lib = self.lib;

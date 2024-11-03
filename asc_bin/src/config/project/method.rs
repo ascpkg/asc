@@ -1,8 +1,6 @@
 #[allow(unused_imports)]
 use super::data::{DependencyConfig, EntryConfig, PackageConfig, ProjectConfig, WorkSpaceConfig};
-use crate::config::relative_paths::{
-    ASC_TARGET_DIR_NAME, ASC_TOML_FILE_NAME, LIB_CPP_FILE_NAME, MAIN_CPP_FILE_NAME, SRC_DIR_NAME,
-};
+use crate::config::relative_paths::{ASC_TARGET_DIR_NAME, ASC_TOML_FILE_NAME};
 use crate::{config::relative_paths, errors::ErrorTag, util};
 
 #[allow(unused_imports)]
@@ -109,73 +107,28 @@ impl ProjectConfig {
         }
     }
 
-    pub fn get_target_name_src(
-        &self,
-        name: &Option<String>,
-        shared_lib: bool,
-        static_lib: bool,
-    ) -> (String, String) {
-        let mut package_name = String::new();
-        if self.package.is_some() {
-            package_name = self.package.as_ref().unwrap().name.clone();
+    pub fn get_target_name_src(&self) -> (String, String, bool, bool) {
+        // first bin
+        if let Some(bins) = &self.bins {
+            for entry in bins {
+                return (entry.name.clone(), entry.path.clone(), false, false);
+            }
         }
 
-        if !shared_lib && !static_lib {
-            // bin
-            return self.get_target_name_src_inner(
-                name,
-                &self.bins,
-                &package_name,
-                &format!("{}/{}", SRC_DIR_NAME, MAIN_CPP_FILE_NAME),
-            );
-        } else {
-            // lib
-            return self.get_target_name_src_inner(
-                name,
-                &self.libs,
-                &package_name,
-                &format!("{}/{}", SRC_DIR_NAME, LIB_CPP_FILE_NAME),
-            );
+        // first lib
+        if let Some(libs) = &self.libs {
+            for entry in libs {
+                let is_shared_lib = entry.shared.unwrap();
+                return (
+                    entry.name.clone(),
+                    entry.path.clone(),
+                    is_shared_lib,
+                    !is_shared_lib,
+                );
+            }
         }
-    }
 
-    fn get_target_name_src_inner(
-        &self,
-        name: &Option<String>,
-        entries: &Option<BTreeSet<EntryConfig>>,
-        default_name: &str,
-        default_path: &str,
-    ) -> (String, String) {
-        // no bins and libs, use package
-        if entries.is_none() || entries.as_ref().unwrap().is_empty() {
-            if default_name.is_empty() {
-                return (String::new(), String::new());
-            }
-            return (default_name.to_string(), default_path.to_string());
-        } else {
-            // try to use bins/libs
-            if name.is_none() {
-                return (String::new(), String::new());
-            }
-            let name = name.as_ref().unwrap();
-            // validate name
-            if name.is_empty() {
-                return (String::new(), String::new());
-            }
-            // validate bins/libs
-            let mut path = String::new();
-            for entry in entries.as_ref().unwrap() {
-                if &entry.name == name {
-                    path = entry.path.clone();
-                    break;
-                }
-            }
-            if path.is_empty() {
-                return (String::new(), String::new());
-            }
-
-            return (name.clone(), path);
-        }
+        return (String::new(), String::new(), false, false);
     }
 }
 
@@ -286,6 +239,7 @@ default = [
         bins.insert(EntryConfig {
             name: String::from("a"),
             path: String::from("src/main.cpp"),
+            shared: None,
         });
         data.bins = Some(bins);
 

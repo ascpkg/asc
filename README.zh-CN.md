@@ -223,16 +223,17 @@ Options:
 ### 3.3.1. 说明
 > asc new --help
 ```bash
-Usage: asc new [OPTIONS] [NAME] [MEMBERS]...
+Usage: asc.exe new [OPTIONS] [NAME]
 
 Arguments:
   [NAME]
-  [MEMBERS]...
 
 Options:
       --lib
+      --shared
       --workspace
-  -h, --help       Print help
+      --member <MEMBER>
+  -h, --help             Print help
 ```
 ### 3.3.2. 创建包
 #### 3.3.2.1. 创建二进制包
@@ -251,8 +252,10 @@ Options:
 └─src
         main.cpp
 ```
-#### 3.3.2.2. 创建库
+#### 3.3.2.2. 创建静态库或动态库
 > asc new --lib test_pkg_lib
+
+> asc new --lib --shared test_pkg_lib
 ```bash
 2024-11-01 13:23:24.8902102  INFO asc::cli::commands::new: 60: new lib name="test_pkg_lib"
 2024-11-01 13:23:24.8903728  INFO asc::cli::commands::new: 185: new package name="test_pkg_lib"
@@ -271,7 +274,7 @@ Options:
 ```
 ### 3.3.3. 创建工作区
 #### 3.3.3.1. 创建包含二进制的工作区
-> asc new test_ws_bin --workspace a b c
+> asc new test_ws_bin --workspace --member=a --member=b --member=c
 ```bash
 2024-11-01 13:25:39.7343758  INFO asc::cli::commands::new: 237: new workspace name="test_ws_bin"
 2024-11-01 13:25:39.7510082  INFO asc::cli::commands::new: 39: new bin name="a"
@@ -308,8 +311,10 @@ Options:
     └─src
             main.cpp
 ```
-#### 3.3.3.2. 创建包含库的工作区
-> asc new --lib test_ws_lib --workspace a b c
+#### 3.3.3.2. 创建包含动态库或者静态库的工作区
+> asc new --lib test_ws_lib --workspace --member=a --member=b --member=c
+
+> asc new --lib --shared test_ws_lib --workspace --member=a --member=b --member=c
 ```bash
 2024-11-01 13:26:55.2823825  INFO asc::cli::commands::new: 237: new workspace name="test_ws_lib"
 2024-11-01 13:26:55.2828598  INFO asc::cli::commands::new: 60: new lib name="a"
@@ -358,15 +363,14 @@ Options:
 ### 3.4.1. 说明
 > asc init --help
 ```bash
-Usage: asc init [OPTIONS] [MEMBERS]...
-
-Arguments:
-  [MEMBERS]...
+Usage: asc.exe init [OPTIONS]
 
 Options:
       --lib
+      --shared
       --workspace
-  -h, --help       Print help
+      --member <MEMBER>
+  -h, --help             Print help
 ```
 ### 3.4.2. 将现在源码目录初始化为包
 #### 3.4.2.1. 将现在源码目录初始化为二进制包
@@ -389,7 +393,7 @@ Options:
 └─src
         main.cpp
 ```
-#### 3.4.2.2. 将现在源码目录初始化为库
+#### 3.4.2.2. 将现在源码目录初始化为静态库或动态库
 > cd exists_pkg_lib
 
 > tree /f
@@ -400,6 +404,8 @@ Options:
         lib.hpp
 ```
 > asc init --lib
+
+> asc init --lib --shared
 ```bash
 2024-11-01 13:35:58.8920565  INFO asc::cli::commands::init: 39: init bin name="exists_pkg_lib"
 2024-11-01 13:35:58.892298  INFO asc::cli::commands::init: 44: init package name="exists_pkg_lib"
@@ -431,7 +437,7 @@ Options:
     └─src
             main.cpp
 ```
-> asc init --workspace a b c
+> asc init --workspace --member=a --member=b --member=c
 ```bash
 2024-11-01 13:37:23.1650265  INFO asc::cli::commands::init: 71: init workspace name="D:/sources/asc/exists_ws_bin"
 2024-11-01 13:37:23.1653402  INFO asc::cli::commands::init: 44: init package name="a"
@@ -460,7 +466,7 @@ Options:
     └─src
             main.cpp
 ```
-#### 3.4.3.2. 将现在源码目录初始化为库工作区
+#### 3.4.3.2. 将现在源码目录初始化为动态库或静态库工作区
 > cd exists_ws_lib
 
 > tree /f
@@ -483,7 +489,9 @@ Options:
             lib.cpp
             lib.hpp
 ```
-> asc init --lib --workspace a b c
+> asc init --lib --workspace --member=a --member=b --member=c
+
+> asc init --lib --shared --workspace --member=a --member=b --member=c
 ```bash
 2024-11-01 13:38:45.3604913  INFO asc::cli::commands::init: 71: init workspace name="D:/sources/asc/exists_ws_lib"
 2024-11-01 13:38:45.3611687  INFO asc::cli::commands::init: 44: init package name="a"

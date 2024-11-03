@@ -17,6 +17,7 @@ pub struct PackageConfig {
 pub struct EntryConfig {
     pub name: String,
     pub path: String,
+    pub shared: Option<bool>,
 }
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]

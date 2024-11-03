@@ -16,15 +16,19 @@ pub struct NewArgs {
     pub lib: bool,
 
     #[clap(long, default_value_t = false)]
+    pub shared: bool,
+
+    #[clap(long, default_value_t = false)]
     pub workspace: bool,
 
-    pub members: Option<Vec<String>>,
+    #[clap(long)]
+    pub member: Vec<String>,
 }
 
 impl NewArgs {
     pub fn exec(&self) -> bool {
         if self.name.is_some() {
-            if self.workspace && self.members.is_some() {
+            if self.workspace {
                 return self.new_workspace();
             } else if !self.lib {
                 return self.new_bin(self.name.as_ref().unwrap());
@@ -219,18 +223,23 @@ impl NewArgs {
 
         // init
         util::fs::set_cwd(name);
-        let mut args = init::InitArgs::default();
-        args.lib = self.lib;
-        args.workspace = self.workspace;
-        args.members = self.members.clone();
+        let args = init::InitArgs {
+            lib: self.lib,
+            shared: self.shared,
+            workspace: self.workspace,
+            member: self.member.clone(),
+        };
         return args.init_package(name) && util::fs::set_cwd(&cwd);
     }
 
     fn new_workspace(&self) -> bool {
         // validate args
         let name = self.name.as_ref().unwrap();
-        let members = self.members.as_ref().unwrap();
-        if name.is_empty() || members.is_empty() {
+        if name.is_empty() || self.member.is_empty() {
+            tracing::error!(
+                func = "self.member.is_empty",
+                error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+            );
             return false;
         }
 
@@ -261,7 +270,7 @@ impl NewArgs {
         util::fs::set_cwd(name);
         let mut has_error = false;
         let mut workspace = config::project::WorkSpaceConfig::default();
-        for m in members {
+        for m in &self.member {
             if workspace.members.insert(m.clone()) {
                 if self.lib {
                     if !self.new_lib(m) {

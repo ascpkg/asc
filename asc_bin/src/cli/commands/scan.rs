@@ -29,14 +29,6 @@ pub struct ScanOptions {
 
 #[derive(Args, Debug, Clone)]
 pub struct ScanArgs {
-    pub name: Option<String>,
-
-    #[clap(long, default_value_t = false)]
-    pub shared_lib: bool,
-
-    #[clap(long, default_value_t = false)]
-    pub static_lib: bool,
-
     #[clap(long, default_value = "3.20")]
     pub cmake_minimum_version: String,
 }
@@ -54,19 +46,16 @@ impl ScanArgs {
                     return self.scan_workspace(&project_conf);
                 }
 
-                if project_conf.package.is_none()
-                    && project_conf.bins.is_none()
-                    && project_conf.libs.is_none()
-                {
+                if project_conf.bins.is_none() && project_conf.libs.is_none() {
                     tracing::error!(
                         error_tag = ErrorTag::InvalidProjectPackageError.as_ref(),
-                        message = "package, bins, libs were not found"
+                        message = "bins, libs were not found"
                     );
                     return false;
                 }
 
-                let (target_name, target_src) =
-                    project_conf.get_target_name_src(&self.name, self.shared_lib, self.static_lib);
+                let (target_name, target_src, is_shared_lib, is_static_lib) =
+                    project_conf.get_target_name_src();
                 if target_name.is_empty() || target_src.is_empty() {
                     tracing::error!(
                         func = "target_name.is_empty || target_src.is_empty",
@@ -78,6 +67,8 @@ impl ScanArgs {
                     &target_src,
                     false,
                     &project_conf.dependencies,
+                    is_shared_lib,
+                    is_static_lib,
                 );
             }
         }
@@ -89,6 +80,8 @@ impl ScanArgs {
         path: &str,
         is_workspace: bool,
         dependencies: &BTreeMap<String, DependencyConfig>,
+        is_shared_lib: bool,
+        is_static_lib: bool,
     ) -> bool {
         tracing::info!(message = "scan package", name = name);
 
@@ -109,8 +102,8 @@ impl ScanArgs {
             source_dir: format!("{cwd}/{}", relative_paths::SRC_DIR_NAME),
             entry_point_source: format!("{cwd}/{}", path),
             include_dirs: vec![],
-            shared_lib: self.shared_lib,
-            static_lib: self.static_lib,
+            shared_lib: is_shared_lib,
+            static_lib: is_static_lib,
             cmake_minimum_version: self.cmake_minimum_version.clone(),
             ..Default::default()
         };
@@ -149,6 +142,7 @@ impl ScanArgs {
         let mut has_error = false;
         let mut members = vec![];
         let mut dependencies = BTreeMap::new();
+        let is_shared_lib = false;
         for member in &project_conf.workspace.as_ref().unwrap().members {
             util::fs::set_cwd(member);
 
@@ -157,17 +151,16 @@ impl ScanArgs {
                     has_error = true;
                 }
                 Some(project_conf) => {
-                    let (target_name, target_src) = project_conf.get_target_name_src(
-                        &Some(member.clone()),
-                        self.shared_lib,
-                        self.static_lib,
-                    );
+                    let (target_name, target_src, is_shared_lib, is_static_lib) =
+                        project_conf.get_target_name_src();
                     if !target_name.is_empty() && !target_src.is_empty() {
                         if self.scan_package(
                             &target_name,
                             &target_src,
                             true,
                             &project_conf.dependencies,
+                            is_shared_lib,
+                            is_static_lib,
                         ) {
                             members.push(member.clone());
                             dependencies.extend(project_conf.dependencies);
@@ -200,7 +193,7 @@ impl ScanArgs {
         let options = ScanOptions {
             project_dir: cwd.clone(),
             target_dir: format!("{cwd}/{}", relative_paths::ASC_TARGET_DIR_NAME),
-            shared_lib: self.shared_lib,
+            shared_lib: is_shared_lib,
             ..Default::default()
         };
         cmake::project::gen(&options);

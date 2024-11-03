@@ -12,10 +12,10 @@ pub struct AddArgs {
     #[clap(long, default_value = "")]
     pub version: String,
 
-    #[clap(long, help = "--find-package=a --find-package=b")]
+    #[clap(long, help = "--find-package=a --find-package=b@!windows")]
     pub find_package: Vec<String>,
 
-    #[clap(long, help = "--find-library=c --find-library=d")]
+    #[clap(long, help = "--find-library=c --find-library=d@windows")]
     pub link_library: Vec<String>,
 
     #[clap(long, help = "--feature=a --feature=b")]
