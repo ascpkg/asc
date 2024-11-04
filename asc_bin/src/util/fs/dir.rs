@@ -28,6 +28,15 @@ pub fn get_cwd_parent() -> String {
         .replace(r"\", "/")
 }
 
+pub fn get_parent_dir(current: &str) -> String {
+    std::path::Path::new(current)
+        .parent()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace(r"\", "/")
+}
+
 pub fn set_cwd(dir: &str) -> bool {
     std::env::set_current_dir(dir).is_ok()
 }

@@ -1334,7 +1334,7 @@ Options:
 2024-11-01 14:46:06.0460582  INFO asc::config::relative_paths::asc: 61: func="util::fs::remove_dirs" path="d:/test_dir/x64-windows-static/share/c"
 2024-11-01 14:46:06.0464013  INFO asc::util::fs::dir: 83: func="std::fs::remove_dir_all" path="d:/test_dir/x64-windows-static/share/b"
 2024-11-01 14:46:06.0466544  INFO asc::config::relative_paths::asc: 61: func="util::fs::remove_dirs" path="d:/test_dir/x64-windows-static/share/b"
-2024-11-01 14:46:06.0471102  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="target/installed_files.toml"
+2024-11-01 14:46:06.0471102  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path=".asc/installed_files.toml"
 ```
 
 ## 3.12. clean
@@ -1353,7 +1353,7 @@ Options:
 2024-11-01 14:46:40.2715091  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="CMakeLists.txt"
 2024-11-01 14:46:40.2719851  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="vcpkg.json"
 2024-11-01 14:46:40.2723839  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="vcpkg-configuration.json"
-2024-11-01 14:46:40.2731009 ERROR asc::config::types::toml: 13: func="std::fs::read_to_string" path="target/installed_files.toml" error_tag="read_file_error" error_str="The system cannot find the file specified. (os error 2)"
+2024-11-01 14:46:40.2731009 ERROR asc::config::types::toml: 13: func="std::fs::read_to_string" path=".asc/installed_files.toml" error_tag="read_file_error" error_str="The system cannot find the file specified. (os error 2)"
 2024-11-01 14:46:40.3164334  INFO asc::util::fs::dir: 83: func="std::fs::remove_dir_all" path="target"
 2024-11-01 14:46:40.3166662  INFO asc::cli::commands::clean: 33: clean package name="a"
 2024-11-01 14:46:40.3169021  INFO asc::util::fs::file: 51: func="std::fs::remove_file" path="CMakeLists.txt"

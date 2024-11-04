@@ -97,7 +97,7 @@ find_package({{package}} CONFIG REQUIRED)
 target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_BINARY_DIR}
 {{#each include_dirs as |dir|}}
     "{{dir}}"

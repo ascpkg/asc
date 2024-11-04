@@ -45,7 +45,7 @@ pub fn get_include_files(source: &String, options: &cli::commands::scan::ScanOpt
         )
     };
     if translation_unit.is_null() {
-        tracing::info!("clang_sys::clang_parseTranslationUnit error");
+        tracing::error!("clang_sys::clang_parseTranslationUnit error");
         unsafe { clang_sys::clang_disposeIndex(index) };
         return include_files;
     }

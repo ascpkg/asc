@@ -204,16 +204,11 @@ fn group_data(
     let mut install_headers = BTreeMap::<String, String>::new();
     for (header, sources) in &source_mappings.header_include_by_sources {
         {
-            let header_locate_dir = std::path::Path::new(header)
-                .parent()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string();
+            let header_locate_dir = util::fs::get_parent_dir(header);
 
             // prepare install headers's src and dst
             let src = if header.starts_with(&options.source_dir) {
-                util::fs::remove_prefix(header, &options.project_dir, &options.target_dir)
+                header.clone()
             } else {
                 format!(
                     "${{CMAKE_CURRENT_BINARY_DIR}}/{}",
@@ -237,17 +232,13 @@ fn group_data(
             // group header
             let relative_path: String =
                 util::fs::remove_prefix(header, &options.project_dir, &options.target_dir);
-            let dir = std::path::Path::new(&relative_path)
-                .parent()
-                .unwrap()
-                .to_str()
-                .unwrap();
+            let dir = util::fs::get_parent_dir(&relative_path);
             let classify = dir.replace("/", "_");
             classify_to_dir.insert(classify.clone(), dir.to_string());
             group_sources
                 .entry(classify.to_string())
                 .or_default()
-                .insert(relative_path);
+                .insert(header.clone());
         }
 
         {
@@ -255,17 +246,13 @@ fn group_data(
                 // group source
                 let relative_path: String =
                     util::fs::remove_prefix(src, &options.project_dir, &options.target_dir);
-                let dir = std::path::Path::new(&relative_path)
-                    .parent()
-                    .unwrap()
-                    .to_str()
-                    .unwrap();
+                let dir = util::fs::get_parent_dir(&relative_path);
                 let classify = dir.replace("/", "_");
                 classify_to_dir.insert(classify.clone(), dir.to_string());
                 group_sources
                     .entry(classify.to_string())
                     .or_default()
-                    .insert(relative_path);
+                    .insert(src.clone());
             }
         }
     }

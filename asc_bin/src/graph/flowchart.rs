@@ -1,10 +1,7 @@
 use crate::clang;
 use crate::cli;
+use crate::config::relative_paths;
 use crate::util;
-
-pub fn path(_options: &cli::commands::scan::ScanOptions) -> String {
-    format!("flowchart.md")
-}
 
 pub fn gen(
     options: &cli::commands::scan::ScanOptions,
@@ -20,7 +17,7 @@ pub fn gen(
     }
 
     std::fs::write(
-        path(&options),
+        relative_paths::FLOW_CHART_MD_FILE_NAME,
         format!("```mermaid\n{}\n```", mermaid_flow_chart).as_bytes(),
     )
     .unwrap();

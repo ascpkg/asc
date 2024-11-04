@@ -21,7 +21,7 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
     println!("{}", &stdout);
 
     let mut data = config::project::InstalledFiles::default();
-    data.path = relative_paths::ASC_TARGET_INSTALLED_FILES_TOML_PATH.to_string();
+    data.path = relative_paths::ASC_PROJECT_INSTALLED_FILES_TOML_PATH.to_string();
     data.prefix = install_prefix;
     for line in stdout.split("\n") {
         let path = line

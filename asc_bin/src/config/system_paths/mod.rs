@@ -6,11 +6,7 @@ static APPLICATION: &str = "asc";
 
 fn build(prefix: &str, name: &str) -> String {
     let path = format!("{prefix}/{name}");
-    let dir = std::path::Path::new(&path)
-        .parent()
-        .unwrap()
-        .to_str()
-        .unwrap();
+    let dir = &util::fs::get_parent_dir(&path);
     if !util::fs::is_dir_exists(dir) {
         util::fs::create_dir(&dir);
     }

@@ -91,8 +91,11 @@ impl ProjectConfig {
     }
 
     pub fn is_source_scaned() -> bool {
-        if util::fs::is_file_exists(relative_paths::CMAKE_LISTS_TXT_FILE_NAME)
-            && util::fs::is_dir_exists(ASC_TARGET_DIR_NAME)
+        if util::fs::is_file_exists(&format!(
+            "{}/{}",
+            relative_paths::ASC_PROJECT_DIR_NAME,
+            relative_paths::CMAKE_LISTS_TXT_FILE_NAME
+        )) && util::fs::is_dir_exists(ASC_TARGET_DIR_NAME)
         {
             return true;
         } else {
@@ -105,30 +108,6 @@ impl ProjectConfig {
             );
             return false;
         }
-    }
-
-    pub fn get_target_name_src(&self) -> (String, String, bool, bool) {
-        // first bin
-        if let Some(bins) = &self.bins {
-            for entry in bins {
-                return (entry.name.clone(), entry.path.clone(), false, false);
-            }
-        }
-
-        // first lib
-        if let Some(libs) = &self.libs {
-            for entry in libs {
-                let is_shared_lib = entry.shared.unwrap();
-                return (
-                    entry.name.clone(),
-                    entry.path.clone(),
-                    is_shared_lib,
-                    !is_shared_lib,
-                );
-            }
-        }
-
-        return (String::new(), String::new(), false, false);
     }
 }
 

@@ -93,8 +93,7 @@
                 }
             },
             "args": [
-                "scan",
-                "--shared-lib"
+                "scan"
             ],
             "cwd": "${workspaceFolder}/test_package"
         },

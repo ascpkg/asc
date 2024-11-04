@@ -21,6 +21,7 @@ Cargo.lock
 #.idea/
 
 asc.toml
+.asc
 target
 *.cmake
 *.cmake.in
