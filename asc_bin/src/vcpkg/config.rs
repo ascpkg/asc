@@ -17,6 +17,9 @@ impl VcpkgManager {
         if let Some(directory) = &self.args.directory {
             conf.directory = Some(directory.clone());
         }
+        if let Some(env_default_binary_cache) = &self.args.env_download_dir {
+            conf.env_download_dir = Some(env_default_binary_cache.clone());
+        }
 
         return conf.dump(false);
     }

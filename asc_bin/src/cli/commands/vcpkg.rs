@@ -25,6 +25,12 @@ pub struct VcpkgArgs {
     #[clap(long)]
     pub directory: Option<String>,
 
+    #[clap(long)]
+    pub env_download_dir: Option<String>,
+
+    #[clap(long)]
+    pub env_binary_cache_dir: Option<String>,
+
     #[clap(long, default_value = "")]
     #[serde(skip)]
     path: String,

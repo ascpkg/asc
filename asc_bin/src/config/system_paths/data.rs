@@ -1,7 +1,7 @@
 use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
 use crate::config::relative_paths::{
-    VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_BUILD_SYSTEMS_DIR_NAME, VCPKG_CMAKE_FILE_NAME,
+    self, VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_BUILD_SYSTEMS_DIR_NAME, VCPKG_CMAKE_FILE_NAME,
     VCPKG_DIR_NAME, VCPKG_SCRIPTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
 };
 use crate::util;
@@ -54,10 +54,28 @@ impl DataPath {
     }
 
     pub fn vcpkg_search_index_json() -> String {
-        build(&Self::prefix(), "vcpkg.index/search_index.json")
+        build(
+            &Self::prefix(),
+            &format!(
+                "{}/{}",
+                relative_paths::VCPKG_INDEX_DIR_NAME,
+                relative_paths::VCPKG_SEARCH_INDEX_JSON_FILE_NAME
+            ),
+        )
     }
 
     pub fn vcpkg_tree_index_json() -> String {
-        build(&Self::prefix(), "vcpkg.index/tree_index.json")
+        build(
+            &Self::prefix(),
+            &format!(
+                "{}/{}",
+                relative_paths::VCPKG_INDEX_DIR_NAME,
+                relative_paths::VCPKG_TREE_INDEX_JSON_FILE_NAME
+            ),
+        )
+    }
+
+    pub fn vcpkg_binary_cache_dir() -> String {
+        build(&Self::prefix(), relative_paths::VCPKG_BINARY_CACHE_DIR_NAME)
     }
 }
