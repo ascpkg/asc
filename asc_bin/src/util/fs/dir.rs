@@ -86,6 +86,10 @@ pub fn create_dirs(path: &str) -> bool {
     }
 }
 
+pub fn remove_dir(path: &str) -> bool {
+    std::fs::remove_dir(path).is_ok()
+}
+
 pub fn remove_dirs(path: &str) -> bool {
     match std::fs::remove_dir_all(path) {
         Ok(_) => {

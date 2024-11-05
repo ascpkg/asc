@@ -15,18 +15,14 @@ pub static LIB_HPP_FILE_NAME: &str = "lib.hpp";
 pub static LIB_CPP_FILE_NAME: &str = "lib.cpp";
 pub static EXPORT_H_FILE_NAME: &str = "export.h";
 
-pub fn clean_asc_files() -> bool {
+pub fn clean_target_files() -> bool {
     if util::fs::is_dir_exists(ASC_TARGET_DIR_NAME) {
         if !util::fs::remove_dirs(ASC_TARGET_DIR_NAME) {
             return false;
         }
     }
 
-    // if util::fs::is_dir_exists(ASC_PROJECT_DIR_NAME) {
-    //     if !util::fs::remove_dirs(ASC_PROJECT_DIR_NAME) {
-    //         return false;
-    //     }
-    // }
+    util::fs::remove_dir(ASC_PROJECT_DIR_NAME);
 
     return true;
 }

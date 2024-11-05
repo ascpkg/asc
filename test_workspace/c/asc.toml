@@ -3,6 +3,11 @@ name = "c"
 version = "2024.10.31"
 edition = "2024"
 
+[[lib]]
+name = "c"
+path = "src/lib.cpp"
+shared = true
+
 [features]
 
 [dependencies.fmt]

@@ -47,6 +47,9 @@ impl CleanArgs {
                 // graph
                 has_error &= relative_paths::clean_graph_files();
 
+                util::fs::set_cwd("..");
+                util::fs::remove_dir(&bin.name);
+
                 util::fs::set_cwd(&cwd);
             }
         }
@@ -65,6 +68,9 @@ impl CleanArgs {
                 // graph
                 has_error &= relative_paths::clean_graph_files();
 
+                util::fs::set_cwd("..");
+                util::fs::remove_dir(&lib.name);
+
                 util::fs::set_cwd(&cwd);
             }
         }
@@ -75,7 +81,7 @@ impl CleanArgs {
         util::fs::set_cwd(&cwd);
 
         // target
-        has_error &= relative_paths::clean_asc_files();
+        has_error &= relative_paths::clean_target_files();
 
         return has_error;
     }
@@ -84,41 +90,38 @@ impl CleanArgs {
         tracing::info!(message = "clean workspace", name = util::fs::get_cwd_name());
 
         let cwd = util::fs::get_cwd();
-        util::fs::set_cwd(relative_paths::ASC_PROJECT_DIR_NAME);
-
-        // cmake
-        let mut has_error = relative_paths::clean_cmake_files("");
-
-        // target
-        has_error &= relative_paths::clean_asc_files();
 
         // members
+        let mut has_error = false;
         match &package_conf.workspace {
             None => {
-                has_error = true;
+                has_error &= true;
                 tracing::error!(error_tag = ErrorTag::InvalidProjectWorkspaceError.as_ref(),);
             }
             Some(workspace_config) => {
                 if workspace_config.members.is_empty() {
-                    has_error = true;
+                    has_error &= true;
                     tracing::error!(error_tag = ErrorTag::InvalidProjectWorkspaceError.as_ref(),);
                 }
-                let c: String = util::fs::get_cwd();
                 for m in &workspace_config.members {
-                    util::fs::set_cwd(m);
-
-                    if let Some(project_conf) = config::project::ProjectConfig::read_project_conf()
-                    {
+                    if let Some(project_conf) = config::project::ProjectConfig::load(
+                        &format!("{}/{}/{}", cwd, m, relative_paths::ASC_TOML_FILE_NAME),
+                        false,
+                    ) {
                         has_error &= self.clean_package(&project_conf);
                     }
-
-                    util::fs::set_cwd(&c);
                 }
             }
         }
 
+        // cmake
+        util::fs::set_cwd(relative_paths::ASC_PROJECT_DIR_NAME);
+        has_error &= relative_paths::clean_cmake_files("");
         util::fs::set_cwd(&cwd);
 
-        return !has_error;
+        // target
+        has_error &= relative_paths::clean_target_files();
+
+        return has_error;
     }
 }

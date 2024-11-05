@@ -101,6 +101,27 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Cargo run asc scan workspace",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "scan"
+            ],
+            "cwd": "${workspaceFolder}/test_workspace"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Cargo run asc clean",
             "cargo": {
                 "args": [

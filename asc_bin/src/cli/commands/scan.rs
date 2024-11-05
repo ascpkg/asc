@@ -204,6 +204,7 @@ impl ScanArgs {
     pub fn scan_workspace(&self, project_conf: &ProjectConfig) -> bool {
         tracing::info!(message = "scan workspace", name = util::fs::get_cwd_name());
 
+        // cd .asc
         if !util::fs::is_dir_exists(relative_paths::ASC_PROJECT_DIR_NAME) {
             util::fs::create_dir(relative_paths::ASC_PROJECT_DIR_NAME);
         }
@@ -215,14 +216,19 @@ impl ScanArgs {
         let mut dependencies = BTreeMap::new();
         let is_shared_lib = false;
         for member in &project_conf.workspace.as_ref().unwrap().members {
-            match config::project::ProjectConfig::read_project_conf() {
+            match config::project::ProjectConfig::load(
+                &format!("{}/{}/{}", &cwd, member, relative_paths::ASC_TOML_FILE_NAME),
+                false,
+            ) {
                 None => {
                     has_error = true;
                 }
                 Some(project_conf) => {
                     if let Some(bins) = &project_conf.bins {
                         for bin_entry in bins {
-                            if util::fs::is_dir_exists(&bin_entry.name) {
+                            members.push(bin_entry.name.clone());
+
+                            if !util::fs::is_dir_exists(&bin_entry.name) {
                                 util::fs::create_dir(&bin_entry.name);
                             }
                             let c = util::fs::get_cwd();
@@ -231,9 +237,13 @@ impl ScanArgs {
                             self.scan_package(
                                 &bin_entry.name,
                                 &cwd,
-                                "",
-                                &format!("{}/{}/{}", util::fs::get_cwd(), member, bin_entry.path),
-                                "",
+                                &format!("{}/{}/{}", cwd, member, relative_paths::SRC_DIR_NAME),
+                                &format!("{}/{}/{}", cwd, member, bin_entry.path),
+                                &format!(
+                                    "{cwd}/{}/{}",
+                                    relative_paths::ASC_TARGET_DIR_NAME,
+                                    bin_entry.name
+                                ),
                                 true,
                                 &project_conf.dependencies,
                                 false,
@@ -246,7 +256,9 @@ impl ScanArgs {
 
                     if let Some(libs) = &project_conf.libs {
                         for lib_entry in libs {
-                            if util::fs::is_dir_exists(&lib_entry.name) {
+                            members.push(lib_entry.name.clone());
+
+                            if !util::fs::is_dir_exists(&lib_entry.name) {
                                 util::fs::create_dir(&lib_entry.name);
                             }
                             let c = util::fs::get_cwd();
@@ -256,9 +268,13 @@ impl ScanArgs {
                             self.scan_package(
                                 &lib_entry.name,
                                 &cwd,
-                                "",
-                                &format!("{}/{}/{}", util::fs::get_cwd(), member, lib_entry.path),
-                                "",
+                                &format!("{}/{}/{}", cwd, member, relative_paths::SRC_DIR_NAME),
+                                &format!("{}/{}/{}", cwd, member, lib_entry.path),
+                                &format!(
+                                    "{cwd}/{}/{}",
+                                    relative_paths::ASC_TARGET_DIR_NAME,
+                                    lib_entry.name
+                                ),
                                 true,
                                 &project_conf.dependencies,
                                 is_shared_lib,
@@ -269,13 +285,10 @@ impl ScanArgs {
                         }
                     }
 
-                    members.push(member.clone());
                     dependencies.extend(project_conf.dependencies);
                 }
             }
         }
-
-        util::fs::set_cwd(&cwd);
 
         cmake::lists::gen_workspace(
             &self.cmake_minimum_version,
@@ -288,12 +301,14 @@ impl ScanArgs {
 
         tracing::warn!("generate a build system with cmake");
         let options = ScanOptions {
-            project_dir: cwd.clone(),
+            project_dir: format!("{cwd}/{}", relative_paths::ASC_PROJECT_DIR_NAME),
             target_dir: format!("{cwd}/{}", relative_paths::ASC_TARGET_DIR_NAME),
             shared_lib: is_shared_lib,
             ..Default::default()
         };
         cmake::project::gen(&options);
+
+        util::fs::set_cwd(&cwd);
 
         return has_error;
     }

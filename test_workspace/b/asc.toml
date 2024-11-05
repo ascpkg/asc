@@ -3,6 +3,15 @@ name = "b"
 version = "2024.10.31"
 edition = "2024"
 
+[[bin]]
+name = "bbin"
+path = "src/main.cpp"
+
+[[lib]]
+name = "b"
+path = "src/lib.cpp"
+shared = false
+
 [features]
 
 [dependencies.spdlog]

@@ -32,7 +32,7 @@ pub fn clean_cmake_files(name: &str) -> bool {
         }
     }
 
-    if !name.is_empty() {
+    if !name.is_empty() && util::fs::is_file_exists(&get_config_cmake_in_file_name(name)) {
         has_error &= util::fs::remove_file(&get_config_cmake_in_file_name(name));
     }
 
