@@ -38,7 +38,7 @@ pub struct VcpkgArgs {
 
     #[clap(long, default_value = "")]
     #[serde(skip)]
-    path: String,
+    pub path: String,
 }
 
 impl VcpkgArgs {

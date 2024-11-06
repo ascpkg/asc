@@ -25,9 +25,16 @@ impl VcpkgManager {
 
 impl VcpkgArgs {
     pub fn load_or_default() -> Self {
-        let mut conf = VcpkgArgs::load(&system_paths::ConfigPath::vcpkg_toml(), true).unwrap();
-        conf.set_defaults();
-        conf
+        return VcpkgArgs::load(&system_paths::ConfigPath::vcpkg_toml(), false).unwrap_or_else(
+            || {
+                let mut default_conf: VcpkgArgs = VcpkgArgs::default();
+                default_conf.path = system_paths::ConfigPath::vcpkg_toml();
+                default_conf.set_defaults();
+                default_conf.dump(false);
+
+                default_conf
+            },
+        );
     }
 
     pub fn set_defaults(&mut self) {

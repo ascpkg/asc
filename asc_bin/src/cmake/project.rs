@@ -1,10 +1,20 @@
 use std::collections::HashMap;
 
+use config_file_derives::ConfigFile;
+
+use serde::{Deserialize, Serialize};
+
 use crate::{
     cli::{self, commands::VcpkgArgs},
-    config::system_paths,
+    config::{self, system_paths},
     util,
 };
+
+static OS_MAP: [(&str, &str); 3] = [
+    ("windows", "windows-static"),
+    ("macos", "osx"),
+    ("linux", "linux"),
+];
 
 static ARCH_MAP: [(&str, &str); 8] = [
     ("x86", "x86"),
@@ -44,26 +54,48 @@ pub fn gen(options: &cli::commands::scan::ScanOptions) {
     util::shell::run("cmake", &args, false, false, false).unwrap();
 }
 
-pub fn default_vcpkg_triplet() -> String {
-    let arch_map = HashMap::from(ARCH_MAP);
+#[derive(Debug, Default, Clone, Deserialize, Serialize, ConfigFile)]
+#[config_file_ext("toml")]
+pub struct ArchOsVcpkgTriplet {
+    #[serde(skip)]
+    pub path: String,
 
-    let machine = std::env::consts::ARCH;
-    let arch = match arch_map.get(machine) {
-        Some(&arch) => arch,
-        None => {
-            tracing::error!("unsupported architecture: {}", machine);
-            return String::new();
+    pub os_map: HashMap<String, String>,
+    pub arch_map: HashMap<String, String>,
+}
+
+pub fn default_vcpkg_triplet() -> String {
+    let mut conf =
+        ArchOsVcpkgTriplet::load(&system_paths::ConfigPath::arch_os_to_vcpkg_triplet(), true)
+            .unwrap();
+    if conf.os_map.is_empty() {
+        for (k, v) in OS_MAP {
+            conf.os_map.insert(k.to_string(), v.to_string());
         }
-    };
+        conf.dump(false);
+    }
+    if conf.arch_map.is_empty() {
+        for (k, v) in ARCH_MAP {
+            conf.arch_map.insert(k.to_string(), v.to_string());
+        }
+        conf.dump(false);
+    }
 
     let os = std::env::consts::OS;
-    match os {
-        "windows" => format!("{}-windows-static", arch),
-        "macos" => format!("{}-osx", arch),
-        "linux" => format!("{}-linux", arch),
-        _ => {
-            tracing::error!("unsupported os: {}", os);
-            String::new()
+    let arch = std::env::consts::ARCH;
+    if let Some(a) = conf.arch_map.get(arch) {
+        if let Some(o) = conf.os_map.get(os) {
+            return format!("{a}-{o}");
+        } else {
+            tracing::error!(message = "unsupported", os = os, config_path = conf.path);
         }
+    } else {
+        tracing::error!(
+            message = "unsupported",
+            arch = arch,
+            config_path = conf.path
+        );
     }
+
+    return String::new();
 }
