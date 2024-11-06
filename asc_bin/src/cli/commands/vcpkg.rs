@@ -2,13 +2,15 @@ use clap::Args;
 
 use config_file_derives::ConfigFile;
 
+use struct_iterable::Iterable;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{config, vcpkg::VcpkgManager};
 
 use super::VcpkgAction;
 
-#[derive(Args, Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
+#[derive(Args, Clone, Debug, Default, Deserialize, Serialize, Iterable, ConfigFile)]
 #[config_file_ext("toml")]
 pub struct VcpkgArgs {
     #[serde(skip)]
@@ -26,10 +28,13 @@ pub struct VcpkgArgs {
     pub directory: Option<String>,
 
     #[clap(long)]
-    pub env_download_dir: Option<String>,
+    pub index_directory: Option<String>,
 
     #[clap(long)]
-    pub env_binary_cache_dir: Option<String>,
+    pub env_downloads: Option<String>,
+
+    #[clap(long)]
+    pub env_default_binary_cache: Option<String>,
 
     #[clap(long, default_value = "")]
     #[serde(skip)]

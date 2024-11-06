@@ -3,10 +3,12 @@ use super::{
     VcpkgManager,
 };
 
-use crate::{config, util};
+use crate::{cli::commands::VcpkgArgs, config, util};
 
 pub fn get_port_version_commit_info(port_name: &str, version: &str) -> Option<GitCommitInfo> {
-    for (v, c, d) in VcpkgManager::get_port_versions(port_name) {
+    let vcpkg_manager = VcpkgManager::new(VcpkgArgs::load_or_default());
+
+    for (v, c, d) in vcpkg_manager.get_port_versions(port_name) {
         if v == version {
             return Some(GitCommitInfo {
                 hash: c,
@@ -21,8 +23,12 @@ pub fn get_port_version_commit_info(port_name: &str, version: &str) -> Option<Gi
 pub fn from_index_file(port_name: &str, list_all: bool) -> Vec<String> {
     let mut results = vec![];
 
+    let vcpkg_manager = VcpkgManager::new(VcpkgArgs::load_or_default());
+
     match VcpkgSearchIndex::load(
-        &config::system_paths::DataPath::vcpkg_search_index_json(),
+        &config::system_paths::DataPath::vcpkg_search_index_json(
+            vcpkg_manager.args.index_directory.as_ref().unwrap(),
+        ),
         false,
     ) {
         None => return results,
@@ -65,7 +71,7 @@ pub fn from_index_file(port_name: &str, list_all: bool) -> Vec<String> {
                         if !list_all {
                             results.push(format_port_version(port_name, version));
                         } else {
-                            for (v, c, d) in VcpkgManager::get_port_versions(port_name) {
+                            for (v, c, d) in vcpkg_manager.get_port_versions(port_name) {
                                 results.push(format!("{}  {}  {}", v, c, d));
                             }
                         }

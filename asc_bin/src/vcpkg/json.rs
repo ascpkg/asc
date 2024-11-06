@@ -9,7 +9,7 @@ use crate::{
             DependencyConfig, VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgDependency,
             VcpkgDependencyDesc, VcpkgRegistry,
         },
-        relative_paths, system_paths,
+        relative_paths,
     },
     util,
 };
@@ -64,10 +64,8 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
         }
     }
 
-    let vcpkg_args = VcpkgArgs::load(&system_paths::ConfigPath::vcpkg_toml(), true).unwrap();
-    let vcpkg_clone_dir = vcpkg_args
-        .directory
-        .unwrap_or(system_paths::DataPath::vcpkg_clone_dir());
+    let vcpkg_args = VcpkgArgs::load_or_default();
+    let vcpkg_clone_dir = vcpkg_args.directory.unwrap();
 
     let cwd = util::fs::get_cwd();
     util::fs::set_cwd(&vcpkg_clone_dir);

@@ -6,12 +6,17 @@ use crate::{config::relative_paths, errors::ErrorTag, util};
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
 
-use chrono;
+use chrono::{self, Datelike};
 
 impl ProjectConfig {
     pub fn version_date() -> String {
         let local_now = chrono::Local::now();
-        local_now.format("%Y.%m.%d").to_string()
+        format!(
+            "{}.{}.{}",
+            local_now.year(),
+            local_now.month(),
+            local_now.day()
+        )
     }
 
     pub fn validate(&self) -> bool {

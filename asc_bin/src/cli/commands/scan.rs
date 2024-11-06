@@ -181,7 +181,7 @@ impl ScanArgs {
         tracing::info!("{:#?}", options);
 
         // write empty files
-        std::fs::create_dir_all(&options.target_dir).unwrap_or(());
+        util::fs::create_dirs(&&options.target_dir);
         std::fs::write(format!("{}/config.h", &options.target_dir), b"").unwrap_or(());
         std::fs::write(format!("{}/version.h", &options.target_dir), b"").unwrap_or(());
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     cli::{self, commands::VcpkgArgs},
-    config::{self, system_paths},
+    config::system_paths,
     util,
 };
 
@@ -18,10 +18,8 @@ static ARCH_MAP: [(&str, &str); 8] = [
 ];
 
 pub fn gen(options: &cli::commands::scan::ScanOptions) {
-    let vcpkg_clone_dir = VcpkgArgs::load(&config::system_paths::ConfigPath::vcpkg_toml(), true)
-        .unwrap()
-        .directory
-        .unwrap_or(config::system_paths::DataPath::vcpkg_clone_dir());
+    let vcpkg_conf = VcpkgArgs::load_or_default();
+    let vcpkg_clone_dir = vcpkg_conf.directory.unwrap();
 
     let cmake_toolchain_file = format!(
         "-D CMAKE_TOOLCHAIN_FILE={}",

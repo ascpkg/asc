@@ -69,6 +69,10 @@ pub fn create_dir(path: &str) -> bool {
 }
 
 pub fn create_dirs(path: &str) -> bool {
+    if is_dir_exists(path) {
+        return true;
+    }
+
     match std::fs::create_dir_all(path) {
         Ok(_) => {
             tracing::info!(func = "std::fs::create_dir_all", path = path,);

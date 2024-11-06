@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use crate::{cli::commands::VcpkgArgs, config::system_paths};
+use crate::cli::commands::VcpkgArgs;
 
 pub fn run(
     command: &str,
@@ -9,14 +7,8 @@ pub fn run(
     capture_stderr: bool,
     silent: bool,
 ) -> std::io::Result<std::process::Output> {
-    let mut envs = HashMap::new();
-    let vcpkg_conf = VcpkgArgs::load(&system_paths::ConfigPath::vcpkg_toml(), true).unwrap();
-    if let Some(env) = vcpkg_conf.env_download_dir {
-        envs.insert("VCPKG_DOWNLOADS", env);
-    }
-    if let Some(env) = vcpkg_conf.env_binary_cache_dir {
-        envs.insert("VCPKG_DEFAULT_BINARY_CACHE", env);
-    }
+    let vcpkg_conf = VcpkgArgs::load_or_default();
+    let envs = vcpkg_conf.get_envs();
 
     if !silent {
         tracing::info!(

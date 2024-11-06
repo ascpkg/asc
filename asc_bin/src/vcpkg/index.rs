@@ -135,6 +135,8 @@ impl VcpkgManager {
         let commits = self.get_commits();
         let latest_commit = &commits[commits.len() - 1];
 
+        self.config_get(true);
+
         self.build_git_tree_index(&commits);
 
         if !self.build_search_index(latest_commit) {
@@ -145,13 +147,11 @@ impl VcpkgManager {
     }
 
     fn get_vcpkg_root_dir() -> String {
-        VcpkgArgs::load(&config::system_paths::ConfigPath::vcpkg_toml(), true)
-            .unwrap()
-            .directory
-            .unwrap_or(config::system_paths::DataPath::vcpkg_clone_dir())
+        let vcpkg_conf = VcpkgArgs::load_or_default();
+        vcpkg_conf.directory.as_ref().unwrap().clone()
     }
 
-    pub fn get_port_versions(port: &str) -> Vec<(String, String, String)> {
+    pub fn get_port_versions(&self, port: &str) -> Vec<(String, String, String)> {
         let mut results = vec![];
 
         let versions_port_json_path = config::system_paths::DataPath::vcpkg_versions_port_json_path(
@@ -160,7 +160,9 @@ impl VcpkgManager {
         );
         if let Some(versions) = VcpkgPortVersions::load(&versions_port_json_path, false) {
             if let Some(git_tree_index) = VcpkgGitTreeIndex::load(
-                &config::system_paths::DataPath::vcpkg_tree_index_json(),
+                &config::system_paths::DataPath::vcpkg_tree_index_json(
+                    self.args.index_directory.as_ref().unwrap(),
+                ),
                 false,
             ) {
                 for v in versions.versions {
@@ -189,7 +191,9 @@ impl VcpkgManager {
             None => return false,
             Some(baseline_data) => {
                 let mut search_index = VcpkgSearchIndex::load(
-                    &config::system_paths::DataPath::vcpkg_search_index_json(),
+                    &config::system_paths::DataPath::vcpkg_search_index_json(
+                        self.args.index_directory.as_ref().unwrap(),
+                    ),
                     true,
                 )
                 .unwrap();
@@ -214,7 +218,9 @@ impl VcpkgManager {
 
     fn build_git_tree_index(&self, commits: &Vec<GitCommitInfo>) -> VcpkgGitTreeIndex {
         let mut results = VcpkgGitTreeIndex::load(
-            &config::system_paths::DataPath::vcpkg_tree_index_json(),
+            &config::system_paths::DataPath::vcpkg_tree_index_json(
+                self.args.index_directory.as_ref().unwrap(),
+            ),
             true,
         )
         .unwrap();

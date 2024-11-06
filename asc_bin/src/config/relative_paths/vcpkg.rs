@@ -16,8 +16,15 @@ pub static VCPKG_INDEX_DIR_NAME: &str = "vcpkg.index";
 pub static VCPKG_SEARCH_INDEX_JSON_FILE_NAME: &str = "search_index.json";
 pub static VCPKG_TREE_INDEX_JSON_FILE_NAME: &str = "tree_index.json";
 
+// vcpkg.downloads
+pub static VPCKG_DOWNLOADS_DIR_NAME: &str = "vcpkg.downloads";
+
 // vcpkg.binary.cache
-pub static VCPKG_BINARY_CACHE_DIR_NAME: &str = "vcpkg.binary.cache";
+pub static VCPKG_BINARY_CACHE_DIR_NAME: &str = "vcpkg.binary_cache";
+
+// vcpkg default repo
+pub static VCPKG_MICROSOFT_REPO_URL: &str = "https://github.com/microsoft/vcpkg.git";
+pub static VCPKG_MICROSOFT_REPO_BRANCH_NAME: &str = "master";
 
 pub fn vcpkg_versions_baseline_json() -> String {
     format!("{VCPKG_VERSIONS_DIR_NAME}/{VCPKG_BASELINE_JSON_FILE_NAME}")

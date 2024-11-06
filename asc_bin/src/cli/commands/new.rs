@@ -209,15 +209,7 @@ impl NewArgs {
 
         // create src dir
         let src_dir = format!("{name}/{}", relative_paths::SRC_DIR_NAME);
-        if let Err(e) = std::fs::create_dir_all(&src_dir) {
-            tracing::error!(
-                func = "std::fs::create_dir_all",
-                path = src_dir,
-                error_tag = ErrorTag::CreateDirectoryError.as_ref(),
-                error_str = e.to_string()
-            );
-            return false;
-        }
+        util::fs::create_dirs(&src_dir);
 
         let cwd = util::fs::get_cwd();
 
