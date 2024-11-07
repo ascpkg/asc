@@ -1,4 +1,10 @@
-use crate::{config, config::relative_paths, errors::ErrorTag, util};
+use std::collections::BTreeSet;
+
+use crate::{
+    config::{self, project::ProjectConfig, relative_paths},
+    errors::ErrorTag,
+    util,
+};
 
 use super::ConfigType;
 
@@ -20,57 +26,79 @@ impl RunArgs {
 
         if let Some(project_conf) = config::project::ProjectConfig::read_project_conf() {
             if let Some(workspace) = project_conf.workspace {
-                if let Some(name) = &self.name {
-                    return util::shell::run(
-                        &format!(
-                            "{}/{}/{}/{}",
-                            relative_paths::ASC_TARGET_DIR_NAME,
-                            name,
-                            self.config.as_ref(),
-                            name
-                        ),
-                        &self
-                            .args
-                            .as_ref()
-                            .unwrap_or(&vec![])
-                            .iter()
-                            .map(|s| s.as_str())
-                            .collect(),
-                        false,
-                        false,
-                        false,
-                    )
-                    .is_ok();
-                } else {
-                    tracing::error!(
-                        error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
-                        members = workspace.get_members()
-                    );
+                let cwd = util::fs::get_cwd();
+                let mut flat_project_conf = config::project::ProjectConfig::default();
+                let mut flat_bins = BTreeSet::new();
+                for member in workspace.members {
+                    util::fs::set_cwd(&member);
+                    if let Some(pc) = config::project::ProjectConfig::read_project_conf() {
+                        if let Some(bins) = &pc.bins {
+                            for bin in bins {
+                                flat_bins.insert(config::project::EntryConfig {
+                                    name: bin.name.clone(),
+                                    ..Default::default()
+                                });
+                            }
+                        }
+                    }
+                    util::fs::set_cwd(&cwd);
                 }
-            }
-            if let Some(package) = project_conf.package {
-                return util::shell::run(
-                    &format!(
-                        "{}/{}/{}",
-                        relative_paths::ASC_TARGET_DIR_NAME,
-                        self.config.as_ref(),
-                        package.name
-                    ),
-                    &self
-                        .args
-                        .as_ref()
-                        .unwrap_or(&vec![])
-                        .iter()
-                        .map(|s| s.as_str())
-                        .collect(),
-                    false,
-                    false,
-                    false,
-                )
-                .is_ok();
+                flat_project_conf.bins = Some(flat_bins);
+                return self.run_bin(&flat_project_conf);
+            } else {
+                return self.run_bin(&project_conf);
             }
         }
 
+        return false;
+    }
+
+    fn run_bin(&self, project_conf: &ProjectConfig) -> bool {
+        if let Some(bins) = &project_conf.bins {
+            let mut bin_name = String::new();
+            let mut bin_names = vec![];
+            if bins.len() == 1 {
+                bin_name = bins.first().unwrap().name.clone();
+                bin_names.push(bin_name.clone());
+            } else {
+                for bin in bins {
+                    bin_names.push(bin.name.clone());
+                    if let Some(n) = &self.name {
+                        if &bin.name == n {
+                            bin_name = bin.name.clone();
+                            break;
+                        }
+                    }
+                }
+            }
+            if bin_name.is_empty() {
+                tracing::error!(
+                    error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+                    bins = bin_names.join(", ")
+                );
+                return false;
+            }
+            return util::shell::run(
+                &format!(
+                    "{}/{}/{}/{}",
+                    relative_paths::ASC_TARGET_DIR_NAME,
+                    bin_name,
+                    self.config.as_ref(),
+                    bin_name
+                ),
+                &self
+                    .args
+                    .as_ref()
+                    .unwrap_or(&vec![])
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect(),
+                false,
+                false,
+                false,
+            )
+            .is_ok();
+        }
         return false;
     }
 }
