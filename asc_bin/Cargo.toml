@@ -7,6 +7,10 @@ edition = "2021"
 name = "test_cli"
 path = "src/tests/cli.rs"
 
+[[bin]]
+name = "test_header_sources_impl"
+path = "src/tests/header_sources_impl.rs"
+
 
 [dependencies]
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
