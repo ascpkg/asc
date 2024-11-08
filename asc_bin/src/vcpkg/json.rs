@@ -121,11 +121,17 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
     }
     util::fs::set_cwd(&cwd);
 
-    // write vcpkg.json
-    vcpkg_data.dump(false);
+    if vcpkg_data.dependencies.is_empty() {
+        tracing::error!("can't found any dependencies in asc.toml");
+    } else {
+        // write vcpkg.json
+        vcpkg_data.dump(false);
+    }
 
     if baseline.is_empty() {
-        tracing::error!("can't found all dependencies in same baseline");
+        if !vcpkg_data.dependencies.is_empty() {
+            tracing::error!("can't found all dependencies in same baseline");
+        }
     } else {
         let mut vcpkg_conf_data =
             VcpkgConfiguration::load(relative_paths::VCPKG_CONFIGURATION_JSON_FILE_NAME, true)
