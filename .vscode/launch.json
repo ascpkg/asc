@@ -95,7 +95,7 @@
             "args": [
                 "scan"
             ],
-            "cwd": "${workspaceFolder}/test_package"
+            "cwd": "${workspaceFolder}/test_sources/test_c"
         },
         
         {
@@ -116,7 +116,7 @@
             "args": [
                 "scan"
             ],
-            "cwd": "${workspaceFolder}/test_workspace"
+            "cwd": "${workspaceFolder}/test_sources/test_workspace"
         },
         
         {
@@ -137,7 +137,7 @@
             "args": [
                 "clean"
             ],
-            "cwd": "${workspaceFolder}/test_workspace"
+            "cwd": "${workspaceFolder}/test_sources/test_workspace"
         },
         
         {
@@ -229,7 +229,7 @@
                 "--feature=json",
                 "--feature=mimalloc@windows"
             ],
-            "cwd": "${workspaceFolder}/test_package"
+            "cwd": "${workspaceFolder}/test_sources/test_package"
         },
     ]
 }

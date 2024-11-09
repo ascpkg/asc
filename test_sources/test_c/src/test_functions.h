@@ -4,7 +4,7 @@
 
 // normal callbacks
 typedef void (*simple_callback)(void);
-typedef int (*data_callback)(const void *, size_t);
+typedef int (*data_callback)(const void *, int);
 
 // complex callbacks
 struct CallbackInfo

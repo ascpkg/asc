@@ -1,0 +1,12 @@
+[package]
+name = "test_c"
+version = "2024.11.9"
+edition = "2024"
+
+[[bin]]
+name = "test_c"
+path = "src/main.c"
+
+[features]
+
+[dependencies]

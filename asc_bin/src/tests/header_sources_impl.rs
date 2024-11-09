@@ -223,7 +223,7 @@ pub fn get_include_files(source: &String, source_dir: &String, target_dir: &Stri
         clang_sys::clang_disposeIndex(index);
     }
 
-    println!("{}", remove_prefix(source, source_dir, target_dir));
+    // println!("{}", remove_prefix(source, source_dir, target_dir));
     for include in &client_data.include_files {
         if include.starts_with(source_dir) || include.starts_with(target_dir) {
             // println!("    {}", remove_prefix(include, source_dir, target_dir));
@@ -267,18 +267,18 @@ extern "C" fn visit_inclusion_directive(
     match cursor_kind {
         clang_sys::CXCursor_InclusionDirective => {
             let display_name = unsafe { clang_sys::clang_getCursorDisplayName(cursor) };
-            let name = cxstring_to_string(display_name);
+            let _name = cxstring_to_string(display_name);
 
             let include_file = unsafe { clang_sys::clang_getIncludedFile(cursor) };
             if !include_file.is_null() {
                 let include_file_name = unsafe { clang_sys::clang_getFileName(include_file) };
                 let path = cxstring_to_string(include_file_name).replace(r"\", "/");
 
-                print!(
-                    "{name}  // {}",
-                    remove_prefix(&path, &client_data.source_dir, &client_data.target_dir)
-                );
-                get_location(cursor, &client_data.source_dir, &client_data.target_dir);
+                // print!(
+                //     "{name}  // {} ",
+                //     remove_prefix(&path, &client_data.source_dir, &client_data.target_dir)
+                // );
+                // get_location(cursor, &client_data.source_dir, &client_data.target_dir);
 
                 client_data.include_files.insert(path);
             }
@@ -306,7 +306,7 @@ extern "C" fn visit_inclusion_directive(
                 let return_type = clang_sys::clang_getResultType(func_type);
                 let return_type_name = clang_sys::clang_getTypeSpelling(return_type);
 
-                print!(") -> {}  // ", cxstring_to_string(return_type_name));
+                print!(") -> {}\t// ", cxstring_to_string(return_type_name));
                 get_location(cursor, &client_data.source_dir, &client_data.target_dir);
             }
         }
@@ -314,31 +314,31 @@ extern "C" fn visit_inclusion_directive(
         clang_sys::CXCursor_StructDecl => unsafe {
             let struct_name = clang_sys::clang_getCursorSpelling(cursor);
 
-            print!("    struct {}  // ", cxstring_to_string(struct_name));
+            print!("    struct {}\t// ", cxstring_to_string(struct_name));
             get_location(cursor, &client_data.source_dir, &client_data.target_dir);
         },
 
         clang_sys::CXCursor_EnumDecl => unsafe {
             let enum_name = clang_sys::clang_getCursorSpelling(cursor);
-            print!("    enum {}  // ", cxstring_to_string(enum_name));
+            print!("    enum {}\t// ", cxstring_to_string(enum_name));
             get_location(cursor, &client_data.source_dir, &client_data.target_dir);
         },
 
         clang_sys::CXCursor_UnionDecl => unsafe {
             let union_name = clang_sys::clang_getCursorSpelling(cursor);
-            print!("    union {}  // ", cxstring_to_string(union_name));
+            print!("    union {}\t// ", cxstring_to_string(union_name));
             get_location(cursor, &client_data.source_dir, &client_data.target_dir);
         },
 
         clang_sys::CXCursor_VarDecl => unsafe {
             let var_name = clang_sys::clang_getCursorSpelling(cursor);
-            print!("    var {}  // ", cxstring_to_string(var_name));
+            print!("    var {}\t// ", cxstring_to_string(var_name));
             get_location(cursor, &client_data.source_dir, &client_data.target_dir);
         },
 
         clang_sys::CXCursor_TypedefDecl => unsafe {
             let typedef_name = clang_sys::clang_getCursorSpelling(cursor);
-            print!("    typedef {}  // ", cxstring_to_string(typedef_name));
+            print!("    typedef {}\t// ", cxstring_to_string(typedef_name));
             get_location(cursor, &client_data.source_dir, &client_data.target_dir);
         },
 
@@ -403,193 +403,10 @@ pub fn remove_prefix(path: &String, source_dir: &String, target_dir: &String) ->
     }
 }
 
-// fn main() {
-//     let source_mappings = SourceMappings::scan(
-//         &String::from("test_sources/test_c/src/main.c"),
-//         &String::from("test_sources/test_c/src"),
-//         &String::from("test_sources/test_c/target"),
-//     );
-// }
-
-use clang_sys::*;
-use std::ffi::{CStr, CString};
-
-#[derive(Debug)]
-struct FunctionLocation {
-    name: String,
-
-    decl_file: String,
-    decl_line: u32,
-    decl_column: u32,
-
-    def_file: String,
-    def_line: u32,
-    def_column: u32,
-    has_definition: bool,
-}
-
-unsafe fn get_location_info(location: CXSourceLocation) -> (String, u32, u32) {
-    let mut file = Box::new(CXString::default());
-    let mut line: u32 = 0;
-    let mut column: u32 = 0;
-
-    clang_getPresumedLocation(location, file.as_mut(), &mut line, &mut column);
-
-    let file_str = if !file.data.is_null() {
-        let c_str = clang_getCString(*file);
-        let result = CStr::from_ptr(c_str).to_string_lossy().into_owned();
-        clang_disposeString(*file);
-        result
-    } else {
-        String::from("")
-    };
-
-    (file_str, line, column)
-}
-
-unsafe fn get_function_info(cursor: CXCursor) -> Option<FunctionLocation> {
-    if clang_getCursorKind(cursor) != CXCursor_FunctionDecl {
-        return None;
-    }
-
-    let name = {
-        let spelling = clang_getCursorSpelling(cursor);
-        let result = CStr::from_ptr(clang_getCString(spelling))
-            .to_string_lossy()
-            .into_owned();
-        clang_disposeString(spelling);
-        result
-    };
-
-    let decl_location = clang_getCursorLocation(cursor);
-    let (decl_file, decl_line, decl_column) = get_location_info(decl_location);
-
-    let has_definition = clang_isCursorDefinition(cursor) != 0;
-
-    let mut def_file = String::new();
-    let mut def_line = 0;
-    let mut def_column = 0;
-
-    if !has_definition {
-        let definition = clang_getCursorDefinition(cursor);
-        if clang_Cursor_isNull(definition) == 0 {
-            let def_location = clang_getCursorLocation(definition);
-            let (file, line, column) = get_location_info(def_location);
-            def_file = file;
-            def_line = line;
-            def_column = column;
-        }
-    } else {
-        def_file = decl_file.clone();
-        def_line = decl_line;
-        def_column = decl_column;
-    }
-
-    Some(FunctionLocation {
-        name,
-        decl_file,
-        decl_line,
-        decl_column,
-        def_file,
-        def_line,
-        def_column,
-        has_definition,
-    })
-}
-
-unsafe fn find_function_definition(cursor: CXCursor) -> Option<CXCursor> {
-    if clang_getCursorKind(cursor) != CXCursor_FunctionDecl {
-        return None;
-    }
-
-    if clang_isCursorDefinition(cursor) != 0 {
-        return Some(cursor);
-    }
-
-    let definition = clang_getCursorDefinition(cursor);
-    if clang_Cursor_isNull(definition) != 0 {
-        None
-    } else {
-        Some(definition)
-    }
-}
-
-struct FunctionCounter(*mut i32);
-
-extern "C" fn visit_function(
-    cursor: CXCursor,
-    _parent: CXCursor,
-    client_data: CXClientData,
-) -> CXChildVisitResult {
-    unsafe {
-        if clang_getCursorKind(cursor) == CXCursor_FunctionDecl {
-            if let Some(info) = get_function_info(cursor) {
-                println!("\nFunction: {}", info.name);
-                println!(
-                    "Declaration at {}:{}:{}",
-                    info.decl_file, info.decl_line, info.decl_column
-                );
-
-                if info.has_definition {
-                    println!(
-                        "Definition at {}:{}:{}",
-                        info.def_file, info.def_line, info.def_column
-                    );
-                } else {
-                    println!("No definition found");
-                }
-
-                let counter = client_data as *mut i32;
-                *counter += 1;
-            }
-        }
-        CXChildVisit_Recurse
-    }
-}
-
-fn parse_file(file_path: &str) -> Result<i32, String> {
-    unsafe {
-        let index = clang_createIndex(0, 0);
-        if index.is_null() {
-            return Err("Failed to create index".to_string());
-        }
-
-        let c_file_path =
-            CString::new(file_path).map_err(|e| format!("Failed to create CString: {}", e))?;
-
-        let tu = clang_parseTranslationUnit(
-            index,
-            c_file_path.as_ptr(),
-            std::ptr::null(),
-            0,
-            std::ptr::null_mut(),
-            0,
-            CXTranslationUnit_None as i32,
-        );
-
-        if tu.is_null() {
-            clang_disposeIndex(index);
-            return Err("Failed to parse translation unit".to_string());
-        }
-
-        let cursor = clang_getTranslationUnitCursor(tu);
-
-        let mut counter = 0;
-        let counter_ptr: *mut i32 = &mut counter;
-
-        clang_visitChildren(cursor, visit_function, counter_ptr as CXClientData);
-
-        clang_disposeTranslationUnit(tu);
-        clang_disposeIndex(index);
-
-        Ok(counter)
-    }
-}
-
 fn main() {
-    let file_path = "test_sources/test_c/src/test.c";
-    match parse_file(file_path) {
-        Ok(count) => println!("\nFound {} functions", count),
-        Err(e) => eprintln!("Error: {}", e),
-    }
+    let _source_mappings = SourceMappings::scan(
+        &String::from("test_sources/test_c/src/main.c"),
+        &String::from("test_sources/test_c/src"),
+        &String::from("test_sources/test_c/target"),
+    );
 }

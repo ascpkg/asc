@@ -80,7 +80,7 @@ pub fn gen(
     }
 
     // group data
-    let (group_sources, classify_to_dir, install_headers) = group_data(options, source_mappings);
+    let (group_sources, classify_to_dir, install_headers) = group_sources(options, source_mappings);
 
     // init data
     let local_date_time = chrono::prelude::Local::now();
@@ -190,7 +190,7 @@ pub fn gen_workspace(cmake_minimum_version: &str, project: &str, members: &Vec<S
     std::fs::write(relative_paths::CMAKE_LISTS_TXT_FILE_NAME, text.as_bytes()).unwrap();
 }
 
-fn group_data(
+fn group_sources(
     options: &cli::commands::scan::ScanOptions,
     source_mappings: &clang::parser::SourceMappings,
 ) -> (

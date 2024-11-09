@@ -1,150 +1,113 @@
-use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
-use std::rc::Rc;
 
 use super::visitor;
 
 use crate::cli;
 use crate::util;
 
-type StringSet = BTreeSet<String>;
-type StringSetMap = BTreeMap<String, BTreeSet<String>>;
-type RcRefCellStringSetMap = Rc<RefCell<StringSetMap>>;
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct SourceMappings {
+    // prefix
+    pub source_dir: String,
+    pub target_dir: String,
+
+    // include dirs
+    pub include_dirs: Vec<String>,
+
     // header - sources
-    pub header_include_by_sources: StringSetMap,
+    pub header_include_by_sources: BTreeMap<String, BTreeSet<String>>,
     // source - headers
-    pub source_include_headers: StringSetMap,
+    pub source_include_headers: BTreeMap<String, BTreeSet<String>>,
+    // file - symbols
+    pub source_symbols: BTreeMap<String, BTreeSet<String>>,
+
+    // parsed
+    parsed_files: BTreeSet<String>,
 }
 
 impl SourceMappings {
-    pub fn scan(options: &cli::commands::scan::ScanOptions) -> SourceMappings {
-        let mut parsed_files = BTreeSet::new();
+    pub fn scan(options: &cli::commands::scan::ScanOptions) -> Self {
+        // init
+        let mut mappings = SourceMappings::default();
+        mappings.source_dir = options.source_dir.clone();
+        mappings.target_dir = options.target_dir.clone();
+        mappings.include_dirs = options.include_dirs.clone();
 
-        let (source_to_headers_from_entry_point, header_to_sources_from_entry_point) =
-            Self::get_includes_from_entry_point(
-                &options,
-                &mut parsed_files,
-                options.entry_point_source.clone(),
-            );
+        // parse entry point source file
+        mappings.get_symbols_and_inclusions(&options.entry_point_source);
 
-        let (_source_to_headers_from_source_files, header_to_sources_from_sources_files) =
-            Self::get_includes_from_source_files(&options, &mut parsed_files);
+        // parse all source files
+        for source_file in util::fs::find_source_files(&mappings.source_dir) {
+            mappings.get_symbols_and_inclusions(&source_file);
+        }
 
-        for (header, sources) in header_to_sources_from_entry_point.borrow_mut().iter_mut() {
-            if header_to_sources_from_sources_files
-                .borrow()
-                .contains_key(header)
-            {
-                for source in header_to_sources_from_sources_files
-                    .borrow()
-                    .get(header)
-                    .unwrap()
-                {
-                    sources.insert(source.clone());
-                }
+        // clear temp data
+        mappings.parsed_files.clear();
+
+        // remove source files that do not implement any symbols declared in the header file
+        for (header, sources) in mappings.header_include_by_sources.iter_mut() {
+            if let Some(header_symbols) = mappings.source_symbols.get(header) {
+                sources.retain(|source| {
+                    if source.ends_with(&options.entry_point_source) {
+                        return true;
+                    }
+                    if let Some(source_symbols) = mappings.source_symbols.get(source) {
+                        return (header_symbols.is_empty() && source_symbols.is_empty())
+                            || !header_symbols
+                                .intersection(source_symbols)
+                                .cloned()
+                                .collect::<Vec<String>>()
+                                .is_empty();
+                    }
+                    return false;
+                });
             }
         }
 
-        for (header, sources) in source_to_headers_from_entry_point.borrow_mut().iter_mut() {
-            if header_to_sources_from_sources_files
-                .borrow()
-                .contains_key(header)
-            {
-                for source in header_to_sources_from_sources_files
-                    .borrow()
-                    .get(header)
-                    .unwrap()
-                {
-                    sources.insert(source.clone());
-                }
-            }
-        }
+        // remove isolated island headers and sources
 
-        return SourceMappings {
-            header_include_by_sources: header_to_sources_from_entry_point.borrow().clone(),
-            source_include_headers: source_to_headers_from_entry_point.borrow().clone(),
-        };
+        return mappings;
     }
 
-    fn get_includes_from_source_files(
-        options: &cli::commands::scan::ScanOptions,
-        parsed_files: &mut StringSet,
-    ) -> (RcRefCellStringSetMap, RcRefCellStringSetMap) {
-        let source_to_headers = Rc::new(RefCell::new(BTreeMap::new()));
-        let header_to_sources = Rc::new(RefCell::new(BTreeMap::new()));
-
-        for source_file in util::fs::find_source_files(&options.source_dir) {
-            Self::get_include_files_in_source_dir(
-                options,
-                parsed_files,
-                &source_file,
-                source_to_headers.clone(),
-                header_to_sources.clone(),
-            );
-        }
-
-        return (source_to_headers, header_to_sources);
-    }
-
-    fn get_includes_from_entry_point(
-        options: &cli::commands::scan::ScanOptions,
-        parsed_files: &mut StringSet,
-        source_file: String,
-    ) -> (RcRefCellStringSetMap, RcRefCellStringSetMap) {
-        let source_to_headers = Rc::new(RefCell::new(BTreeMap::new()));
-        let header_to_sources = Rc::new(RefCell::new(BTreeMap::new()));
-
-        Self::get_include_files_in_source_dir(
-            options,
-            parsed_files,
-            &source_file,
-            source_to_headers.clone(),
-            header_to_sources.clone(),
-        );
-
-        return (source_to_headers, header_to_sources);
-    }
-
-    fn get_include_files_in_source_dir(
-        options: &cli::commands::scan::ScanOptions,
-        parsed_files: &mut StringSet,
-        source_file: &String,
-        source_include_headers: RcRefCellStringSetMap,
-        header_include_by_sources: RcRefCellStringSetMap,
-    ) {
-        // skip parsed
-        if parsed_files.contains(source_file) {
+    fn get_symbols_and_inclusions(&mut self, source_file: &String) {
+        // skip parsed file
+        if self.parsed_files.contains(source_file) {
             return;
         }
-        parsed_files.insert(source_file.clone());
+        self.parsed_files.insert(source_file.clone());
 
-        for include in visitor::get_include_files(source_file, &options) {
+        // visit
+        let (include_files, source_symbols) =
+            visitor::get_symbols_and_inclusions(source_file, &self);
+
+        // collect symbols
+        for (source, symbols) in source_symbols {
+            if !self.source_symbols.contains_key(&source) {
+                self.source_symbols.insert(source, symbols);
+            } else {
+                let values = self.source_symbols.get_mut(&source).unwrap();
+                for symbol in symbols.iter() {
+                    values.insert(symbol.clone());
+                }
+            }
+        }
+
+        // collect sources
+        for include in include_files {
             // map source to headers
-            source_include_headers
-                .borrow_mut()
+            self.source_include_headers
                 .entry(source_file.clone())
                 .or_insert_with(BTreeSet::new)
                 .insert(include.clone());
 
             // map header to sources
-            let header_include_by_sources_cloned = header_include_by_sources.clone();
-            header_include_by_sources_cloned
-                .borrow_mut()
+            self.header_include_by_sources
                 .entry(include.clone())
                 .or_insert_with(BTreeSet::new)
                 .insert(source_file.clone());
 
             // recurse
-            Self::get_include_files_in_source_dir(
-                options,
-                parsed_files,
-                &include,
-                source_include_headers.clone(),
-                header_include_by_sources.clone(),
-            );
+            self.get_symbols_and_inclusions(&include);
         }
     }
 }
