@@ -9,3 +9,12 @@ pub fn remove_prefix(path: &String, source_dir: &String, target_dir: &String) ->
         String::new()
     }
 }
+
+pub fn get_file_name(path: &str) -> String {
+    std::path::Path::new(path)
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string()
+}

@@ -133,7 +133,7 @@ impl SourceMappings {
             source_include_headers
                 .borrow_mut()
                 .entry(source_file.clone())
-                .or_insert_with(BTreeSet::new)
+                .or_default()
                 .insert(include.clone());
 
             // map header to sources
@@ -141,7 +141,7 @@ impl SourceMappings {
             header_include_by_sources_cloned
                 .borrow_mut()
                 .entry(include.clone())
-                .or_insert_with(BTreeSet::new)
+                .or_default()
                 .insert(source_file.clone());
 
             // recurse

@@ -95,7 +95,7 @@
             "args": [
                 "scan"
             ],
-            "cwd": "${workspaceFolder}/test_sources/test_c"
+            "cwd": "${workspaceFolder}/test_sources/test_package"
         },
         
         {

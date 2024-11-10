@@ -182,8 +182,24 @@ impl ScanArgs {
 
         // write empty files
         util::fs::create_dirs(&&options.target_dir);
-        std::fs::write(format!("{}/config.h", &options.target_dir), b"").unwrap_or(());
-        std::fs::write(format!("{}/version.h", &options.target_dir), b"").unwrap_or(());
+        std::fs::write(
+            format!(
+                "{}/{}",
+                &options.target_dir,
+                relative_paths::CONFIG_H_FILE_NAME
+            ),
+            b"",
+        )
+        .unwrap_or(());
+        std::fs::write(
+            format!(
+                "{}/{}",
+                &options.target_dir,
+                relative_paths::VERSION_H_FILE_NAME
+            ),
+            b"",
+        )
+        .unwrap_or(());
 
         tracing::warn!("scan source dependencies with clang ir");
         let source_mappings = clang::parser::SourceMappings::scan(&options);

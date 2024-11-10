@@ -16,98 +16,86 @@ pub struct SourceMappings {
 
     // header - sources
     pub header_include_by_sources: BTreeMap<String, BTreeSet<String>>,
-    // source - headers
-    pub source_include_headers: BTreeMap<String, BTreeSet<String>>,
+
     // file - symbols
     pub source_symbols: BTreeMap<String, BTreeSet<String>>,
 
     // parsed
-    parsed_files: BTreeSet<String>,
+    pub parsed_files: BTreeSet<String>,
 }
 
 impl SourceMappings {
     pub fn scan(options: &cli::commands::scan::ScanOptions) -> Self {
         // init
-        let mut mappings = SourceMappings::default();
-        mappings.source_dir = options.source_dir.clone();
-        mappings.target_dir = options.target_dir.clone();
-        mappings.include_dirs = options.include_dirs.clone();
+        let mut self_ = SourceMappings {
+            source_dir: options.source_dir.clone(),
+            target_dir: options.target_dir.clone(),
+            include_dirs: options.include_dirs.clone(),
+            ..Default::default()
+        };
 
         // parse entry point source file
-        mappings.get_symbols_and_inclusions(&options.entry_point_source);
+        self_.collect_symbols_and_inclusions(&options.entry_point_source);
+        let header_include_by_sources = self_.header_include_by_sources.clone();
 
-        // parse all source files
-        for source_file in util::fs::find_source_files(&mappings.source_dir) {
-            mappings.get_symbols_and_inclusions(&source_file);
+        // parse other source files
+        let other_source_files = util::fs::find_source_files(&self_.source_dir)
+            .into_iter()
+            .filter(|path| path != &options.entry_point_source)
+            .collect();
+        for source_file in &other_source_files {
+            self_.collect_symbols_and_inclusions(source_file);
         }
 
         // clear temp data
-        mappings.parsed_files.clear();
+        self_.parsed_files.clear();
 
-        // remove source files that do not implement any symbols declared in the header file
-        for (header, sources) in mappings.header_include_by_sources.iter_mut() {
-            if let Some(header_symbols) = mappings.source_symbols.get(header) {
-                sources.retain(|source| {
-                    if source.ends_with(&options.entry_point_source) {
-                        return true;
-                    }
-                    if let Some(source_symbols) = mappings.source_symbols.get(source) {
-                        return (header_symbols.is_empty() && source_symbols.is_empty())
-                            || !header_symbols
-                                .intersection(source_symbols)
-                                .cloned()
-                                .collect::<Vec<String>>()
-                                .is_empty();
-                    }
-                    return false;
-                });
-            }
-        }
+        // add source files which implement symbols declared in header files
+        self_.add_implementation_sources(other_source_files, header_include_by_sources);
 
-        // remove isolated island headers and sources
-
-        return mappings;
+        return self_;
     }
 
-    fn get_symbols_and_inclusions(&mut self, source_file: &String) {
-        // skip parsed file
-        if self.parsed_files.contains(source_file) {
-            return;
-        }
-        self.parsed_files.insert(source_file.clone());
-
-        // visit
-        let (include_files, source_symbols) =
-            visitor::get_symbols_and_inclusions(source_file, &self);
-
-        // collect symbols
-        for (source, symbols) in source_symbols {
-            if !self.source_symbols.contains_key(&source) {
-                self.source_symbols.insert(source, symbols);
-            } else {
-                let values = self.source_symbols.get_mut(&source).unwrap();
-                for symbol in symbols.iter() {
-                    values.insert(symbol.clone());
+    fn add_implementation_sources(
+        &mut self,
+        other_sources: Vec<String>,
+        header_include_by_sources: BTreeMap<String, BTreeSet<String>>,
+    ) {
+        self.header_include_by_sources = header_include_by_sources.clone();
+        for source in &other_sources {
+            if let Some(source_symbols) = self.source_symbols.get(source) {
+                for (header, sources) in self.header_include_by_sources.iter_mut() {
+                    if let Some(header_symbols) = self.source_symbols.get(header) {
+                        if header_symbols.intersection(source_symbols).next().is_some() {
+                            sources.insert(source.clone());
+                        }
+                    }
                 }
             }
         }
+    }
+
+    fn collect_symbols_and_inclusions(&mut self, source_file: &String) {
+        // visit
+        let result = visitor::collect_symbols_and_inclusions(source_file, &self);
+
+        // collect symbols
+        for (source, symbols) in result.source_symbols {
+            self.source_symbols
+                .entry(source)
+                .or_default()
+                .extend(symbols);
+        }
 
         // collect sources
-        for include in include_files {
-            // map source to headers
-            self.source_include_headers
-                .entry(source_file.clone())
-                .or_insert_with(BTreeSet::new)
-                .insert(include.clone());
-
-            // map header to sources
+        for (include, source) in &result.include_files {
             self.header_include_by_sources
                 .entry(include.clone())
-                .or_insert_with(BTreeSet::new)
-                .insert(source_file.clone());
-
-            // recurse
-            self.get_symbols_and_inclusions(&include);
+                .or_default()
+                .insert(source.clone());
         }
+
+        // collect parsed files
+        self.parsed_files.extend(result.parsed_files);
     }
 }

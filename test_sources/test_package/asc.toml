@@ -7,10 +7,10 @@ edition = "2024"
 name = "test_package_bin"
 path = "src/main.cpp"
 
-[[lib]]
-name = "test_package_lib"
-path = "src/lib.cpp"
-shared = true
+# [[lib]]
+# name = "test_package_lib"
+# path = "src/lib.cpp"
+# shared = true
 
 [features]
 

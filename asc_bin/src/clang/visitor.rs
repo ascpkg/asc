@@ -1,31 +1,35 @@
+use clang_sys;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
+use super::{
+    parser::SourceMappings,
+    util::{
+        cx_string_to_string, get_class_name, get_location_info, get_namespace, string_to_c_str,
+    },
+};
 use crate::util;
 
-use clang_sys;
-
-use super::parser::SourceMappings;
-
-struct ClientData {
+#[derive(Debug, Default, Clone)]
+pub struct ParsedResult {
     source_dir: String,
     target_dir: String,
-    include_files: BTreeSet<String>,
-    source_symbols: BTreeMap<String, BTreeSet<String>>,
+    outter_parsed_files: BTreeSet<String>,
+    pub parsed_files: BTreeSet<String>,
+    pub include_files: BTreeMap<String, String>,
+    pub source_symbols: BTreeMap<String, BTreeSet<String>>,
 }
 
-pub fn get_symbols_and_inclusions(
-    source: &String,
-    parser: &SourceMappings,
-) -> (BTreeSet<String>, BTreeMap<String, BTreeSet<String>>) {
+pub fn collect_symbols_and_inclusions(source: &String, parser: &SourceMappings) -> ParsedResult {
     unsafe {
         // init data for ast visitor
-        let mut client_data = ClientData {
+        let mut result = ParsedResult {
             source_dir: parser.source_dir.clone(),
             target_dir: parser.target_dir.clone(),
-            include_files: BTreeSet::new(),
-            source_symbols: BTreeMap::new(),
+            outter_parsed_files: parser.parsed_files.clone(),
+            ..Default::default()
         };
+        result.parsed_files.insert(source.clone());
 
         // set include search paths
         let mut rs_args: Vec<String> = parser
@@ -35,8 +39,6 @@ pub fn get_symbols_and_inclusions(
             .collect();
         rs_args.push(format!("-I{}", parser.source_dir));
         rs_args.push(format!("-I{}", parser.target_dir));
-        rs_args.push(String::from("-nostdinc"));
-        rs_args.push(String::from("-nostdinc++"));
         let c_args: Vec<*const std::ffi::c_char> = rs_args
             .iter()
             .map(|s| s.as_ptr() as *const std::ffi::c_char)
@@ -65,35 +67,34 @@ pub fn get_symbols_and_inclusions(
                 path = source
             );
             clang_sys::clang_disposeIndex(index);
-            return (client_data.include_files, client_data.source_symbols);
+            return result;
         }
-
-        // visit the AST
-        clang_sys::clang_visitChildren(
-            clang_sys::clang_getTranslationUnitCursor(translation_unit),
-            visit_symbols_and_inclusions,
-            &mut client_data as *mut _ as *mut std::ffi::c_void,
-        );
-
-        // clean up
-        clang_sys::clang_disposeTranslationUnit(translation_unit);
-        clang_sys::clang_disposeIndex(index);
 
         // logging
         tracing::info!(
             "{}",
             util::fs::remove_prefix(source, &parser.source_dir, &parser.target_dir)
         );
-        for include in &client_data.include_files {
-            if include.starts_with(&parser.source_dir) || include.starts_with(&parser.target_dir) {
-                tracing::info!(
-                    "    {}",
-                    util::fs::remove_prefix(include, &parser.source_dir, &parser.target_dir)
-                );
-            }
+        // visit the AST
+        clang_sys::clang_visitChildren(
+            clang_sys::clang_getTranslationUnitCursor(translation_unit),
+            visit_symbols_and_inclusions,
+            &mut result as *mut _ as *mut std::ffi::c_void,
+        );
+        // logging
+        for (include, source) in &result.include_files {
+            tracing::info!(
+                "    {} <- {}",
+                util::fs::remove_prefix(include, &parser.source_dir, &parser.target_dir),
+                util::fs::remove_prefix(source, &parser.source_dir, &parser.target_dir),
+            );
         }
 
-        return (client_data.include_files, client_data.source_symbols);
+        // clean up
+        clang_sys::clang_disposeTranslationUnit(translation_unit);
+        clang_sys::clang_disposeIndex(index);
+
+        return result;
     }
 }
 
@@ -103,14 +104,19 @@ extern "C" fn visit_symbols_and_inclusions(
     client_data: clang_sys::CXClientData,
 ) -> clang_sys::CXChildVisitResult {
     unsafe {
-        let client_data = &mut *(client_data as *mut ClientData);
+        let result = &mut *(client_data as *mut ParsedResult);
 
-        let (path, _line, _column) = get_location_info(cursor);
-        if !path.starts_with(&client_data.source_dir) && !path.starts_with(&client_data.target_dir)
-        {
-            // skip third-party
+        let path = get_location_info(cursor).0;
+
+        // skip parsed files
+        if result.outter_parsed_files.contains(&path) {
             return clang_sys::CXChildVisit_Continue;
         }
+        // skip third party files
+        if !path.starts_with(&result.source_dir) && !path.starts_with(&result.target_dir) {
+            return clang_sys::CXChildVisit_Continue;
+        }
+        result.parsed_files.insert(path.clone());
 
         // format symbol signature
         let mut signature = String::new();
@@ -126,20 +132,20 @@ extern "C" fn visit_symbols_and_inclusions(
                     // tracing::info!("{include_name}  // {include_path}");
 
                     // skip third-party
-                    if include_path.starts_with(&client_data.source_dir)
-                        || include_path.starts_with(&client_data.target_dir)
+                    if include_path.starts_with(&result.source_dir)
+                        || include_path.starts_with(&result.target_dir)
                     {
-                        client_data.include_files.insert(include_path);
+                        result.include_files.insert(include_path, path.clone());
                     }
                 }
             }
 
             clang_sys::CXCursor_FunctionDecl => {
-                let func_name = clang_sys::clang_getCursorSpelling(cursor);
-                signature.push_str(&format!("fn {}(", cx_string_to_string(func_name)));
+                let function_name = clang_sys::clang_getCursorSpelling(cursor);
+                signature.push_str(&format!("function {}(", cx_string_to_string(function_name)));
 
-                let func_args_count = clang_sys::clang_Cursor_getNumArguments(cursor) as u32;
-                for i in 0..func_args_count {
+                let function_args_count = clang_sys::clang_Cursor_getNumArguments(cursor) as u32;
+                for i in 0..function_args_count {
                     let arg_cursor = clang_sys::clang_Cursor_getArgument(cursor, i);
                     // let arg_name = clang_sys::clang_getCursorSpelling(arg_cursor);
 
@@ -156,8 +162,46 @@ extern "C" fn visit_symbols_and_inclusions(
                     signature.push_str(&cx_string_to_string(arg_type_name));
                 }
 
-                let func_type = clang_sys::clang_getCursorType(cursor);
-                let return_type = clang_sys::clang_getResultType(func_type);
+                let function_type = clang_sys::clang_getCursorType(cursor);
+                let return_type = clang_sys::clang_getResultType(function_type);
+                let return_type_name = clang_sys::clang_getTypeSpelling(return_type);
+
+                signature.push_str(&format!(") -> {}", cx_string_to_string(return_type_name)));
+            }
+
+            clang_sys::CXCursor_CXXMethod
+            | clang_sys::CXCursor_Constructor
+            | clang_sys::CXCursor_Destructor => {
+                let method_name = clang_sys::clang_getCursorSpelling(cursor);
+                let namespace = get_namespace(cursor);
+                signature.push_str(&format!(
+                    "method {}{}{}::{}(",
+                    namespace,
+                    if namespace.is_empty() { "" } else { ":" },
+                    get_class_name(cursor),
+                    cx_string_to_string(method_name)
+                ));
+
+                let method_args_count = clang_sys::clang_Cursor_getNumArguments(cursor) as u32;
+                for i in 0..method_args_count {
+                    let arg_cursor = clang_sys::clang_Cursor_getArgument(cursor, i);
+                    // let arg_name = clang_sys::clang_getCursorSpelling(arg_cursor);
+
+                    let arg_type = clang_sys::clang_getCursorType(arg_cursor);
+                    let arg_canonical_type = clang_sys::clang_getCanonicalType(arg_type);
+                    let arg_type_name = if arg_canonical_type.kind == arg_type.kind {
+                        clang_sys::clang_getTypeSpelling(arg_type)
+                    } else {
+                        clang_sys::clang_getTypeSpelling(arg_canonical_type)
+                    };
+                    if i > 0 {
+                        signature.push_str(", ")
+                    }
+                    signature.push_str(&cx_string_to_string(arg_type_name));
+                }
+
+                let method_type = clang_sys::clang_getCursorType(cursor);
+                let return_type = clang_sys::clang_getResultType(method_type);
                 let return_type_name = clang_sys::clang_getTypeSpelling(return_type);
 
                 signature.push_str(&format!(") -> {}", cx_string_to_string(return_type_name)));
@@ -197,42 +241,13 @@ extern "C" fn visit_symbols_and_inclusions(
         }
 
         if !signature.is_empty() {
-            client_data
+            result
                 .source_symbols
                 .entry(path)
-                .or_insert_with(BTreeSet::new)
+                .or_default()
                 .insert(signature);
         }
-    }
 
-    return clang_sys::CXChildVisit_Recurse;
-}
-
-fn string_to_c_str(rust_str: &String) -> std::ffi::CString {
-    std::ffi::CString::new(rust_str.as_str()).unwrap()
-}
-
-fn cx_string_to_string(cx_str: clang_sys::CXString) -> String {
-    if cx_str.data.is_null() {
-        return String::new();
-    }
-
-    unsafe {
-        let c_str = std::ffi::CStr::from_ptr(clang_sys::clang_getCString(cx_str) as *const _);
-        let rust_str = c_str.to_string_lossy().into_owned();
-        clang_sys::clang_disposeString(cx_str);
-        return rust_str;
-    }
-}
-
-fn get_location_info(cursor: clang_sys::CXCursor) -> (String, u32, u32) {
-    let file: *mut clang_sys::CXString = Box::into_raw(Box::new(clang_sys::CXString::default()));
-    let mut line: u32 = 0;
-    let mut column: u32 = 0;
-    unsafe {
-        let location = clang_sys::clang_getCursorLocation(cursor);
-        clang_sys::clang_getPresumedLocation(location, file, &mut line, &mut column);
-        let path = cx_string_to_string(*file).replace(r"\", "/");
-        return (path, line, column);
+        return clang_sys::CXChildVisit_Recurse;
     }
 }

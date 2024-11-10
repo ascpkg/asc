@@ -10,7 +10,9 @@ pub static CMAKE_INSTALL_INCLUDE_DIR_NAME: &str = "include";
 pub static CMAKE_INSTALL_SHARE_DIR_NAME: &str = "share";
 
 pub static CMAKE_LISTS_TXT_FILE_NAME: &str = "CMakeLists.txt";
+pub static VERSION_H_FILE_NAME: &str = "version.h";
 pub static VERSION_H_IN_FILE_NAME: &str = "version.h.in";
+pub static CONFIG_H_FILE_NAME: &str = "config.h";
 pub static CONFIG_H_CM_FILE_NAME: &str = "config.h.cm";
 pub static USER_CMAKE_FILE_NAME: &str = "user.cmake";
 

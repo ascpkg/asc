@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use crate::clang;
 use crate::cli;
 use crate::config::relative_paths;
@@ -7,13 +9,18 @@ pub fn gen(
     options: &cli::commands::scan::ScanOptions,
     source_mappings: &clang::parser::SourceMappings,
 ) -> String {
-    let mut mermaid_flow_chart = String::from("flowchart LR;");
+    let mut ordered_lines = BTreeSet::new();
     for (header, sources) in &source_mappings.header_include_by_sources {
         let h = util::fs::remove_prefix(header, &options.source_dir, &options.target_dir);
         for source in sources {
             let s = util::fs::remove_prefix(source, &options.source_dir, &options.target_dir);
-            mermaid_flow_chart.push_str(&format!("\n    {} ---> {};", s, h));
+            ordered_lines.insert(format!("\n    {} ---> {};", s, h));
         }
+    }
+
+    let mut mermaid_flow_chart = String::from("flowchart LR;");
+    for line in ordered_lines {
+        mermaid_flow_chart.push_str(&line);
     }
 
     std::fs::write(
