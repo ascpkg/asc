@@ -92,7 +92,7 @@ impl SourceMappings {
             self.header_include_by_sources
                 .entry(include.clone())
                 .or_default()
-                .insert(source.clone());
+                .extend(source.clone());
         }
 
         // collect parsed files

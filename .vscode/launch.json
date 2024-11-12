@@ -249,7 +249,7 @@
             },
             "args": [
             ],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}/test_sources/test_package"
         },
     ]
 }
