@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
         "vcpkg"
-    ]
+    ],
+    "files.associations": {
+        "format": "cpp"
+    }
 }
