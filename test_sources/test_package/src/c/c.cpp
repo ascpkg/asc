@@ -1,4 +1,5 @@
 #include "c.hpp"
+#include "extra_cc.hpp"
 
 CC::CC()
 {

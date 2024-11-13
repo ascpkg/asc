@@ -14,7 +14,7 @@
 // clang
 #include <clang-c/Index.h>
 
-// self
+// lib
 #include "lib.h"
 
 
@@ -22,9 +22,10 @@
 struct ParsedResult {
 	std::string source_dir;
 	std::string target_dir;
+	std::set<std::string> last_parsed_files;
 	std::set<std::string> current_parsed_files;
-	std::set<std::string> previous_parsed_files;
 	std::map<std::string, std::set<std::string>> source_symbols;
+	std::map<std::string, std::set<std::string>> source_include_headers;
 	std::map<std::string, std::set<std::string>> header_include_by_sources;
 };
 
@@ -36,7 +37,7 @@ public:
 		m_result.target_dir = target_dir;
 	}
 
-	const ParsedResult &scan_necessary_sources(std::string entry_point_file) {
+	const ParsedResult &scan_necessary_sources(const std::string entry_point_file) {
 		// collect from entry point file
 		ParsedResult result = scan_symbols_and_inclusions(entry_point_file, m_result.source_dir, m_result.target_dir, m_result.current_parsed_files);
 		this->collect_symbols_and_inclusions(result);
@@ -70,6 +71,17 @@ public:
 			iter->second.insert(sources.begin(), sources.end());
 		}
 
+		// collect source and headers
+		for (const auto &[source, headers] : result.source_include_headers) {
+			auto iter = m_result.source_include_headers.find(source);
+			if (iter == m_result.source_include_headers.end()) {
+				m_result.source_include_headers[source] = std::set<std::string>();
+				iter = m_result.source_include_headers.find(source);
+			}
+			iter->second.insert(headers.begin(), headers.end());
+		}
+
+
 		// collect source and symbols
 		for (const auto &[source, symbols] : result.source_symbols) {
 			auto iter = m_result.source_symbols.find(source);
@@ -82,35 +94,68 @@ public:
 	}
 
 	void clean_symbols_and_inclusions(std::map<std::string, std::set<std::string>> &necessaries) {
-		for (auto &[header, sources] : necessaries) {
-			// find sources
-			auto iter = m_result.header_include_by_sources.find(header);
-			if (iter != m_result.header_include_by_sources.end()) {
-				// find header symbols
-				auto header_symbols_iter = m_result.source_symbols.find(header);
-				if (header_symbols_iter == m_result.source_symbols.end()) {
+		std::set<std::string> parsed_files;
+		while (true) {
+			std::map<std::string, std::set<std::string>> header_sources_to_insert;
+
+			for (auto &[header, sources] : necessaries) {
+				// skip parsed
+				if (parsed_files.contains(header)) {
 					continue;
 				}
+				parsed_files.insert(header);
 
-				for (const auto &source : iter->second) {
-					// find source symbols
-					auto source_symbols_iter = m_result.source_symbols.find(source);
-					if (source_symbols_iter == m_result.source_symbols.end()) {
+				// find sources
+				auto iter = m_result.header_include_by_sources.find(header);
+				if (iter != m_result.header_include_by_sources.end()) {
+					// find header symbols
+					auto header_symbols_iter = m_result.source_symbols.find(header);
+					if (header_symbols_iter == m_result.source_symbols.end()) {
 						continue;
 					}
 
-					// find implementation source file
-					std::set<std::string> intersection;
-					std::set_intersection(
-						header_symbols_iter->second.begin(), header_symbols_iter->second.end(),
-						source_symbols_iter->second.begin(), source_symbols_iter->second.end(),
-						std::inserter(intersection, intersection.begin())
-					);
-					if (!intersection.empty()) {
-						// add source file which implement symbols
-						sources.insert(source);
+					for (const auto &source : iter->second) {
+						// find source symbols
+						auto source_symbols_iter = m_result.source_symbols.find(source);
+						if (source_symbols_iter == m_result.source_symbols.end()) {
+							continue;
+						}
+
+						// find implementation source file
+						std::set<std::string> intersection;
+						std::set_intersection(
+							header_symbols_iter->second.begin(), header_symbols_iter->second.end(),
+							source_symbols_iter->second.begin(), source_symbols_iter->second.end(),
+							std::inserter(intersection, intersection.begin())
+						);
+						if (!intersection.empty()) {
+							// add source file which implement symbols
+							sources.insert(source);
+
+							// add header files which include by added source file
+							auto i = m_result.source_include_headers.find(source);
+							if (i != m_result.source_include_headers.end()) {
+								for (const auto h : i->second) {
+									if (!necessaries.contains(h)) {
+										auto j = header_sources_to_insert.find(h);
+										if (j == header_sources_to_insert.end()) {
+											header_sources_to_insert[h] = std::set<std::string>();
+											j = header_sources_to_insert.find(h);
+										}
+										j->second.insert(source);
+									}
+								}
+							}
+						}
 					}
 				}
+			}
+
+			if (header_sources_to_insert.empty()) {
+				break;
+			}
+			for (const auto &[header, sources] : header_sources_to_insert) {
+				necessaries[header] = sources;
 			}
 		}
 
@@ -121,7 +166,7 @@ public:
 			necessary_sources.insert(sources.begin(), sources.end());
 		}
 		for (auto iter = m_result.source_symbols.begin(); iter != m_result.source_symbols.end();) {
-			if (necessary_sources.find(iter->first) == necessary_sources.end()) {
+			if (!necessary_sources.contains(iter->first)) {
 				// remove unnecessary source file and its symbols
 				iter = m_result.source_symbols.erase(iter);
 			}
@@ -160,7 +205,7 @@ public:
 		ParsedResult result;
 		result.source_dir = source_dir;
 		result.target_dir = target_dir;
-		result.previous_parsed_files = current_parsed_files;
+		result.last_parsed_files = current_parsed_files;
 
 		std::vector<const char *> args = {
 			"-I", source_dir.c_str(),
@@ -205,7 +250,7 @@ public:
 		std::replace(source_path.begin(), source_path.end(), '\\', '/');
 
 		// skip parsed
-		if (result->previous_parsed_files.find(source_path) != result->previous_parsed_files.end()) {
+		if (result->last_parsed_files.find(source_path) != result->last_parsed_files.end()) {
 			return CXChildVisit_Continue;
 		}
 		// skip third party files
@@ -227,12 +272,19 @@ public:
 				// skip third-party
 				if (0 == include_path.find(result->source_dir) || 0 == include_path.find(result->target_dir)) {
 					// collect inclusions
-					auto iter = result->header_include_by_sources.find(include_path);
-					if (iter == result->header_include_by_sources.end()) {
+					auto i = result->header_include_by_sources.find(include_path);
+					if (i == result->header_include_by_sources.end()) {
 						result->header_include_by_sources[include_path] = std::set<std::string>();
-						iter = result->header_include_by_sources.find(include_path);
+						i = result->header_include_by_sources.find(include_path);
 					}
-					iter->second.insert(source_path);
+					i->second.insert(source_path);
+
+					auto j = result->source_include_headers.find(source_path);
+					if (j == result->source_include_headers.end()) {
+						result->source_include_headers[source_path] = std::set<std::string>();
+						j = result->source_include_headers.find(source_path);
+					}
+					j->second.insert(include_path);
 				}
 			}
 			break;
@@ -441,7 +493,7 @@ private:
 
 
 int scan_necessary_sources(const char *entry_point_file, const char *source_dir, const char *target_dir, char *result_buf, int result_len) {
-	SourceMappings mappings = SourceMappings(source_dir, target_dir);
+	SourceMappings mappings(source_dir, target_dir);
 	mappings.scan_necessary_sources(entry_point_file);
 	std::string result = mappings.get_result_text(false);
 

@@ -10,7 +10,7 @@ fn main() {
     let library_name = "ast";
     let header_path = format!("{cargo_manifest_dir}/{library_name}/src/lib.h");
     let library_dir = format!("{cargo_manifest_dir}/{library_name}/target/{library_name}/{profile}");
-    let bindings_path = std::path::PathBuf::from(format!("{cargo_manifest_dir}/src/clang/ast.rs"));
+    let bindings_path = std::path::PathBuf::from(format!("{cargo_manifest_dir}/src/clang/{library_name}.rs"));
 
     // link
     println!("cargo:rustc-link-lib={}", library_name);
