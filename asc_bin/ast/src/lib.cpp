@@ -14,6 +14,9 @@
 // clang
 #include <clang-c/Index.h>
 
+// self
+#include "lib.h"
+
 
 
 struct ParsedResult {
@@ -131,31 +134,26 @@ public:
 		m_result.header_include_by_sources = necessaries;
 	}
 
-	void output_result(bool output_symbols) {
-		if (output_symbols) {
-			std::cout << "---------------------------------------------------------\n";
-		}
+	std::string get_result_text(bool include_symbols = false) {
+		std::stringstream text;
 
-		for (auto const header_sources : m_result.header_include_by_sources) {
-			auto header = remove_path_prefix(header_sources.first, m_result.source_dir, m_result.target_dir);
-			for (auto const source : header_sources.second) {
-				std::cout << std::format("{}\t\t{}\n", header, remove_path_prefix(source, m_result.source_dir, m_result.target_dir));
+		for (const auto &[header, sources] : m_result.header_include_by_sources) {
+			for (const auto &source : sources) {
+				text << std::format("{}\t\t{}\n", header, source);
 			}
 		}
 
-		if (!output_symbols) {
-			return;
+		if (!include_symbols) {
+			return text.str();
 		}
 
-		std::cout << "=========================================================\n";
-
-		for (auto const source_symbols : m_result.source_symbols) {
-			auto source = remove_path_prefix(source_symbols.first, m_result.source_dir, m_result.target_dir);
-			for (auto const symbol : source_symbols.second) {
-				std::cout << std::format("{}\t\t{}\n", source, symbol);
+		for (const auto &[source, symbols] : m_result.source_symbols) {
+			for (const auto &symbol : symbols) {
+				text << std::format("{}\t\t{}\n", source, symbol);
 			}
-			std::cout << "---------------------------------------------------------\n";
 		}
+
+		return text.str();
 	}
 
 	static ParsedResult scan_symbols_and_inclusions(const std::string &source_path, const std::string &source_dir, const std::string &target_dir, const std::set<std::string> &current_parsed_files) {
@@ -258,9 +256,9 @@ public:
 				"{} {}{}{}{}{}(",
 				func_type,
 				namespace_,
-				namespace_.empty() ? "" : "::",
+				namespace_.empty() ? "" : ":",
 				class_name,
-				class_name.empty() ? "" : "::",
+				class_name.empty() ? "" : ":",
 				func_name
 			);
 
@@ -442,19 +440,15 @@ private:
 };
 
 
-int main(int argc, char **argv) {
-	// cl clang_parse.cpp /EHsc /utf-8 /std:c++20 /I "D:/vcpkg/installed/x64-windows-static/include" /link /LIBPATH:"D:/vcpkg/installed/x64-windows-static/lib" libclang.lib
-
-	std::string cwd = std::filesystem::current_path().string();
-	std::replace(cwd.begin(), cwd.end(), '\\', '/');
-
-	std::string source_dir = std::format("{}/src", cwd);
-	std::string target_dir = std::format("{}/target/test_package_bin", cwd);
-
+int scan_necessary_sources(const char *entry_point_file, const char *source_dir, const char *target_dir, char *result_buf, int result_len) {
 	SourceMappings mappings = SourceMappings(source_dir, target_dir);
-	mappings.scan_necessary_sources(std::format("{}/main.cpp", source_dir));
+	mappings.scan_necessary_sources(entry_point_file);
+	std::string result = mappings.get_result_text(false);
 
-	mappings.output_result(true);
+	if (result_len < result.size()) {
+		return 0;
+	}
 
-	return 0;
+	std::memcpy(result_buf, result.c_str(), result.size());
+	return static_cast<int>(result.size());
 }

@@ -195,9 +195,9 @@ extern "C" fn visit_symbols_and_inclusions(
                 "{} {}{}{}{}{}(",
                 func_type,
                 namespace_,
-                if namespace_.is_empty() { "" } else { ":" },
+                if namespace_.is_empty() { "" } else { "::" },
                 class_name,
-                if class_name.is_empty() { "" } else { ":" },
+                if class_name.is_empty() { "" } else { "::" },
                 func_name
             );
 
