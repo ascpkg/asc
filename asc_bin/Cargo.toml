@@ -1,6 +1,6 @@
 [package]
 name = "asc"
-version = "2024.11.1"
+version = "2024.11.13"
 edition = "2021"
 
 [[bin]]

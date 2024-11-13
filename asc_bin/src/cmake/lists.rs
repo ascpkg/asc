@@ -235,10 +235,16 @@ fn group_sources(
             let dir = util::fs::get_parent_dir(&relative_path);
             let classify = dir.replace("/", "_");
             classify_to_dir.insert(classify.clone(), dir.to_string());
+            let header_path = util::fs::replace_common_prefix(
+                &header,
+                &options.source_dir,
+                &options.target_dir,
+                "../../",
+            );
             group_sources
                 .entry(classify.to_string())
                 .or_default()
-                .insert(header.clone());
+                .insert(header_path);
         }
 
         {
@@ -249,10 +255,16 @@ fn group_sources(
                 let dir = util::fs::get_parent_dir(&relative_path);
                 let classify = dir.replace("/", "_");
                 classify_to_dir.insert(classify.clone(), dir.to_string());
+                let src_path = util::fs::replace_common_prefix(
+                    &src,
+                    &options.source_dir,
+                    &options.target_dir,
+                    "../../",
+                );
                 group_sources
                     .entry(classify.to_string())
                     .or_default()
-                    .insert(src.clone());
+                    .insert(src_path);
             }
         }
     }
