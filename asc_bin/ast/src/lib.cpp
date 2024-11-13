@@ -63,33 +63,17 @@ public:
 
 		// collect header and sources
 		for (const auto &[header, sources] : result.header_include_by_sources) {
-			auto iter = m_result.header_include_by_sources.find(header);
-			if (iter == m_result.header_include_by_sources.end()) {
-				m_result.header_include_by_sources[header] = std::set<std::string>();
-				iter = m_result.header_include_by_sources.find(header);
-			}
-			iter->second.insert(sources.begin(), sources.end());
+			extend_map_set(m_result.header_include_by_sources, header, sources);
 		}
 
 		// collect source and headers
 		for (const auto &[source, headers] : result.source_include_headers) {
-			auto iter = m_result.source_include_headers.find(source);
-			if (iter == m_result.source_include_headers.end()) {
-				m_result.source_include_headers[source] = std::set<std::string>();
-				iter = m_result.source_include_headers.find(source);
-			}
-			iter->second.insert(headers.begin(), headers.end());
+			extend_map_set(m_result.source_include_headers, source, headers);
 		}
-
 
 		// collect source and symbols
 		for (const auto &[source, symbols] : result.source_symbols) {
-			auto iter = m_result.source_symbols.find(source);
-			if (iter == m_result.source_symbols.end()) {
-				m_result.source_symbols[source] = std::set<std::string>();
-				iter = m_result.source_symbols.find(source);
-			}
-			iter->second.insert(symbols.begin(), symbols.end());
+			extend_map_set(m_result.source_symbols, source, symbols);
 		}
 	}
 
@@ -137,12 +121,7 @@ public:
 							if (i != m_result.source_include_headers.end()) {
 								for (const auto h : i->second) {
 									if (!necessaries.contains(h)) {
-										auto j = header_sources_to_insert.find(h);
-										if (j == header_sources_to_insert.end()) {
-											header_sources_to_insert[h] = std::set<std::string>();
-											j = header_sources_to_insert.find(h);
-										}
-										j->second.insert(source);
+										insert_map_set(header_sources_to_insert, h, source);
 									}
 								}
 							}
@@ -272,19 +251,8 @@ public:
 				// skip third-party
 				if (0 == include_path.find(result->source_dir) || 0 == include_path.find(result->target_dir)) {
 					// collect inclusions
-					auto i = result->header_include_by_sources.find(include_path);
-					if (i == result->header_include_by_sources.end()) {
-						result->header_include_by_sources[include_path] = std::set<std::string>();
-						i = result->header_include_by_sources.find(include_path);
-					}
-					i->second.insert(source_path);
-
-					auto j = result->source_include_headers.find(source_path);
-					if (j == result->source_include_headers.end()) {
-						result->source_include_headers[source_path] = std::set<std::string>();
-						j = result->source_include_headers.find(source_path);
-					}
-					j->second.insert(include_path);
+					insert_map_set(result->header_include_by_sources, include_path, source_path);
+					insert_map_set(result->source_include_headers, source_path, include_path);
 				}
 			}
 			break;
@@ -378,12 +346,7 @@ public:
 
 		if (!symbol_signature.empty()) {
 			// collect symbols
-			auto iter = result->source_symbols.find(source_path);
-			if (iter == result->source_symbols.end()) {
-				result->source_symbols[source_path] = std::set<std::string>();
-				iter = result->source_symbols.find(source_path);
-			}
-			iter->second.insert(symbol_signature);
+			insert_map_set(result->source_symbols, source_path, symbol_signature);
 		}
 
 		return CXChildVisit_Recurse;
@@ -441,6 +404,24 @@ public:
 
 		CXString cx_str_file_name = clang_getFileName(cx_file);
 		return std::make_tuple(cx_string_to_string(cx_str_file_name), line, column);
+	}
+
+	static void insert_map_set(std::map<std::string, std::set<std::string>> &container, const std::string &key, const std::string &value) {
+		auto iter = container.find(key);
+		if (iter == container.end()) {
+			container[key] = std::set<std::string>();
+			iter = container.find(key);
+		}
+		iter->second.insert(value);
+	}
+
+	static void extend_map_set(std::map<std::string, std::set<std::string>> &container, const std::string &key, const std::set<std::string> &values) {
+		auto iter = container.find(key);
+		if (iter == container.end()) {
+			container[key] = std::set<std::string>();
+			iter = container.find(key);
+		}
+		iter->second.insert(values.begin(), values.end());
 	}
 
 	static std::string remove_path_prefix(const std::string &path, const std::string &source_dir, const std::string &target_dir) {
