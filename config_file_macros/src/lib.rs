@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! generate_wrapper_methods {
-    ($format:ident, $deserialize_method:ident, $serialize_method:ident, $deserialize_func_str:expr, $serialize_func_str:expr, $deserialize_error:expr, $serialize_error:expr) => {
-        impl<T> Wrapper<T>
+    ($wrapper:ident, $format:ident, $deserialize_method:ident, $serialize_method:ident, $deserialize_func_str:expr, $serialize_func_str:expr, $deserialize_error:expr, $serialize_error:expr) => {
+        impl<T> $wrapper<T>
         where
             T: DeserializeOwned + Serialize,
         {
@@ -14,7 +14,7 @@ macro_rules! generate_wrapper_methods {
                             tracing::error!(
                                 func = "std::fs::read_to_string",
                                 path = path,
-                                error_tag = ErrorTag::ReadFileError.as_ref(),
+                                error_tag = "ReadFileError",
                                 error_str = e.to_string(),
                             );
                         }
@@ -60,7 +60,7 @@ macro_rules! generate_wrapper_methods {
                             tracing::error!(
                                 func = "std::fs::write",
                                 path = path,
-                                error_tag = ErrorTag::WriteFileError.as_ref(),
+                                error_tag = "WriteFileError",
                                 error_str = e.to_string(),
                                 message = text,
                             );

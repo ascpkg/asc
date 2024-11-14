@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
 use config_file_derives::ConfigFile;
+use config_file_types;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
     cli::{self, commands::VcpkgArgs},
-    config::{self, system_paths},
+    config::system_paths,
     util,
 };
 

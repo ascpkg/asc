@@ -2,6 +2,8 @@
 name = "asc"
 version = "2024.11.13"
 edition = "2021"
+description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
+license = "LGPL-3.0+"
 
 [[bin]]
 name = "test_cli"
@@ -18,8 +20,9 @@ path = "src/tests/clang_parse.rs"
 
 [dependencies]
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
-config_file_derives  = { version = "2024.11.1", path = "../config_file_derives" }
-config_file_macros  = { version = "2024.11.1", path = "../config_file_macros" }
+config_file_derives = { version = "2024.11.14", path = "../config_file_derives" }
+config_file_macros = { version = "2024.11.14", path = "../config_file_macros" }
+config_file_types = { version = "2024.11.14", path = "../config_file_types" }
 chrono = { version = "0.4.38" }
 clang-sys = { version = "1.8.1", features = ["clang_10_0"] }
 clap = { version = "4.5.20", features = ["derive"] }

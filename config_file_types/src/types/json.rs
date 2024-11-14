@@ -1,21 +1,21 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde_json;
 
 use config_file_macros::generate_wrapper_methods;
 
-use crate::errors::ErrorTag;
-
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Wrapper<T> {
+pub struct JsonConfigFileWrapper<T> {
     inner: T,
     path: String,
 }
 
 generate_wrapper_methods!(
+    JsonConfigFileWrapper,
     serde_json,
     from_str,
     to_string,
     "from_str",
     "to_string",
-    ErrorTag::JsonDeserializeError.as_ref(),
-    ErrorTag::JsonSerializeError.as_ref()
+    "JsonDeserializeError",
+    "JsonSerializeError"
 );

@@ -1,0 +1,13 @@
+[package]
+name = "config_file_types"
+version = "2024.11.14"
+edition = "2021"
+description = "Automatically generate file configuration wrapper"
+license = "LGPL-3.0+"
+
+[dependencies]
+config_file_macros = { version = "2024.11.1", path = "../config_file_macros" }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = { version = "1.0.129" }
+toml = { version = "0.8.19" }
+tracing = { version = "0.1.40" }

@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
-use basic_trie::DataTrie;
-use config_file_derives::ConfigFile;
 use serde::{Deserialize, Serialize};
 use serde_json;
+
+use basic_trie::DataTrie;
+use config_file_derives::ConfigFile;
+use config_file_types;
 
 use crate::{
     cli::commands::VcpkgArgs,

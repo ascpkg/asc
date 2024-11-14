@@ -4,4 +4,5 @@ members = [
     "asc_bin",
     "config_file_derives",
     "config_file_macros",
+    "config_file_types",
 ]

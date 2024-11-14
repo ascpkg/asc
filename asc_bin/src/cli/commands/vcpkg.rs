@@ -1,12 +1,13 @@
 use clap::Args;
 
 use config_file_derives::ConfigFile;
+use config_file_types;
 
 use struct_iterable::Iterable;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{config, vcpkg::VcpkgManager};
+use crate::vcpkg::VcpkgManager;
 
 use super::VcpkgAction;
 

@@ -3,8 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use config_file_derives::ConfigFile;
-
-use crate::config;
+use config_file_types;
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct PackageConfig {
