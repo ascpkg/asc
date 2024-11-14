@@ -32,47 +32,43 @@ impl CleanArgs {
         let mut has_error = false;
 
         let cwd = util::fs::get_cwd();
-        if let Some(bins) = &project_conf.bins {
-            for bin in bins {
-                util::fs::set_cwd(&format!(
-                    "{}/{}",
-                    relative_paths::ASC_PROJECT_DIR_NAME,
-                    bin.name
-                ));
-                tracing::info!(message = "clean bin", name = bin.name);
+        for bin in &project_conf.bins {
+            util::fs::set_cwd(&format!(
+                "{}/{}",
+                relative_paths::ASC_PROJECT_DIR_NAME,
+                bin.name
+            ));
+            tracing::info!(message = "clean bin", name = bin.name);
 
-                // cmake
-                has_error &= relative_paths::clean_cmake_files(&bin.name);
+            // cmake
+            has_error &= relative_paths::clean_cmake_files(&bin.name);
 
-                // graph
-                has_error &= relative_paths::clean_graph_files();
+            // graph
+            has_error &= relative_paths::clean_graph_files();
 
-                util::fs::set_cwd("..");
-                util::fs::remove_dir(&bin.name);
+            util::fs::set_cwd("..");
+            util::fs::remove_dir(&bin.name);
 
-                util::fs::set_cwd(&cwd);
-            }
+            util::fs::set_cwd(&cwd);
         }
-        if let Some(libs) = &project_conf.libs {
-            for lib in libs {
-                util::fs::set_cwd(&format!(
-                    "{}/{}",
-                    relative_paths::ASC_PROJECT_DIR_NAME,
-                    lib.name
-                ));
-                tracing::info!(message = "clean lib", name = lib.name);
+        for lib in &project_conf.libs {
+            util::fs::set_cwd(&format!(
+                "{}/{}",
+                relative_paths::ASC_PROJECT_DIR_NAME,
+                lib.name
+            ));
+            tracing::info!(message = "clean lib", name = lib.name);
 
-                // cmake
-                has_error &= relative_paths::clean_cmake_files(&lib.name);
+            // cmake
+            has_error &= relative_paths::clean_cmake_files(&lib.name);
 
-                // graph
-                has_error &= relative_paths::clean_graph_files();
+            // graph
+            has_error &= relative_paths::clean_graph_files();
 
-                util::fs::set_cwd("..");
-                util::fs::remove_dir(&lib.name);
+            util::fs::set_cwd("..");
+            util::fs::remove_dir(&lib.name);
 
-                util::fs::set_cwd(&cwd);
-            }
+            util::fs::set_cwd(&cwd);
         }
 
         // cmake

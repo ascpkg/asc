@@ -33,10 +33,10 @@ impl ProjectConfig {
             if self.package.is_some() {
                 errors.push("package");
             }
-            if self.bins.is_some() {
+            if self.bins.is_empty() {
                 errors.push("bins");
             }
-            if self.libs.is_some() {
+            if self.libs.is_empty() {
                 errors.push("libs");
             }
             if !self.dependencies.is_empty() {
@@ -230,14 +230,12 @@ default = [
             repository: String::from(""),
         });
 
-        let mut bins = BTreeSet::new();
-        bins.insert(EntryConfig {
+        data.bins.insert(EntryConfig {
             name: String::from("a"),
             source_dir: String::from("src"),
             source_file: String::from("main.cpp"),
             shared: None,
         });
-        data.bins = Some(bins);
 
         data.workspace = Some(WorkSpaceConfig {
             members: [

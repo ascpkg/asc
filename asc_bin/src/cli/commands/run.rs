@@ -32,18 +32,16 @@ impl RunArgs {
                 for member in workspace.members {
                     util::fs::set_cwd(&member);
                     if let Some(pc) = config::project::ProjectConfig::read_project_conf() {
-                        if let Some(bins) = &pc.bins {
-                            for bin in bins {
-                                flat_bins.insert(config::project::EntryConfig {
-                                    name: bin.name.clone(),
-                                    ..Default::default()
-                                });
-                            }
+                        for bin in &pc.bins {
+                            flat_bins.insert(config::project::EntryConfig {
+                                name: bin.name.clone(),
+                                ..Default::default()
+                            });
                         }
                     }
                     util::fs::set_cwd(&cwd);
                 }
-                flat_project_conf.bins = Some(flat_bins);
+                flat_project_conf.bins = flat_bins;
                 return self.run_bin(&flat_project_conf);
             } else {
                 return self.run_bin(&project_conf);
@@ -54,51 +52,48 @@ impl RunArgs {
     }
 
     fn run_bin(&self, project_conf: &ProjectConfig) -> bool {
-        if let Some(bins) = &project_conf.bins {
-            let mut bin_name = String::new();
-            let mut bin_names = vec![];
-            if bins.len() == 1 {
-                bin_name = bins.first().unwrap().name.clone();
-                bin_names.push(bin_name.clone());
-            } else {
-                for bin in bins {
-                    bin_names.push(bin.name.clone());
-                    if let Some(n) = &self.name {
-                        if &bin.name == n {
-                            bin_name = bin.name.clone();
-                            break;
-                        }
+        let mut bin_name = String::new();
+        let mut bin_names = vec![];
+        if project_conf.bins.len() == 1 {
+            bin_name = project_conf.bins.first().unwrap().name.clone();
+            bin_names.push(bin_name.clone());
+        } else {
+            for bin in &project_conf.bins {
+                bin_names.push(bin.name.clone());
+                if let Some(n) = &self.name {
+                    if &bin.name == n {
+                        bin_name = bin.name.clone();
+                        break;
                     }
                 }
             }
-            if bin_name.is_empty() {
-                tracing::error!(
-                    error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
-                    bins = bin_names.join(", ")
-                );
-                return false;
-            }
-            return util::shell::run(
-                &format!(
-                    "{}/{}/{}/{}",
-                    relative_paths::ASC_TARGET_DIR_NAME,
-                    bin_name,
-                    self.config.as_ref(),
-                    bin_name
-                ),
-                &self
-                    .args
-                    .as_ref()
-                    .unwrap_or(&vec![])
-                    .iter()
-                    .map(|s| s.as_str())
-                    .collect(),
-                false,
-                false,
-                false,
-            )
-            .is_ok();
         }
-        return false;
+        if bin_name.is_empty() {
+            tracing::error!(
+                error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+                bins = bin_names.join(", ")
+            );
+            return false;
+        }
+        return util::shell::run(
+            &format!(
+                "{}/{}/{}/{}",
+                relative_paths::ASC_TARGET_DIR_NAME,
+                bin_name,
+                self.config.as_ref(),
+                bin_name
+            ),
+            &self
+                .args
+                .as_ref()
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|s| s.as_str())
+                .collect(),
+            false,
+            false,
+            false,
+        )
+        .is_ok();
     }
 }

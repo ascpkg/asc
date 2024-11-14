@@ -43,11 +43,13 @@ pub struct WorkSpaceConfig {
 pub struct ProjectConfig {
     pub workspace: Option<WorkSpaceConfig>,
     pub package: Option<PackageConfig>,
-    #[serde(rename = "bin")]
-    pub bins: Option<BTreeSet<EntryConfig>>,
-    #[serde(rename = "lib")]
-    pub libs: Option<BTreeSet<EntryConfig>>,
+    #[serde(rename = "bin", default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub bins: BTreeSet<EntryConfig>,
+    #[serde(rename = "lib", default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub libs: BTreeSet<EntryConfig>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub features: BTreeMap<String, BTreeSet<String>>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub dependencies: BTreeMap<String, DependencyConfig>,
 
     #[serde(skip)]

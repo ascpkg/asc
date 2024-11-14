@@ -71,19 +71,19 @@ impl InitArgs {
         project.package = Some(package);
 
         if self.lib {
-            project.libs = Some(BTreeSet::from([EntryConfig {
+            project.libs = BTreeSet::from([EntryConfig {
                 name: name.to_string(),
                 source_dir: relative_paths::SRC_DIR_NAME.to_string(),
                 source_file: relative_paths::LIB_CPP_FILE_NAME.to_string(),
                 shared: if self.shared { Some(true) } else { Some(false) },
-            }]));
+            }]);
         } else {
-            project.bins = Some(BTreeSet::from([EntryConfig {
+            project.bins = BTreeSet::from([EntryConfig {
                 name: name.to_string(),
                 source_dir: relative_paths::SRC_DIR_NAME.to_string(),
                 source_file: relative_paths::MAIN_CPP_FILE_NAME.to_string(),
                 shared: None,
-            }]));
+            }]);
         }
 
         // write asc.toml

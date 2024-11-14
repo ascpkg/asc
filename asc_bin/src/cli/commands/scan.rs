@@ -46,7 +46,7 @@ impl ScanArgs {
                     return self.scan_workspace(&project_conf);
                 }
 
-                if project_conf.bins.is_none() && project_conf.libs.is_none() {
+                if project_conf.bins.is_empty() && project_conf.libs.is_empty() {
                     tracing::error!(
                         error_tag = ErrorTag::InvalidProjectPackageError.as_ref(),
                         message = "bins, libs were not found"
@@ -62,70 +62,65 @@ impl ScanArgs {
                 util::fs::set_cwd(relative_paths::ASC_PROJECT_DIR_NAME);
 
                 let mut members = vec![];
+                for bin_entry in &project_conf.bins {
+                    members.push(bin_entry.name.clone());
 
-                if let Some(bins) = &project_conf.bins {
-                    for bin_entry in bins {
-                        members.push(bin_entry.name.clone());
-
-                        if !util::fs::is_dir_exists(&bin_entry.name) {
-                            util::fs::create_dir(&bin_entry.name);
-                        }
-                        let c = util::fs::get_cwd();
-                        // cd bin_entry.name
-                        util::fs::set_cwd(&bin_entry.name);
-
-                        self.scan_package(
-                            &bin_entry.name,
-                            &cwd,
-                            &format!("{cwd}/{}", bin_entry.source_dir),
-                            &format!("{cwd}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
-                            &format!(
-                                "{cwd}/{}/{}",
-                                relative_paths::ASC_TARGET_DIR_NAME,
-                                bin_entry.name
-                            ),
-                            true,
-                            &project_conf.dependencies,
-                            false,
-                            false,
-                        );
-
-                        // cd .asc
-                        util::fs::set_cwd(&c);
+                    if !util::fs::is_dir_exists(&bin_entry.name) {
+                        util::fs::create_dir(&bin_entry.name);
                     }
+                    let c = util::fs::get_cwd();
+                    // cd bin_entry.name
+                    util::fs::set_cwd(&bin_entry.name);
+
+                    self.scan_package(
+                        &bin_entry.name,
+                        &cwd,
+                        &format!("{cwd}/{}", bin_entry.source_dir),
+                        &format!("{cwd}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
+                        &format!(
+                            "{cwd}/{}/{}",
+                            relative_paths::ASC_TARGET_DIR_NAME,
+                            bin_entry.name
+                        ),
+                        true,
+                        &project_conf.dependencies,
+                        false,
+                        false,
+                    );
+
+                    // cd .asc
+                    util::fs::set_cwd(&c);
                 }
 
-                if let Some(libs) = &project_conf.libs {
-                    for lib_entry in libs {
-                        members.push(lib_entry.name.clone());
+                for lib_entry in &project_conf.libs {
+                    members.push(lib_entry.name.clone());
 
-                        if !util::fs::is_dir_exists(&lib_entry.name) {
-                            util::fs::create_dir(&lib_entry.name);
-                        }
-                        let c = util::fs::get_cwd();
-                        // cd lib_entry.name
-                        util::fs::set_cwd(&lib_entry.name);
-
-                        let is_shared_lib = lib_entry.shared.unwrap();
-                        self.scan_package(
-                            &lib_entry.name,
-                            &cwd,
-                            &format!("{cwd}/{}", lib_entry.source_dir),
-                            &format!("{cwd}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
-                            &format!(
-                                "{cwd}/{}/{}",
-                                relative_paths::ASC_TARGET_DIR_NAME,
-                                lib_entry.name
-                            ),
-                            true,
-                            &project_conf.dependencies,
-                            is_shared_lib,
-                            !is_shared_lib,
-                        );
-
-                        // cd .asc
-                        util::fs::set_cwd(&c);
+                    if !util::fs::is_dir_exists(&lib_entry.name) {
+                        util::fs::create_dir(&lib_entry.name);
                     }
+                    let c = util::fs::get_cwd();
+                    // cd lib_entry.name
+                    util::fs::set_cwd(&lib_entry.name);
+
+                    let is_shared_lib = lib_entry.shared.unwrap();
+                    self.scan_package(
+                        &lib_entry.name,
+                        &cwd,
+                        &format!("{cwd}/{}", lib_entry.source_dir),
+                        &format!("{cwd}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
+                        &format!(
+                            "{cwd}/{}/{}",
+                            relative_paths::ASC_TARGET_DIR_NAME,
+                            lib_entry.name
+                        ),
+                        true,
+                        &project_conf.dependencies,
+                        is_shared_lib,
+                        !is_shared_lib,
+                    );
+
+                    // cd .asc
+                    util::fs::set_cwd(&c);
                 }
 
                 cmake::lists::gen_workspace(
@@ -240,65 +235,61 @@ impl ScanArgs {
                     has_error = true;
                 }
                 Some(project_conf) => {
-                    if let Some(bins) = &project_conf.bins {
-                        for bin_entry in bins {
-                            members.push(bin_entry.name.clone());
+                    for bin_entry in &project_conf.bins {
+                        members.push(bin_entry.name.clone());
 
-                            if !util::fs::is_dir_exists(&bin_entry.name) {
-                                util::fs::create_dir(&bin_entry.name);
-                            }
-                            let c = util::fs::get_cwd();
-                            util::fs::set_cwd(&bin_entry.name);
-
-                            self.scan_package(
-                                &bin_entry.name,
-                                &cwd,
-                                &format!("{cwd}/{member}/{}", bin_entry.source_dir),
-                                &format!("{cwd}/{member}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
-                                &format!(
-                                    "{cwd}/{}/{}",
-                                    relative_paths::ASC_TARGET_DIR_NAME,
-                                    bin_entry.name
-                                ),
-                                true,
-                                &project_conf.dependencies,
-                                false,
-                                false,
-                            );
-
-                            util::fs::set_cwd(&c);
+                        if !util::fs::is_dir_exists(&bin_entry.name) {
+                            util::fs::create_dir(&bin_entry.name);
                         }
+                        let c = util::fs::get_cwd();
+                        util::fs::set_cwd(&bin_entry.name);
+
+                        self.scan_package(
+                            &bin_entry.name,
+                            &cwd,
+                            &format!("{cwd}/{member}/{}", bin_entry.source_dir),
+                            &format!("{cwd}/{member}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
+                            &format!(
+                                "{cwd}/{}/{}",
+                                relative_paths::ASC_TARGET_DIR_NAME,
+                                bin_entry.name
+                            ),
+                            true,
+                            &project_conf.dependencies,
+                            false,
+                            false,
+                        );
+
+                        util::fs::set_cwd(&c);
                     }
 
-                    if let Some(libs) = &project_conf.libs {
-                        for lib_entry in libs {
-                            members.push(lib_entry.name.clone());
+                    for lib_entry in &project_conf.libs {
+                        members.push(lib_entry.name.clone());
 
-                            if !util::fs::is_dir_exists(&lib_entry.name) {
-                                util::fs::create_dir(&lib_entry.name);
-                            }
-                            let c = util::fs::get_cwd();
-                            util::fs::set_cwd(&lib_entry.name);
-
-                            let is_shared_lib = lib_entry.shared.unwrap();
-                            self.scan_package(
-                                &lib_entry.name,
-                                &cwd,
-                                &format!("{cwd}/{member}/{}", lib_entry.source_dir),
-                                &format!("{cwd}/{member}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
-                                &format!(
-                                    "{cwd}/{}/{}",
-                                    relative_paths::ASC_TARGET_DIR_NAME,
-                                    lib_entry.name
-                                ),
-                                true,
-                                &project_conf.dependencies,
-                                is_shared_lib,
-                                !is_shared_lib,
-                            );
-
-                            util::fs::set_cwd(&c);
+                        if !util::fs::is_dir_exists(&lib_entry.name) {
+                            util::fs::create_dir(&lib_entry.name);
                         }
+                        let c = util::fs::get_cwd();
+                        util::fs::set_cwd(&lib_entry.name);
+
+                        let is_shared_lib = lib_entry.shared.unwrap();
+                        self.scan_package(
+                            &lib_entry.name,
+                            &cwd,
+                            &format!("{cwd}/{member}/{}", lib_entry.source_dir),
+                            &format!("{cwd}/{member}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
+                            &format!(
+                                "{cwd}/{}/{}",
+                                relative_paths::ASC_TARGET_DIR_NAME,
+                                lib_entry.name
+                            ),
+                            true,
+                            &project_conf.dependencies,
+                            is_shared_lib,
+                            !is_shared_lib,
+                        );
+
+                        util::fs::set_cwd(&c);
                     }
 
                     dependencies.extend(project_conf.dependencies);
