@@ -4,7 +4,6 @@ pub fn reverse_string(input: &str) -> String {
     chars.iter().collect()
 }
 
-
 pub fn longest_common_substring(s1: &str, s2: &str) -> String {
     let m = s1.len();
     let n = s2.len();

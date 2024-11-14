@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::{index::VcpkgBaseline, search::get_port_version_commit_info, VcpkgManager};
+use super::{search::get_port_version_commit_info, VcpkgManager};
 
 use crate::{
     cli::commands::VcpkgArgs,
@@ -10,6 +10,7 @@ use crate::{
             VcpkgDependencyDesc, VcpkgRegistry,
         },
         relative_paths,
+        vcpkg::versions_baseline::VcpkgBaseline,
     },
     util,
 };

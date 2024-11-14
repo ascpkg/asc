@@ -9,7 +9,11 @@ use config_file_types;
 
 use crate::{
     cli::commands::VcpkgArgs,
-    config::{self, relative_paths::VCPKG_PORTS_DIR_NAME},
+    config::{
+        self,
+        relative_paths::VCPKG_PORTS_DIR_NAME,
+        vcpkg::{versions_baseline::VcpkgBaseline, versions_port::VcpkgPortVersions},
+    },
     errors::ErrorTag,
     util,
 };
@@ -27,16 +31,6 @@ pub struct GitCommitInfo {
     pub date_time: String,
 }
 
-// from vcpkg (versions/baseline.json)
-#[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
-#[config_file_ext("json")]
-pub struct VcpkgBaseline {
-    #[serde(skip)]
-    path: String,
-
-    pub default: HashMap<String, VcpkgPortVersion>,
-}
-
 // asc
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
@@ -50,46 +44,6 @@ pub struct VcpkgSearchIndex {
     pub baseline: VcpkgBaseline,
 
     check_point: GitCommitInfo,
-}
-
-// from vcpkg
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct VcpkgPortVersion {
-    pub baseline: String,
-    pub port_version: u32,
-}
-
-impl VcpkgPortVersion {
-    pub fn format_version_text(&self) -> String {
-        if self.port_version == 0 {
-            self.baseline.clone()
-        } else {
-            format!("{}#{}", self.baseline, self.port_version)
-        }
-    }
-}
-
-// from vcpkg
-#[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
-#[config_file_ext("json")]
-pub struct VcpkgPortVersions {
-    #[serde(skip)]
-    path: String,
-
-    versions: Vec<VcpkgPortTreeVersion>,
-}
-
-// from vcpkg
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct VcpkgPortTreeVersion {
-    git_tree: String,
-    version: Option<String>,
-    version_date: Option<String>,
-    version_semver: Option<String>,
-    version_string: Option<String>,
-    port_version: u32,
 }
 
 // asc
@@ -109,27 +63,6 @@ pub struct VcpkgGitTreeInfo {
     pub port_name: String,
     pub commit_hash: String,
     pub commit_date_time: String,
-}
-
-impl VcpkgPortTreeVersion {
-    pub fn format_version_text(&self) -> String {
-        let mut s = String::new();
-        if let Some(v) = &self.version {
-            s = v.clone();
-        } else if let Some(v) = &self.version_date {
-            s = v.clone();
-        } else if let Some(v) = &self.version_string {
-            s = v.clone();
-        } else if let Some(v) = &self.version_semver {
-            s = v.clone();
-        }
-
-        if self.port_version == 0 {
-            s
-        } else {
-            format!("{}#{}", s, self.port_version)
-        }
-    }
 }
 
 impl VcpkgManager {

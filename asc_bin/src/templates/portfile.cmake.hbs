@@ -1,0 +1,31 @@
+set(VCPKG_POLICY_SKIP_COPYRIGHT_CHECK enabled)
+set(VCPKG_POLICY_EMPTY_INCLUDE_FOLDER enabled)
+set(VCPKG_POLICY_ALLOW_EXES_IN_BIN enabled)
+set(VCPKG_POLICY_DLLS_IN_STATIC_LIBRARY enabled)
+
+vcpkg_from_git(
+    OUT_SOURCE_PATH SOURCE_PATH
+    URL "{{repo}}"
+    REF {{commit}} # {{version}}
+    HEAD_REF {{branch}}
+{{#if has_patches}}
+    PATCHES
+    {{#each patches as |patch|}}
+    {{patch}}
+    {{/each}}
+{{/if}}
+)
+
+vcpkg_cmake_configure(
+    SOURCE_PATH ${SOURCE_PATH}
+)
+
+vcpkg_cmake_install()
+vcpkg_cmake_config_fixup()
+vcpkg_copy_pdbs()
+
+
+file(REMOVE_RECURSE
+    "${CURRENT_PACKAGES_DIR}/debug/include"
+    "${CURRENT_PACKAGES_DIR}/debug/share"
+)

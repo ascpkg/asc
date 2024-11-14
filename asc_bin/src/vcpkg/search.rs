@@ -1,9 +1,13 @@
 use super::{
-    index::{GitCommitInfo, VcpkgPortVersion, VcpkgSearchIndex},
+    index::{GitCommitInfo, VcpkgSearchIndex},
     VcpkgManager,
 };
 
-use crate::{cli::commands::VcpkgArgs, config, util};
+use crate::{
+    cli::commands::VcpkgArgs,
+    config::{self, vcpkg::versions_baseline::VcpkgPortVersion},
+    util,
+};
 
 pub fn get_port_version_commit_info(port_name: &str, version: &str) -> Option<GitCommitInfo> {
     let vcpkg_manager = VcpkgManager::new(VcpkgArgs::load_or_default());
