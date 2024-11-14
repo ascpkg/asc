@@ -10,12 +10,16 @@ pub struct PackageConfig {
     pub name: String,
     pub version: String,
     pub edition: String,
+    pub description: String,
+    pub license: String,
+    pub repository: String,
 }
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct EntryConfig {
     pub name: String,
-    pub path: String,
+    pub source_dir: String,
+    pub source_file: String,
     pub shared: Option<bool>,
 }
 

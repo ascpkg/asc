@@ -147,10 +147,14 @@ members = [
 name = "test"
 version = "2024.10.21"
 edition = "2024"
+description = ""
+license = "LGPL-3.0+"
+repository = ""
 
 [[bin]]
 name = "a"
-path = "src/main.cpp"
+source_dir = "src"
+source_file = "main.cpp"
 
 [features]
 debug = [
@@ -183,10 +187,14 @@ members = [
 name = "test"
 version = "2024.10.21"
 edition = "2024"
+description = ""
+license = "LGPL-3.0+"
+repository = ""
 
 [[bin]]
 name = "a"
-path = "src/main.cpp"
+source_dir = "src"
+source_file = "main.cpp"
 
 [features]
 debug = [
@@ -217,12 +225,16 @@ default = [
             name: String::from("test"),
             version: String::from("2024.10.21"),
             edition: String::from("2024"),
+            description: String::new(),
+            license: String::from("LGPL-3.0+"),
+            repository: String::from(""),
         });
 
         let mut bins = BTreeSet::new();
         bins.insert(EntryConfig {
             name: String::from("a"),
-            path: String::from("src/main.cpp"),
+            source_dir: String::from("src"),
+            source_file: String::from("main.cpp"),
             shared: None,
         });
         data.bins = Some(bins);

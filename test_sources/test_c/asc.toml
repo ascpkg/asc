@@ -2,10 +2,14 @@
 name = "test_c"
 version = "2024.11.9"
 edition = "2024"
+description = "pure c syntax code"
+license = "LGPL-3.0+"
+repository = ""
 
 [[bin]]
 name = "test_c"
-path = "src/main.c"
+source_dir = "src"
+source_file = "main.c"
 
 [features]
 

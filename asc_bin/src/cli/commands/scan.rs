@@ -77,8 +77,8 @@ impl ScanArgs {
                         self.scan_package(
                             &bin_entry.name,
                             &cwd,
-                            &format!("{}/{}", cwd, relative_paths::SRC_DIR_NAME),
-                            &format!("{}/{}", cwd, bin_entry.path),
+                            &format!("{cwd}/{}", bin_entry.source_dir),
+                            &format!("{cwd}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
                             &format!(
                                 "{cwd}/{}/{}",
                                 relative_paths::ASC_TARGET_DIR_NAME,
@@ -110,8 +110,8 @@ impl ScanArgs {
                         self.scan_package(
                             &lib_entry.name,
                             &cwd,
-                            &format!("{}/{}", cwd, relative_paths::SRC_DIR_NAME),
-                            &format!("{}/{}", cwd, lib_entry.path),
+                            &format!("{cwd}/{}", lib_entry.source_dir),
+                            &format!("{cwd}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
                             &format!(
                                 "{cwd}/{}/{}",
                                 relative_paths::ASC_TARGET_DIR_NAME,
@@ -233,7 +233,7 @@ impl ScanArgs {
         let is_shared_lib = false;
         for member in &project_conf.workspace.as_ref().unwrap().members {
             match config::project::ProjectConfig::load(
-                &format!("{}/{}/{}", &cwd, member, relative_paths::ASC_TOML_FILE_NAME),
+                &format!("{cwd}/{member}/{}", relative_paths::ASC_TOML_FILE_NAME),
                 false,
             ) {
                 None => {
@@ -253,8 +253,8 @@ impl ScanArgs {
                             self.scan_package(
                                 &bin_entry.name,
                                 &cwd,
-                                &format!("{}/{}/{}", cwd, member, relative_paths::SRC_DIR_NAME),
-                                &format!("{}/{}/{}", cwd, member, bin_entry.path),
+                                &format!("{cwd}/{member}/{}", bin_entry.source_dir),
+                                &format!("{cwd}/{member}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
                                 &format!(
                                     "{cwd}/{}/{}",
                                     relative_paths::ASC_TARGET_DIR_NAME,
@@ -284,8 +284,8 @@ impl ScanArgs {
                             self.scan_package(
                                 &lib_entry.name,
                                 &cwd,
-                                &format!("{}/{}/{}", cwd, member, relative_paths::SRC_DIR_NAME),
-                                &format!("{}/{}/{}", cwd, member, lib_entry.path),
+                                &format!("{cwd}/{member}/{}", lib_entry.source_dir),
+                                &format!("{cwd}/{member}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
                                 &format!(
                                     "{cwd}/{}/{}",
                                     relative_paths::ASC_TARGET_DIR_NAME,

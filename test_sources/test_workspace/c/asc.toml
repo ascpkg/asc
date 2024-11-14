@@ -2,10 +2,14 @@
 name = "c"
 version = "2024.10.31"
 edition = "2024"
+description = "test asc workspace member b"
+license = "LGPL-3.0+"
+repository = ""
 
 [[lib]]
 name = "c"
-path = "src/lib.cpp"
+source_dir = "src"
+source_file = "lib.cpp"
 shared = true
 
 [features]

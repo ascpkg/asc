@@ -2,13 +2,17 @@
 name = "ast"
 version = "2024.11.13"
 edition = "2024"
+description = "scan necessary source files"
+license = "LGPL-3.0+"
+repository = ""
 
 [[lib]]
 name = "ast"
-path = "src/main.cpp"
+source_dir = "src"
+source_file = "main.cpp"
 shared = false
 
 [features]
 
 [dependencies]
-# llvm = { version = "18.1.6#1", find_packages = ["clang"], link_libraries = ["clang"], features = ["clang"] }
+llvm = { version = "18.1.6#1", find_packages = ["clang"], link_libraries = ["clang"], features = ["clang"] }

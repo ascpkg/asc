@@ -2,14 +2,19 @@
 name = "test_package"
 version = "2024.10.30"
 edition = "2024"
+description = "test asc package"
+license = "LGPL-3.0+"
+repository = ""
 
 [[bin]]
 name = "test_package_bin"
-path = "src/main.cpp"
+source_dir = "src"
+source_file = "main.cpp"
 
 [[lib]]
 name = "test_package_lib"
-path = "src/lib.cpp"
+source_dir = "src"
+source_file = "lib.cpp"
 shared = true
 
 [features]
