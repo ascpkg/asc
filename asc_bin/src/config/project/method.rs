@@ -148,7 +148,7 @@ name = "test"
 version = "2024.10.21"
 edition = "2024"
 description = ""
-license = "LGPL-3.0+"
+license = "LGPL-3.0-or-later"
 repository = ""
 
 [[bin]]
@@ -188,7 +188,7 @@ name = "test"
 version = "2024.10.21"
 edition = "2024"
 description = ""
-license = "LGPL-3.0+"
+license = "LGPL-3.0-or-later"
 repository = ""
 
 [[bin]]
@@ -226,7 +226,7 @@ default = [
             version: String::from("2024.10.21"),
             edition: String::from("2024"),
             description: String::new(),
-            license: String::from("LGPL-3.0+"),
+            license: String::from("LGPL-3.0-or-later"),
             repository: String::from(""),
         });
 

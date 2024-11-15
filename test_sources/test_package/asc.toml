@@ -3,7 +3,7 @@ name = "test_package"
 version = "2024.10.30"
 edition = "2024"
 description = "test asc package"
-license = "LGPL-3.0+"
+license = "LGPL-3.0-or-later"
 repository = ""
 
 [[bin]]
@@ -19,32 +19,9 @@ shared = true
 
 [features]
 
-[dependencies.arrow]
-version = "17.0.0"
-find_packages = []
-link_libraries = []
-features = ["json", "mimalloc@windows"]
-
-[dependencies.cli11]
-version = "2.3.2"
-find_packages = ["CLI11"]
-link_libraries = ["CLI11::CLI11"]
-features = []
-
-[dependencies.fmt]
-version = "10.0.0"
-find_packages = ["fmt"]
-link_libraries = ["fmt::fmt"]
-features = []
-
-[dependencies.openssl]
-version = "3.3.2#1"
-find_packages = ["openssl"]
-link_libraries = ["OpenSSL::Crypto", "OpenSSL::SSL"]
-features = []
-
-[dependencies.spdlog]
-version = "1.11.0#1"
-find_packages = ["spdlog"]
-link_libraries = ["spdlog::spdlog"]
-features = []
+[dependencies]
+arrow = { version = "17.0.0", find_packages = [], link_libraries = [], features = ["json", "mimalloc@windows"] }
+cli11 = { version = "2.3.2", find_packages = ["CLI11"], include_directories = [], link_libraries = ["CLI11::CLI11"], features = [] }
+fmt = { version = "10.0.0", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
+openssl = { version = "3.3.2#1", find_packages = ["openssl"], include_directories = [], link_libraries = ["OpenSSL::Crypto", "OpenSSL::SSL"], features = [] }
+spdlog = { version = "1.11.0#1", find_packages = ["spdlog"], include_directories = [], link_libraries = ["spdlog::spdlog"], features = [] }

@@ -3,7 +3,7 @@ name = "c"
 version = "2024.10.31"
 edition = "2024"
 description = "test asc workspace member b"
-license = "LGPL-3.0+"
+license = "LGPL-3.0-or-later"
 repository = ""
 
 [[lib]]
@@ -14,8 +14,5 @@ shared = true
 
 [features]
 
-[dependencies.fmt]
-version = "11.0.2#1"
-find_packages = ["fmt"]
-link_libraries = ["fmt::fmt"]
-features = []
+[dependencies]
+fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }

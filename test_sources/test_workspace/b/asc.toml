@@ -3,7 +3,7 @@ name = "b"
 version = "2024.10.31"
 edition = "2024"
 description = "test asc workspace member b"
-license = "LGPL-3.0+"
+license = "LGPL-3.0-or-later"
 repository = ""
 
 [[bin]]
@@ -19,8 +19,5 @@ shared = false
 
 [features]
 
-[dependencies.spdlog]
-version = "1.14.1"
-find_packages = ["spdlog"]
-link_libraries = ["spdlog::spdlog"]
-features = []
+[dependencies]
+spdlog = { version = "1.14.1", find_packages = ["spdlog"], include_directories = [], link_libraries = ["spdlog::spdlog"], features = [] }

@@ -3,7 +3,7 @@ name = "test_c"
 version = "2024.11.9"
 edition = "2024"
 description = "pure c syntax code"
-license = "LGPL-3.0+"
+license = "LGPL-3.0-or-later"
 repository = ""
 
 [[bin]]
