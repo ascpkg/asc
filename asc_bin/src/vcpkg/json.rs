@@ -32,6 +32,7 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
 
     let mut vcpkg_data = VcpkgDependency::load(relative_paths::VCPKG_JSON_FILE_NAME, true).unwrap();
     vcpkg_data.dependencies.clear();
+    vcpkg_data.overrides.clear();
 
     for (port_name, desc) in dependencies {
         let mut dep = VcpkgDependencyDesc::default();

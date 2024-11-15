@@ -9,7 +9,7 @@ repository = ""
 [[lib]]
 name = "ast"
 source_dir = "src"
-source_file = "main.cpp"
+source_file = "lib.cpp"
 shared = false
 std_c = "11"
 std_cxx = "20"
