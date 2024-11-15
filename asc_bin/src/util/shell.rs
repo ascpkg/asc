@@ -3,6 +3,7 @@ use crate::cli::commands::VcpkgArgs;
 pub fn run(
     command: &str,
     args: &Vec<&str>,
+    work_dir: &str,
     capture_stdout: bool,
     capture_stderr: bool,
     silent: bool,
@@ -21,6 +22,7 @@ pub fn run(
 
     return std::process::Command::new(command)
         .args(args)
+        .current_dir(work_dir)
         .envs(envs)
         .stdout(if capture_stdout {
             std::process::Stdio::piped()

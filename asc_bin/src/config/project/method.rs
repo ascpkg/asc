@@ -33,10 +33,10 @@ impl ProjectConfig {
             if self.package.is_some() {
                 errors.push("package");
             }
-            if self.bins.is_empty() {
+            if !self.bins.is_empty() {
                 errors.push("bins");
             }
-            if self.libs.is_empty() {
+            if !self.libs.is_empty() {
                 errors.push("libs");
             }
             if !self.dependencies.is_empty() {
@@ -50,7 +50,7 @@ impl ProjectConfig {
                 tracing::error!(
                     func = "!errors.is_empty",
                     error_tag = ErrorTag::InvalidProjectWorkspaceError.as_ref(),
-                    error_str = errors.join(", ") + "conflicts",
+                    error_str = errors.join(", ") + " conflicts",
                 );
             }
 

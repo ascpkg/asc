@@ -135,7 +135,7 @@ impl ScanArgs {
                 );
 
                 tracing::warn!("generate vcpkg manifest");
-                vcpkg::json::gen(&project_conf.dependencies);
+                vcpkg::json::gen_vcpkg_configurations(&project_conf.dependencies);
 
                 tracing::warn!("generate a build system with cmake");
                 let options = ScanOptions {
@@ -322,7 +322,7 @@ impl ScanArgs {
         );
 
         tracing::warn!("generate vcpkg manifest");
-        vcpkg::json::gen(&dependencies);
+        vcpkg::json::gen_vcpkg_configurations(&dependencies);
 
         tracing::warn!("generate a build system with cmake");
         let options = ScanOptions {

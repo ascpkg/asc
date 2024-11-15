@@ -1,35 +1,25 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use serde_json;
 
 use basic_trie::DataTrie;
 use config_file_derives::ConfigFile;
 use config_file_types;
 
+use super::VcpkgManager;
+
 use crate::{
     cli::commands::VcpkgArgs,
     config::{
         self,
-        relative_paths::VCPKG_PORTS_DIR_NAME,
-        vcpkg::{versions_baseline::VcpkgBaseline, versions_port::VcpkgPortVersions},
+        vcpkg::{
+            versions_baseline::VcpkgBaseline,
+            versions_port::{VcpkgGitTreeInfo, VcpkgPortVersions},
+        },
     },
-    errors::ErrorTag,
+    git::{self, log::GitCommitInfo},
     util,
 };
-
-use super::VcpkgManager;
-
-// from vcpkg (git log)
-#[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
-#[config_file_ext("toml")]
-pub struct GitCommitInfo {
-    #[serde(skip)]
-    pub path: String,
-
-    pub hash: String,
-    pub date_time: String,
-}
 
 // asc
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
@@ -56,13 +46,6 @@ pub struct VcpkgGitTreeIndex {
     index: HashMap<String, VcpkgGitTreeInfo>,
 
     check_point: GitCommitInfo,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct VcpkgGitTreeInfo {
-    pub port_name: String,
-    pub commit_hash: String,
-    pub commit_date_time: String,
 }
 
 impl VcpkgManager {
@@ -201,121 +184,14 @@ impl VcpkgManager {
     }
 
     fn get_git_trees(&self, git_commit_hash: &str) -> Vec<(String, String)> {
-        let mut results = vec![];
-
-        let cwd = util::fs::get_cwd();
-        util::fs::set_cwd(&Self::get_vcpkg_root_dir());
-        let output = util::shell::run(
-            "git",
-            &vec![
-                "ls-tree",
-                "-d",
-                "-r",
-                "--full-tree",
-                git_commit_hash,
-                VCPKG_PORTS_DIR_NAME,
-            ],
-            true,
-            false,
-            true,
-        )
-        .unwrap();
-        util::fs::set_cwd(&cwd);
-
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        for line in stdout.split("\n") {
-            let s = line.trim();
-            if !s.is_empty() {
-                let right = s.split_once(" tree ").unwrap().1;
-                let parts: Vec<&str> = right
-                    .split(VCPKG_PORTS_DIR_NAME)
-                    .map(|s| s.trim())
-                    .collect();
-                if parts.len() == 2 {
-                    results.push((parts[0].to_string(), parts[1].to_string()));
-                }
-            }
-        }
-
-        return results;
+        return git::ls_tree::run(git_commit_hash, &Self::get_vcpkg_root_dir());
     }
 
     pub fn get_latest_commit() -> GitCommitInfo {
-        let cwd = util::fs::get_cwd();
-        util::fs::set_cwd(&Self::get_vcpkg_root_dir());
-        let output = util::shell::run(
-            "git",
-            &vec![
-                "log",
-                "-n 1",
-                "--date=iso",
-                r#"--pretty=format:{"hash": "%H", "date_time": "%ad"}"#,
-            ],
-            true,
-            false,
-            false,
-        )
-        .unwrap();
-        util::fs::set_cwd(&cwd);
-
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        for line in stdout.split("\n") {
-            match serde_json::from_str(line) {
-                Err(e) => {
-                    tracing::error!(
-                        call = "serde_json::from_str",
-                        line = line,
-                        error_tag = ErrorTag::JsonDeserializeError.as_ref(),
-                        message = e.to_string()
-                    );
-                }
-                Ok(info) => {
-                    return info;
-                }
-            }
-        }
-
-        return GitCommitInfo::default();
+        return git::log::get_latest_commit(&Self::get_vcpkg_root_dir(), git::log::GIT_LOG_FORMAT);
     }
 
     fn get_commits(&mut self) -> Vec<GitCommitInfo> {
-        let mut commits = vec![];
-
-        let cwd = util::fs::get_cwd();
-
-        util::fs::set_cwd(&Self::get_vcpkg_root_dir());
-        let output = util::shell::run(
-            "git",
-            &vec![
-                "log",
-                "--reverse",
-                "--date=iso",
-                r#"--pretty=format:{"hash": "%H", "date_time": "%ad"}"#,
-            ],
-            true,
-            false,
-            false,
-        )
-        .unwrap();
-        util::fs::set_cwd(&cwd);
-
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        for line in stdout.split("\n") {
-            match serde_json::from_str(line) {
-                Err(e) => {
-                    tracing::error!(
-                        call = "serde_json::from_str",
-                        line = line,
-                        error_tag = ErrorTag::JsonDeserializeError.as_ref(),
-                        message = e.to_string()
-                    );
-                }
-                Ok(info) => {
-                    commits.push(info);
-                }
-            }
-        }
-
-        return commits;
+        return git::log::get_commits(&Self::get_vcpkg_root_dir(), git::log::GIT_LOG_FORMAT);
     }
 }

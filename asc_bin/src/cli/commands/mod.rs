@@ -18,6 +18,8 @@ pub mod scan;
 pub use scan::ScanArgs;
 pub mod install;
 pub use install::InstallArgs;
+pub mod publish;
+pub use publish::PublishArgs;
 pub mod uninstall;
 pub use uninstall::UninstallArgs;
 pub mod vcpkg;
@@ -52,6 +54,8 @@ pub enum Commands {
 
     Install(InstallArgs),
     Uninstall(UninstallArgs),
+
+    Publish(PublishArgs),
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]

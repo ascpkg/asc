@@ -11,6 +11,7 @@ pub mod cmake;
 pub mod config;
 pub mod dependency;
 pub mod errors;
+pub mod git;
 pub mod graph;
 pub mod templates;
 pub mod util;
@@ -80,6 +81,11 @@ fn main() {
         }
         // remove target
         cli::Commands::Uninstall(options) => {
+            options.exec();
+        }
+
+        // publish package
+        cli::Commands::Publish(options) => {
             options.exec();
         }
     }

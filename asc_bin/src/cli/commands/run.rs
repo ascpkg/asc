@@ -90,6 +90,7 @@ impl RunArgs {
                 .iter()
                 .map(|s| s.as_str())
                 .collect(),
+            ".",
             false,
             false,
             false,

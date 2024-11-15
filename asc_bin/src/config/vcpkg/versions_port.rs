@@ -45,3 +45,10 @@ impl VcpkgPortTreeVersion {
         }
     }
 }
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct VcpkgGitTreeInfo {
+    pub port_name: String,
+    pub commit_hash: String,
+    pub commit_date_time: String,
+}

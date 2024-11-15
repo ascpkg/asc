@@ -13,7 +13,7 @@ use crate::{
             versions_baseline::VcpkgBaseline,
         },
     },
-    util,
+    git, util,
 };
 
 static VCPKG_PORT_NAME_KEY: &str = "name";
@@ -26,7 +26,7 @@ static VCPKG_REGISTRY_DEFAULT_NAME: &str = "microsoft";
 static VCPKG_REGISTRY_DEFAULT_LOCATION: &str =
     "https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip";
 
-pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
+pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig>) {
     // ascending date time commits
     let mut sorted_commits = BTreeMap::new();
 
@@ -74,22 +74,7 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
     util::fs::set_cwd(&vcpkg_clone_dir);
     let mut baseline = String::new();
     for (date_time, hash) in sorted_commits {
-        let output = util::shell::run(
-            "git",
-            &vec![
-                "show",
-                &format!(
-                    "{}:{}",
-                    hash,
-                    relative_paths::vcpkg_versions_baseline_json()
-                ),
-            ],
-            true,
-            false,
-            false,
-        )
-        .unwrap();
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let stdout = git::show::run(&vcpkg_clone_dir, &hash);
 
         if let Some(baseline_data) = VcpkgBaseline::loads(&stdout, false) {
             // overwrite versions
@@ -152,4 +137,12 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
         // write vcpkg-configuration.json
         vcpkg_conf_data.dump(true, false);
     }
+}
+
+pub fn gen_port_data() -> bool {
+    false
+}
+
+pub fn gen_port_versions() -> bool {
+    false
 }

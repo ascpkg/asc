@@ -7,5 +7,5 @@ pub fn exec(options: &cli::commands::scan::ScanOptions) {
         "--config",
         options.cmake_config.as_ref(),
     ];
-    util::shell::run("cmake", &args, false, false, false).unwrap();
+    util::shell::run("cmake", &args, ".", false, false, false).unwrap();
 }

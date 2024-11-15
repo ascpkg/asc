@@ -1,11 +1,9 @@
-use super::{
-    index::{GitCommitInfo, VcpkgSearchIndex},
-    VcpkgManager,
-};
+use super::{index::VcpkgSearchIndex, VcpkgManager};
 
 use crate::{
     cli::commands::VcpkgArgs,
     config::{self, vcpkg::versions_baseline::VcpkgPortVersion},
+    git::log::GitCommitInfo,
     util,
 };
 

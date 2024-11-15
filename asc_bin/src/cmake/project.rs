@@ -52,7 +52,7 @@ pub fn gen(options: &cli::commands::scan::ScanOptions) {
         args.push("-D BUILD_SHARED_LIBS=1");
     }
 
-    util::shell::run("cmake", &args, false, false, false).unwrap();
+    util::shell::run("cmake", &args, ".", false, false, false).unwrap();
 }
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize, ConfigFile)]
