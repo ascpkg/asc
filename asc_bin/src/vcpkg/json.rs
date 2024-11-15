@@ -5,12 +5,13 @@ use super::{search::get_port_version_commit_info, VcpkgManager};
 use crate::{
     cli::commands::VcpkgArgs,
     config::{
-        project::{
-            DependencyConfig, VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgDependency,
-            VcpkgDependencyDesc, VcpkgRegistry,
-        },
+        project::DependencyConfig,
         relative_paths,
-        vcpkg::versions_baseline::VcpkgBaseline,
+        vcpkg::{
+            port::{VcpkgDependency, VcpkgDependencyDesc},
+            manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
+            versions_baseline::VcpkgBaseline,
+        },
     },
     util,
 };
