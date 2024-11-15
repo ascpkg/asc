@@ -12,7 +12,7 @@ pub struct SourceMappings {
     pub target_dir: String,
 
     // include dirs
-    pub include_dirs: Vec<String>,
+    pub include_directories: Vec<String>,
 
     // header - sources
     pub header_include_by_sources: BTreeMap<String, BTreeSet<String>>,
@@ -30,7 +30,7 @@ impl SourceMappings {
         let mut self_ = SourceMappings {
             source_dir: options.source_dir.clone(),
             target_dir: options.target_dir.clone(),
-            include_dirs: options.include_dirs.clone(),
+            include_directories: options.include_directories.clone(),
             ..Default::default()
         };
 

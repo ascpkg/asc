@@ -94,6 +94,11 @@ fn add_for_pakcage(args: &AddArgs, project_conf: &mut config::project::ProjectCo
                     .iter()
                     .map(|s| s.clone())
                     .collect::<BTreeSet<String>>(),
+                include_directories: args
+                    .include_directory
+                    .iter()
+                    .map(|s| s.clone())
+                    .collect::<BTreeSet<String>>(),
                 link_libraries: args
                     .link_library
                     .iter()

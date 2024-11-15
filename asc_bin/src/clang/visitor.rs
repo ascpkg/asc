@@ -33,7 +33,7 @@ pub fn collect_symbols_and_inclusions(source: &String, parser: &SourceMappings) 
 
         // set include search paths
         let mut rs_args: Vec<String> = parser
-            .include_dirs
+            .include_directories
             .iter()
             .map(|s| format!("-I{}", s))
             .collect();

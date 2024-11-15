@@ -76,6 +76,8 @@ impl InitArgs {
                 source_dir: relative_paths::SRC_DIR_NAME.to_string(),
                 source_file: relative_paths::LIB_CPP_FILE_NAME.to_string(),
                 shared: if self.shared { Some(true) } else { Some(false) },
+                std_c: String::new(),
+                std_cxx: String::new(),
             }]);
         } else {
             project.bins = BTreeSet::from([EntryConfig {
@@ -83,6 +85,8 @@ impl InitArgs {
                 source_dir: relative_paths::SRC_DIR_NAME.to_string(),
                 source_file: relative_paths::MAIN_CPP_FILE_NAME.to_string(),
                 shared: None,
+                std_c: String::new(),
+                std_cxx: String::new(),
             }]);
         }
 

@@ -4,6 +4,22 @@ cmake_minimum_required(VERSION {{cmake_version}})
 # set project name
 project ({{project}} C CXX)
 
+{{#if (or std_c std_cxx)}}
+{{#if std_c}}
+# set c standard version
+set(CMAKE_C_STANDARD {{std_c}})
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+{{/if}}
+
+{{#if std_cxx}}
+# set c++ standard version
+set(CMAKE_CXX_STANDARD {{std_cxx}})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+{{/if}}
+{{/if}}
+
 # configure msvc
 if(MSVC)
     # utf-8 source code encoding
@@ -70,12 +86,12 @@ FILE(
 SOURCE_GROUP("{{group.original_dir}}" FILES {{group.variable}})
 {{/each}}
 
-{{#if executable}}
-# generate executable
-add_executable(
-{{else}}
+{{#if library}}
 # generate library
 add_library(
+{{else}}
+# generate executable
+add_executable(
 {{/if}}
     ${PROJECT_NAME}
 {{#if shared_library}}
@@ -86,7 +102,7 @@ add_library(
     {{/each}}
 )
 
-{{#if link_libraries}}
+{{#if find_packages}}
 # find package
 {{#each find_packages as |package|}}
 find_package({{package}} CONFIG REQUIRED)
@@ -99,22 +115,22 @@ target_include_directories(
     PRIVATE
     ${CMAKE_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_BINARY_DIR}
-{{#each include_dirs as |dir|}}
-    "{{dir}}"
+{{#each include_directories as |directory|}}
+    {{directory}}
 {{/each}}
 )
 
-{{#if link_libraries }}
+{{#if (or public_libraries private_libraries) }}
 # link libraries
 target_link_libraries(
     ${PROJECT_NAME}
-    {{#if link_public_libraries}}
+    {{#if public_libraries}}
     PUBLIC
     {{#each public_libraries as |lib|}}
     {{lib}}
     {{/each}}
     {{/if}}
-    {{#if link_private_libraries}}
+    {{#if private_libraries}}
     PRIVATE
     {{#each private_libraries as |lib|}}
     {{lib}}

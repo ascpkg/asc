@@ -41,16 +41,14 @@ struct CMakeListsData {
     install_lib_dir: String,
     install_include_dir: String,
     install_share_dir: String,
-    executable: bool,
     library: bool,
     shared_library: bool,
     sources_group_by_dir: Vec<SourcesGroup>,
-    include_dirs: Vec<String>,
+    std_c: String,
+    std_cxx: String,
+    include_directories: Vec<String>,
     find_packages: Vec<String>,
-    link_libraries: bool,
-    link_public_libraries: bool,
     public_libraries: Vec<String>,
-    link_private_libraries: bool,
     private_libraries: Vec<String>,
     install_headers: Vec<InstallHeader>,
 }
@@ -98,17 +96,23 @@ pub fn gen(
     data.install_lib_dir = relative_paths::CMAKE_INSTALL_LIB_DIR_NAME.to_string();
     data.install_include_dir = relative_paths::CMAKE_INSTALL_INCLUDE_DIR_NAME.to_string();
     data.install_share_dir = relative_paths::CMAKE_INSTALL_SHARE_DIR_NAME.to_string();
-    data.executable = !options.static_lib && !options.shared_lib;
     data.library = options.static_lib || options.shared_lib;
     data.shared_library = data.library && options.shared_lib;
-    data.include_dirs = options.include_dirs.clone();
-    data.link_libraries = !dependencies.is_empty();
-    data.link_public_libraries = false;
-    data.link_private_libraries = !dependencies.is_empty();
+    data.std_c = options.std_c.clone();
+    data.std_cxx = options.std_cxx.clone();
     for (_, dep) in dependencies {
         if !dep.find_packages.is_empty() {
             data.find_packages.push(
                 dep.find_packages
+                    .iter()
+                    .map(|s| s.clone())
+                    .collect::<Vec<String>>()
+                    .join(" "),
+            );
+        }
+        if !dep.include_directories.is_empty() {
+            data.include_directories.push(
+                dep.include_directories
                     .iter()
                     .map(|s| s.clone())
                     .collect::<Vec<String>>()

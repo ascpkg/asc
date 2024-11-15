@@ -20,11 +20,12 @@ pub struct ScanOptions {
     pub target_dir: String,
     pub source_dir: String,
     pub entry_point_source: String,
-    pub include_dirs: Vec<String>,
     pub shared_lib: bool,
     pub static_lib: bool,
-    pub cmake_minimum_version: String,
+    pub std_c: String,
+    pub std_cxx: String,
     pub cmake_config: String,
+    pub cmake_minimum_version: String,
 }
 
 #[derive(Args, Debug, Clone)]
@@ -86,6 +87,8 @@ impl ScanArgs {
                         &project_conf.dependencies,
                         false,
                         false,
+                        &bin_entry.std_c,
+                        &bin_entry.std_cxx,
                     );
 
                     // cd .asc
@@ -117,6 +120,8 @@ impl ScanArgs {
                         &project_conf.dependencies,
                         is_shared_lib,
                         !is_shared_lib,
+                        &lib_entry.std_c,
+                        &lib_entry.std_cxx,
                     );
 
                     // cd .asc
@@ -157,6 +162,8 @@ impl ScanArgs {
         dependencies: &BTreeMap<String, DependencyConfig>,
         is_shared_lib: bool,
         is_static_lib: bool,
+        std_c: &str,
+        std_cxx: &str,
     ) -> bool {
         tracing::info!(message = "scan package", name = name);
 
@@ -166,9 +173,10 @@ impl ScanArgs {
             target_dir: taget_dir.to_string(),
             source_dir: src_dir.to_string(),
             entry_point_source: src_path.to_string(),
-            include_dirs: vec![],
             shared_lib: is_shared_lib,
             static_lib: is_static_lib,
+            std_c: std_c.to_string(),
+            std_cxx: std_cxx.to_string(),
             cmake_minimum_version: self.cmake_minimum_version.clone(),
             ..Default::default()
         };
@@ -258,6 +266,8 @@ impl ScanArgs {
                             &project_conf.dependencies,
                             false,
                             false,
+                            &bin_entry.std_c,
+                            &bin_entry.std_cxx,
                         );
 
                         util::fs::set_cwd(&c);
@@ -287,6 +297,8 @@ impl ScanArgs {
                             &project_conf.dependencies,
                             is_shared_lib,
                             !is_shared_lib,
+                            &lib_entry.std_c,
+                            &lib_entry.std_cxx,
                         );
 
                         util::fs::set_cwd(&c);

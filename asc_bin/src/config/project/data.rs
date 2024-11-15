@@ -21,12 +21,17 @@ pub struct EntryConfig {
     pub source_dir: String,
     pub source_file: String,
     pub shared: Option<bool>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub std_c: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub std_cxx: String,
 }
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct DependencyConfig {
     pub version: String,
     pub find_packages: BTreeSet<String>,
+    pub include_directories: BTreeSet<String>,
     pub link_libraries: BTreeSet<String>,
     pub features: BTreeSet<String>,
 }

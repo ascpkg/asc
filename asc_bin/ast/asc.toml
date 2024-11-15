@@ -11,8 +11,10 @@ name = "ast"
 source_dir = "src"
 source_file = "main.cpp"
 shared = false
+std_c = "11"
+std_cxx = "20"
 
 [features]
 
 [dependencies]
-llvm = { version = "18.1.6#1", find_packages = ["clang"], link_libraries = ["clang"], features = ["clang"] }
+llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["clangParse"], features = ["clang"] }

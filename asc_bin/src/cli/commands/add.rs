@@ -15,10 +15,13 @@ pub struct AddArgs {
     #[clap(long, help = "--find-package=a --find-package=b@!windows")]
     pub find_package: Vec<String>,
 
-    #[clap(long, help = "--find-library=c --find-library=d@windows")]
+    #[clap(long, help = "--include-directory=c -include-directory=d")]
+    pub include_directory: Vec<String>,
+
+    #[clap(long, help = "--link-library=e --link-library=f")]
     pub link_library: Vec<String>,
 
-    #[clap(long, help = "--feature=a --feature=b")]
+    #[clap(long, help = "--feature=g --feature=h")]
     pub feature: Vec<String>,
 }
 

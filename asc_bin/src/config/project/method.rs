@@ -235,6 +235,8 @@ default = [
             source_dir: String::from("src"),
             source_file: String::from("main.cpp"),
             shared: None,
+            std_c: String::new(),
+            std_cxx: String::new(),
         });
 
         data.workspace = Some(WorkSpaceConfig {
@@ -278,6 +280,7 @@ default = [
             DependencyConfig {
                 version: String::from("0.4.38"),
                 find_packages: BTreeSet::new(),
+                include_directories: BTreeSet::new(),
                 link_libraries: BTreeSet::new(),
                 features: BTreeSet::new(),
             },
@@ -287,6 +290,7 @@ default = [
             DependencyConfig {
                 version: String::from("1.8.1"),
                 find_packages: BTreeSet::new(),
+                include_directories: BTreeSet::new(),
                 link_libraries: BTreeSet::new(),
                 features: [String::from("derive")].into(),
             },
@@ -296,6 +300,7 @@ default = [
             DependencyConfig {
                 version: String::from("clang_10_0"),
                 find_packages: BTreeSet::new(),
+                include_directories: BTreeSet::new(),
                 link_libraries: BTreeSet::new(),
                 features: [
                     String::from("env-filter"),
