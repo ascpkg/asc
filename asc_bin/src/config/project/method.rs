@@ -150,6 +150,7 @@ edition = "2024"
 description = ""
 license = "LGPL-3.0-or-later"
 repository = ""
+branch = "main"
 
 [[bin]]
 name = "a"
@@ -190,6 +191,7 @@ edition = "2024"
 description = ""
 license = "LGPL-3.0-or-later"
 repository = ""
+branch = "main"
 
 [[bin]]
 name = "a"
@@ -228,6 +230,8 @@ default = [
             description: String::new(),
             license: String::from("LGPL-3.0-or-later"),
             repository: String::from(""),
+            branch: String::from("main"),
+            supports: String::from(""),
         });
 
         data.bins.insert(EntryConfig {

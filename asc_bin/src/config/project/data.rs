@@ -13,6 +13,8 @@ pub struct PackageConfig {
     pub description: String,
     pub license: String,
     pub repository: String,
+    pub branch: String,
+    pub supports: String,
 }
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]

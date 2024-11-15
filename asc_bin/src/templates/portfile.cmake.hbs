@@ -6,9 +6,9 @@ set(VCPKG_POLICY_DLLS_IN_STATIC_LIBRARY enabled)
 vcpkg_from_git(
     OUT_SOURCE_PATH SOURCE_PATH
     URL "{{repo}}"
-    REF {{commit}} # {{version}}
+    REF {{commit}} # version = "{{version}}", datetime = "{{datetime}}"
     HEAD_REF {{branch}}
-{{#if has_patches}}
+{{#if patches}}
     PATCHES
     {{#each patches as |patch|}}
     {{patch}}

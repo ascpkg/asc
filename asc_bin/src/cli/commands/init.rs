@@ -69,6 +69,7 @@ impl InitArgs {
         package.version = config::project::ProjectConfig::version_date();
         package.edition = relative_paths::ASC_EDITION.to_string();
         package.license = String::from("LGPL-3.0-or-later");
+        package.branch = String::from("main");
         project.package = Some(package);
 
         if self.lib {

@@ -98,14 +98,27 @@ macro_rules! generate_wrapper_methods {
                                         output.push_str("[dependencies]\n");
                                     }
                                     feed = false;
-                                    current_dep = line["[dependencies.".len()..line.len() - 1].to_string();
+                                    current_dep =
+                                        line["[dependencies.".len()..line.len() - 1].to_string();
                                 } else if !feed && line.starts_with("version") {
-                                    let version = line.split('=').nth(1).unwrap().trim().to_string();
-                                    dependencies.insert(current_dep.clone(), format!(r#"version = {}"#, version));
-                                } else if !feed && (line.starts_with("find_packages") || line.starts_with("include_directories") || line.starts_with("link_libraries") || line.starts_with("features")) {
+                                    let version =
+                                        line.split('=').nth(1).unwrap().trim().to_string();
+                                    dependencies.insert(
+                                        current_dep.clone(),
+                                        format!(r#"version = {}"#, version),
+                                    );
+                                } else if !feed
+                                    && (line.starts_with("find_packages")
+                                        || line.starts_with("include_directories")
+                                        || line.starts_with("link_libraries")
+                                        || line.starts_with("features"))
+                                {
                                     let key = line.split('=').next().unwrap().trim();
                                     let value = line.split('=').nth(1).unwrap().trim();
-                                    dependencies.entry(current_dep.clone()).or_insert(String::new()).push_str(&format!(r#", {} = {}"#, key, value));
+                                    dependencies
+                                        .entry(current_dep.clone())
+                                        .or_insert(String::new())
+                                        .push_str(&format!(r#", {} = {}"#, key, value));
                                 } else {
                                     if feed {
                                         output.push_str(&line);
@@ -119,7 +132,7 @@ macro_rules! generate_wrapper_methods {
                             output.push_str("\n");
                             output
                         }
-                    },
+                    }
                     Err(e) => {
                         if !ignore_error {
                             tracing::error!(

@@ -5,6 +5,7 @@ edition = "2024"
 description = "pure c syntax code"
 license = "LGPL-3.0-or-later"
 repository = ""
+branch = "main"
 
 [[bin]]
 name = "test_c"

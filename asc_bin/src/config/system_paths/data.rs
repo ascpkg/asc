@@ -2,7 +2,8 @@ use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
 use crate::config::relative_paths::{
     self, VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_BUILD_SYSTEMS_DIR_NAME, VCPKG_CMAKE_FILE_NAME,
-    VCPKG_DIR_NAME, VCPKG_SCRIPTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
+    VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME, VCPKG_PORT_FILE_CMAKE_FILE_NAME,
+    VCPKG_SCRIPTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
 };
 
 pub struct DataPath {}
@@ -21,6 +22,32 @@ impl DataPath {
             vec![String::from(VCPKG_DIR_NAME)],
             false,
             true,
+        )
+    }
+
+    pub fn vcpkg_port_json_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
+        build(
+            vcpkg_clone_dir,
+            vec![
+                String::from(VCPKG_VERSIONS_DIR_NAME),
+                VCPKG_PORTS_DIR_NAME[..VCPKG_PORTS_DIR_NAME.len() - 1].to_string(),
+                format!("{port_name}/{VCPKG_JSON_FILE_NAME}"),
+            ],
+            false,
+            false,
+        )
+    }
+
+    pub fn vcpkg_port_file_cmake_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
+        build(
+            vcpkg_clone_dir,
+            vec![
+                String::from(VCPKG_VERSIONS_DIR_NAME),
+                VCPKG_PORTS_DIR_NAME[..VCPKG_PORTS_DIR_NAME.len() - 1].to_string(),
+                format!("{port_name}/{VCPKG_PORT_FILE_CMAKE_FILE_NAME}"),
+            ],
+            false,
+            false,
         )
     }
 

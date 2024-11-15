@@ -10,6 +10,7 @@ pub static VCPKG_PORTS_DIR_NAME: &str = "ports/";
 pub static VCPKG_SCRIPTS_DIR_NAME: &str = "scripts";
 pub static VCPKG_BUILD_SYSTEMS_DIR_NAME: &str = "buildsystems";
 pub static VCPKG_CMAKE_FILE_NAME: &str = "vcpkg.cmake";
+pub static VCPKG_PORT_FILE_CMAKE_FILE_NAME: &str = "portfile.cmake";
 
 // vcpkg.index
 pub static VCPKG_INDEX_DIR_NAME: &str = "vcpkg.index";

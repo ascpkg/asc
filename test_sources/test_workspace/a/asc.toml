@@ -5,6 +5,7 @@ edition = "2024"
 description = "test asc workspace member a"
 license = "LGPL-3.0-or-later"
 repository = ""
+branch = "main"
 
 [[bin]]
 name = "abin"

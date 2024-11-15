@@ -4,6 +4,7 @@ version = "2024.11.16"
 edition = "2021"
 description = "Add file configuration support for the struct to enable seamless serialization and deserialization of its fields, improving data management and persistence."
 license = "LGPL-3.0+"
+repository = "https://github.com/ascpkg/asc/tree/main/config_file_macros"
 
 
 [dependencies]
