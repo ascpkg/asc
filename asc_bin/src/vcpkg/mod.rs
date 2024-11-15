@@ -30,7 +30,7 @@ impl VcpkgArgs {
                 let mut default_conf: VcpkgArgs = VcpkgArgs::default();
                 default_conf.path = system_paths::ConfigPath::vcpkg_toml();
                 default_conf.set_defaults();
-                default_conf.dump(false);
+                default_conf.dump(true, false);
 
                 default_conf
             },
@@ -97,7 +97,7 @@ impl VcpkgArgs {
         }
 
         if dump {
-            return self.dump(false);
+            return self.dump(true, false);
         }
 
         return true;

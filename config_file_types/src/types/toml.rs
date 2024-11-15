@@ -13,9 +13,10 @@ generate_wrapper_methods!(
     TomlConfigFileWrapper,
     toml,
     from_str,
+    to_string,
     to_string_pretty,
     "toml::from_str",
-    "toml::to_string_pretty",
+    "toml::to_string",
     "TomlDeserializeError",
     "TomlSerializeError"
 );

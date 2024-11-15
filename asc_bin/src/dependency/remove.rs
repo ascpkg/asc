@@ -54,6 +54,6 @@ fn remove_for_pakcage(
         return false;
     } else {
         return project_conf.dependencies.remove(&args.dependency).is_some()
-            && project_conf.dump(false);
+            && project_conf.dump(true, false);
     }
 }

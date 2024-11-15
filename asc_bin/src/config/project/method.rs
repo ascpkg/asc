@@ -92,7 +92,7 @@ impl ProjectConfig {
         if self.path.is_empty() {
             self.path = ASC_TOML_FILE_NAME.to_string();
         }
-        self.dump(false)
+        self.dump(true, false)
     }
 
     pub fn is_source_scaned() -> bool {
@@ -312,7 +312,7 @@ default = [
             },
         );
 
-        let text = data.dumps(false);
+        let text = data.dumps(true, false);
         assert!(text == TEXT_CONFLICTS);
     }
 

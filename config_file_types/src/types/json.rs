@@ -14,6 +14,7 @@ generate_wrapper_methods!(
     serde_json,
     from_str,
     to_string,
+    to_string_pretty,
     "from_str",
     "to_string",
     "JsonDeserializeError",

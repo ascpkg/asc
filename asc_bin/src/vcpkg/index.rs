@@ -146,7 +146,7 @@ impl VcpkgManager {
                 }
                 search_index.baseline = baseline_data;
                 search_index.check_point = latest_commit.clone();
-                return search_index.dump(false);
+                return search_index.dump(false, false);
             }
         }
     }
@@ -189,13 +189,13 @@ impl VcpkgManager {
 
             if index % 200 == 0 || commits.len() < 1000 {
                 results.check_point = c.clone();
-                results.dump(false);
+                results.dump(false, false);
                 tracing::info!("[{index}] #{}# {:#?}", results.index.len(), c.date_time);
             }
         }
 
         results.check_point = commits[commits.len() - 1].clone();
-        results.dump(false);
+        results.dump(false, false);
 
         return results;
     }

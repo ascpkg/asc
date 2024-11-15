@@ -69,13 +69,13 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
             }
 
             // write to file
-            pub fn dump(&self, ignore_error: bool) -> bool {
-                #wrapper_type::<Self>::dump_data(self, &self.path, ignore_error)
+            pub fn dump(&self, pretty: bool, ignore_error: bool) -> bool {
+                #wrapper_type::<Self>::dump_data(self, &self.path, pretty, ignore_error)
             }
 
             // write to str
-            pub fn dumps(&self, ignore_error: bool) -> String {
-                #wrapper_type::<Self>::dumps_data(self, ignore_error)
+            pub fn dumps(&self, pretty: bool, ignore_error: bool) -> String {
+                #wrapper_type::<Self>::dumps_data(self, pretty, ignore_error)
             }
         }
     })

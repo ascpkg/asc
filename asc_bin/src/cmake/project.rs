@@ -73,13 +73,13 @@ pub fn default_vcpkg_triplet() -> String {
         for (k, v) in OS_MAP {
             conf.os_map.insert(k.to_string(), v.to_string());
         }
-        conf.dump(false);
+        conf.dump(true, false);
     }
     if conf.arch_map.is_empty() {
         for (k, v) in ARCH_MAP {
             conf.arch_map.insert(k.to_string(), v.to_string());
         }
-        conf.dump(false);
+        conf.dump(true, false);
     }
 
     let os = std::env::consts::OS;

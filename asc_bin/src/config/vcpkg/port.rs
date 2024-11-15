@@ -24,7 +24,6 @@ pub struct VcpkgPortJson {
     path: String,
 }
 
-
 #[derive(Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
 pub struct VcpkgDependency {

@@ -12,7 +12,12 @@ pub fn remove_prefix(path: &String, source_dir: &String, target_dir: &String) ->
     }
 }
 
-pub fn replace_common_prefix(path: &String, source_dir: &String, target_dir: &String, replacement: &str) -> String {
+pub fn replace_common_prefix(
+    path: &String,
+    source_dir: &String,
+    target_dir: &String,
+    replacement: &str,
+) -> String {
     let common_prefix = util::str::longest_common_substring(source_dir, target_dir);
     if path.starts_with(&common_prefix) {
         path.replace(&common_prefix, replacement)

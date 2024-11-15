@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! generate_wrapper_methods {
-    ($wrapper:ident, $format:ident, $deserialize_method:ident, $serialize_method:ident, $deserialize_func_str:expr, $serialize_func_str:expr, $deserialize_error:expr, $serialize_error:expr) => {
+    ($wrapper:ident, $format:ident, $deserialize_method:ident, $serialize_method:ident, $serialize_pretty_method:ident, $deserialize_func_str:expr, $serialize_func_str:expr, $deserialize_error:expr, $serialize_error:expr) => {
         impl<T> $wrapper<T>
         where
             T: DeserializeOwned + Serialize,
@@ -42,13 +42,13 @@ macro_rules! generate_wrapper_methods {
             }
 
             // write to file
-            pub fn dump(&self, ignore_error: bool) -> bool {
-                Self::dump_data(&self.inner, &self.path, ignore_error)
+            pub fn dump(&self, pretty: bool, ignore_error: bool) -> bool {
+                Self::dump_data(&self.inner, &self.path, pretty, ignore_error)
             }
 
             // write to file
-            pub fn dump_data(data: &T, path: &str, ignore_error: bool) -> bool {
-                let text = Self::dumps_data(data, ignore_error);
+            pub fn dump_data(data: &T, path: &str, pretty: bool, ignore_error: bool) -> bool {
+                let text = Self::dumps_data(data, pretty, ignore_error);
                 if text.is_empty() {
                     return false;
                 }
@@ -71,13 +71,18 @@ macro_rules! generate_wrapper_methods {
             }
 
             // write to str
-            pub fn dumps(&self, ignore_error: bool) -> String {
-                Self::dumps_data(&self.inner, ignore_error)
+            pub fn dumps(&self, pretty: bool, ignore_error: bool) -> String {
+                Self::dumps_data(&self.inner, pretty, ignore_error)
             }
 
             // write to str
-            pub fn dumps_data(data: &T, ignore_error: bool) -> String {
-                match $format::$serialize_method(data) {
+            pub fn dumps_data(data: &T, pretty: bool, ignore_error: bool) -> String {
+                let f = if !pretty {
+                    $format::$serialize_method
+                } else {
+                    $format::$serialize_pretty_method
+                };
+                match f(data) {
                     Ok(text) => text,
                     Err(e) => {
                         if !ignore_error {

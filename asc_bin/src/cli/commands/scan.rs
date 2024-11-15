@@ -256,7 +256,10 @@ impl ScanArgs {
                             &bin_entry.name,
                             &cwd,
                             &format!("{cwd}/{member}/{}", bin_entry.source_dir),
-                            &format!("{cwd}/{member}/{}/{}", bin_entry.source_dir, bin_entry.source_file),
+                            &format!(
+                                "{cwd}/{member}/{}/{}",
+                                bin_entry.source_dir, bin_entry.source_file
+                            ),
                             &format!(
                                 "{cwd}/{}/{}",
                                 relative_paths::ASC_TARGET_DIR_NAME,
@@ -287,7 +290,10 @@ impl ScanArgs {
                             &lib_entry.name,
                             &cwd,
                             &format!("{cwd}/{member}/{}", lib_entry.source_dir),
-                            &format!("{cwd}/{member}/{}/{}", lib_entry.source_dir, lib_entry.source_file),
+                            &format!(
+                                "{cwd}/{member}/{}/{}",
+                                lib_entry.source_dir, lib_entry.source_file
+                            ),
                             &format!(
                                 "{cwd}/{}/{}",
                                 relative_paths::ASC_TARGET_DIR_NAME,

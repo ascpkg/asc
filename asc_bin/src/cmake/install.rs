@@ -33,5 +33,5 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
             data.files.push(path);
         }
     }
-    data.dump(false);
+    data.dump(true, false);
 }

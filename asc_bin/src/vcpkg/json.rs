@@ -8,8 +8,8 @@ use crate::{
         project::DependencyConfig,
         relative_paths,
         vcpkg::{
-            port::{VcpkgDependency, VcpkgDependencyDesc},
             manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
+            port::{VcpkgDependency, VcpkgDependencyDesc},
             versions_baseline::VcpkgBaseline,
         },
     },
@@ -127,7 +127,7 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
         tracing::error!("can't found any dependencies in asc.toml");
     } else {
         // write vcpkg.json
-        vcpkg_data.dump(false);
+        vcpkg_data.dump(true, false);
     }
 
     if baseline.is_empty() {
@@ -149,6 +149,6 @@ pub fn gen(dependencies: &BTreeMap<String, DependencyConfig>) {
             baseline: VcpkgManager::get_latest_commit().hash,
         };
         // write vcpkg-configuration.json
-        vcpkg_conf_data.dump(false);
+        vcpkg_conf_data.dump(true, false);
     }
 }
