@@ -16,7 +16,7 @@ pub fn run(git_commit_hash: &str, repo_root_dir: &str) -> Vec<(String, String)> 
         repo_root_dir,
         true,
         false,
-        true,
+        false,
     )
     .unwrap();
 

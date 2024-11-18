@@ -21,7 +21,7 @@ shared = true
 [features]
 
 [dependencies]
-arrow = { version = "17.0.0", find_packages = [], link_libraries = [], features = ["json", "mimalloc@windows"] }
+arrow = { version = "17.0.0", find_packages = [], link_libraries = [], include_directories = [], features = ["json", "mimalloc@windows"] }
 cli11 = { version = "2.3.2", find_packages = ["CLI11"], include_directories = [], link_libraries = ["CLI11::CLI11"], features = [] }
 fmt = { version = "10.0.0", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
 openssl = { version = "3.3.2#1", find_packages = ["openssl"], include_directories = [], link_libraries = ["OpenSSL::Crypto", "OpenSSL::SSL"], features = [] }

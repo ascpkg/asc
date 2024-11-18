@@ -13,9 +13,10 @@ pub fn run(
 
     if !silent {
         tracing::info!(
-            "command: {}, args: {}, envs: {}",
+            "command: {}, args: {}, cwd: {}, envs: {}",
             command,
             args.join(" "),
+            work_dir,
             serde_json::to_string(&envs).unwrap()
         );
     }

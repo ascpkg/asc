@@ -11,10 +11,12 @@ use crate::{
         vcpkg::{
             manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
             port::{VcpkgDependency, VcpkgDependencyDesc, VcpkgJsonDependency, VcpkgPortJson},
-            versions_baseline::VcpkgBaseline,
+            versions_baseline::{VcpkgBaseline, VcpkgPortVersion},
+            versions_port::{VcpkgPortTreeVersion, VcpkgPortVersions},
         },
     },
-    git, util,
+    git::{self, log::GitCommitInfo},
+    util,
 };
 
 static VCPKG_PORT_NAME_KEY: &str = "name";
@@ -141,24 +143,27 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
 }
 
 pub fn gen_port_json(
+    repo_root_dir: &String,
     package_conf: &PackageConfig,
     dependencies: &BTreeMap<String, DependencyConfig>,
-) -> bool {
-    let vcpkg_conf = VcpkgArgs::load_or_default();
-    let repo_root_dir = vcpkg_conf.directory.as_ref().unwrap();
-
+    latest_commit: &GitCommitInfo,
+) -> (bool, u32) {
     let mut data = VcpkgPortJson::load(
-        &config::system_paths::DataPath::vcpkg_port_json_path(repo_root_dir, &package_conf.name),
+        &config::system_paths::DataPath::vcpkg_ports_vcpkg_json_path(
+            repo_root_dir,
+            &package_conf.name,
+        ),
         true,
     )
     .unwrap();
 
-    let port_file_cmake =
-        std::fs::read_to_string(&config::system_paths::DataPath::vcpkg_port_file_cmake_path(
+    let port_file_cmake = std::fs::read_to_string(
+        &config::system_paths::DataPath::vcpkg_ports_port_file_cmake_path(
             repo_root_dir,
             &package_conf.name,
-        ))
-        .unwrap_or_default();
+        ),
+    )
+    .unwrap_or_default();
 
     data.name = package_conf.name.clone();
     if data.version >= package_conf.version {
@@ -167,15 +172,14 @@ pub fn gen_port_json(
             version_in_vcpkg_json = data.version,
             version_in_asc_toml = data.version,
         );
-        return false;
+        return (false, data.port_version);
     } else if data.version == package_conf.version {
-        let commit = git::log::get_latest_commit(".", git::log::GIT_LOG_FORMAT);
-        if port_file_cmake.contains(&commit.hash) {
+        if port_file_cmake.contains(&latest_commit.hash) {
             tracing::warn!(
                 message = "the version and commit hash were not changed",
                 version = data.version,
-                commit_hash = commit.hash,
-                commit_time = commit.date_time
+                commit_hash = latest_commit.hash,
+                commit_time = latest_commit.date_time
             );
 
             println!("Do you want to update port version, yes or no? ");
@@ -185,16 +189,16 @@ pub fn gen_port_json(
                 data.port_version += 1;
                 update_vcpkg_json_fields(&mut data, package_conf, dependencies);
                 data.dump(true, false);
-                return true;
+                return (true, data.port_version);
             }
 
-            return false;
+            return (false, data.port_version);
         } else {
             tracing::warn!(
                 message = "the version was not changed, but commit hash was changed",
                 version = data.version,
-                commit_hash = commit.hash,
-                commit_time = commit.date_time
+                commit_hash = latest_commit.hash,
+                commit_time = latest_commit.date_time
             );
 
             println!("Do you want to update port version, yes or no? ");
@@ -204,24 +208,24 @@ pub fn gen_port_json(
                 data.port_version += 1;
                 update_vcpkg_json_fields(&mut data, package_conf, dependencies);
                 data.dump(true, false);
-                return true;
+                return (true, data.port_version);
             }
 
             tracing::error!(
                 message = format!("update package version in {ASC_TOML_FILE_NAME} first"),
                 version = data.version,
-                commit_hash = commit.hash,
-                commit_time = commit.date_time
+                commit_hash = latest_commit.hash,
+                commit_time = latest_commit.date_time
             );
-            return false;
+            return (false, data.port_version);
         }
     } else {
         data.version = package_conf.version.clone();
         data.port_version = 0;
         update_vcpkg_json_fields(&mut data, package_conf, dependencies);
+        data.dump(true, false);
+        return (true, data.port_version);
     }
-
-    false
 }
 
 fn update_vcpkg_json_fields(
@@ -236,20 +240,10 @@ fn update_vcpkg_json_fields(
 
     data.dependencies.clear();
 
-    data.dependencies.push(VcpkgJsonDependency {
-        name: String::from("vcpkg-cmake"),
-        host: Some(true),
-        ..Default::default()
-    });
-    data.dependencies.push(VcpkgJsonDependency {
-        name: String::from("vcpkg-cmake-config"),
-        host: Some(true),
-        ..Default::default()
-    });
     for (name, desc) in dependencies {
         let mut dep = VcpkgJsonDependency::default();
         dep.name = name.clone();
-        let mut platform = vec![];
+        let mut platforms = vec![];
         if !desc.features.is_empty() {
             dep.default_features = Some(false);
             for feat in &desc.features {
@@ -258,23 +252,112 @@ fn update_vcpkg_json_fields(
                         dep.features.push(feat.clone());
                     }
                     Some((n, p)) => {
-                        dep.features.push(n.to_string());
-                        platform.push(p.to_string());
+                        let ns = n.to_string();
+                        if !dep.features.contains(&ns) {
+                            dep.features.push(ns);
+                        }
+                        let ps = p.to_string();
+                        if !platforms.contains(&ps) {
+                            platforms.push(ps);
+                        }
                     }
                 };
             }
         }
-        dep.platform = Some(
-            platform
-                .iter()
-                .map(|p| format!("({p})"))
-                .collect::<Vec<String>>()
-                .join(" | "),
-        );
+        if !platforms.is_empty() {
+            dep.platform = Some(
+                platforms
+                    .iter()
+                    .map(|p| {
+                        if p.contains("|") || p.contains("&") {
+                            format!("({p})")
+                        } else {
+                            p.clone()
+                        }
+                    })
+                    .collect::<Vec<String>>()
+                    .join(" | "),
+            );
+        }
         data.dependencies.push(dep);
+
+        data.dependencies.push(VcpkgJsonDependency {
+            name: String::from("vcpkg-cmake"),
+            host: Some(true),
+            ..Default::default()
+        });
+        data.dependencies.push(VcpkgJsonDependency {
+            name: String::from("vcpkg-cmake-config"),
+            host: Some(true),
+            ..Default::default()
+        });
     }
 }
 
-pub fn gen_port_versions() -> bool {
-    false
+pub fn gen_port_versions(
+    repo_root_dir: &String,
+    package_conf: &PackageConfig,
+    port_version: u32,
+) -> bool {
+    let mut versions_data = VcpkgPortVersions::load(
+        &config::system_paths::DataPath::vcpkg_versions_port_json_path(
+            repo_root_dir,
+            &package_conf.name,
+        ),
+        true,
+    )
+    .unwrap();
+
+    if !versions_data.versions.is_empty() {
+        if versions_data.versions[0].version.as_ref().unwrap() == &package_conf.version
+            && versions_data.versions[0].port_version == port_version
+        {
+            tracing::warn!(
+                message = "the version was not changed",
+                version = package_conf.version,
+                port_version = port_version,
+            );
+            return false;
+        }
+    }
+
+    versions_data.versions.insert(
+        0,
+        VcpkgPortTreeVersion {
+            git_tree: git::rev_parse::run(&package_conf.name, repo_root_dir),
+            version: Some(package_conf.version.clone()),
+            port_version: port_version,
+            ..Default::default()
+        },
+    );
+
+    let mut result = versions_data.dump(true, false);
+
+    let mut baseline_data = VcpkgBaseline::load(
+        &&config::system_paths::DataPath::vcpkg_versions_baseline_json_path(repo_root_dir),
+        true,
+    )
+    .unwrap();
+    if let Some(v) = baseline_data.default.get(&package_conf.name) {
+        if v.baseline == package_conf.version && v.port_version == port_version {
+            tracing::warn!(
+                message = "the version was not changed",
+                version = package_conf.version,
+                port_version = port_version,
+            );
+            return result;
+        }
+    }
+
+    baseline_data.default.insert(
+        package_conf.name.clone(),
+        VcpkgPortVersion {
+            baseline: package_conf.version.clone(),
+            port_version: port_version,
+        },
+    );
+
+    result &= baseline_data.dump(true, false);
+
+    return result;
 }

@@ -36,6 +36,30 @@ pub fn find_source_files(dir: &String) -> Vec<String> {
     files
 }
 
+pub fn is_patch(ext: &std::ffi::OsStr) -> bool {
+    ext == "patch"
+}
+
+pub fn find_patch_files(dir: &String) -> Vec<String> {
+    let mut files = Vec::new();
+
+    let walker = walkdir::WalkDir::new(dir.clone())
+        .into_iter()
+        .filter_map(|e| e.ok());
+    for entry in walker {
+        let path = entry.path();
+        if let Some(ext) = path.extension() {
+            if is_patch(ext) {
+                if let Some(file_name) = path.to_str() {
+                    files.push(file_name.replace(r"\", "/"));
+                }
+            }
+        }
+    }
+
+    files
+}
+
 pub fn is_file_exists(path: &str) -> bool {
     if let Ok(metadata) = std::fs::metadata(path) {
         if metadata.is_file() {

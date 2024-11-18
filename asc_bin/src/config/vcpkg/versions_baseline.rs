@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +9,7 @@ use config_file_types;
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
 pub struct VcpkgBaseline {
-    pub default: HashMap<String, VcpkgPortVersion>,
+    pub default: BTreeMap<String, VcpkgPortVersion>,
 
     #[serde(skip)]
     path: String,

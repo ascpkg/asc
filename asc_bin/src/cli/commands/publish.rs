@@ -1,16 +1,20 @@
-use std::collections::BTreeSet;
-
 use clap::Args;
 
 use crate::{
-    config::{self, project::ProjectConfig, relative_paths::ASC_TOML_FILE_NAME},
+    config::{
+        self,
+        project::ProjectConfig,
+        relative_paths::{ASC_TOML_FILE_NAME, VCPKG_MICROSOFT_REPO_URL},
+    },
     errors::ErrorTag,
-    util, vcpkg,
+    git, util, vcpkg,
 };
+
+use super::VcpkgArgs;
 
 #[derive(Args, Debug, Default, Clone)]
 pub struct PublishArgs {
-    edit: bool,
+    #[clap(long)]
     package: Option<String>,
 }
 
@@ -33,8 +37,8 @@ impl PublishArgs {
                 Some(workspace) => match &self.package {
                     None => {
                         tracing::error!(
-                            error_tag = ErrorTag::InvalidProjectWorkspaceError.as_ref(),
-                            path = ASC_TOML_FILE_NAME
+                            error_tag = ErrorTag::InvalidCliArgsError.as_ref(),
+                            packages = workspace.get_members()
                         );
                         return false;
                     }
@@ -78,11 +82,57 @@ impl PublishArgs {
                 return false;
             }
             Some(pkg) => {
-                let mut result = vcpkg::json::gen_port_json(pkg, &project_conf.dependencies);
-                result &= vcpkg::cmake::gen_port_file_cmake(pkg);
-                if !self.edit {
-                    result &= vcpkg::json::gen_port_versions();
+                let latest_commit = git::log::get_latest_commit(".", git::log::GIT_LOG_FORMAT);
+
+                let vcpkg_conf = VcpkgArgs::load_or_default();
+                let repo_root_dir = vcpkg_conf.directory.as_ref().unwrap();
+                let dir =
+                    config::system_paths::DataPath::vcpkg_ports_dir_path(repo_root_dir, &pkg.name);
+                let action = if util::fs::is_dir_exists(&dir) {
+                    "update"
+                } else {
+                    "add"
+                };
+
+                let (mut result, port_version) = vcpkg::json::gen_port_json(
+                    repo_root_dir,
+                    pkg,
+                    &project_conf.dependencies,
+                    &latest_commit,
+                );
+                result &= vcpkg::cmake::gen_port_file_cmake(repo_root_dir, pkg, &latest_commit);
+                if result {
+                    git::add::run(&vec![dir], repo_root_dir);
+                    git::commit::run(
+                        format!(
+                            "[{}] {} {}#{} ({})",
+                            &pkg.name, action, pkg.version, port_version, latest_commit.hash
+                        ),
+                        repo_root_dir,
+                    );
                 }
+
+                result &= vcpkg::json::gen_port_versions(repo_root_dir, pkg, port_version);
+                if result {
+                    git::add::run(
+                        &vec![
+                            config::system_paths::DataPath::vcpkg_versions_port_json_path(
+                                repo_root_dir,
+                                &pkg.name,
+                            ),
+                            config::system_paths::DataPath::vcpkg_versions_baseline_json_path(
+                                repo_root_dir,
+                            ),
+                        ],
+                        repo_root_dir,
+                    );
+                    git::commit_amend::run(repo_root_dir);
+
+                    if vcpkg_conf.repo.unwrap() != VCPKG_MICROSOFT_REPO_URL {
+                        git::push::run(repo_root_dir);
+                    }
+                }
+
                 return result;
             }
         }

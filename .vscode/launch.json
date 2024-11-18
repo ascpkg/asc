@@ -251,5 +251,26 @@
             ],
             "cwd": "${workspaceFolder}/test_sources/test_package"
         },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run asc publish",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "publish"
+            ],
+            "cwd": "${workspaceFolder}/test_sources/test_c"
+        },
     ]
 }

@@ -33,14 +33,14 @@ fn main() {
     my_toml.files.push(String::from("a.txt"));
     // serialize to string (pretty & output error)
     let my_toml_text = my_toml.dumps(true, false);
-    // serialize to file
+    // serialize to file (pretty & output error)
     my_toml.dump(true, false);
 
     // load from file or panic
     let my_json = MyTomlConfig::load("test.json", false).unwrap();
     // serialize to string (no indent & ignore error)
-    let my_json_text = my_json.dumps(true, true);
-    // serialize to file
-    my_json.dump(true, false);
+    let my_json_text = my_json.dumps(false, true);
+    // serialize to file (no indent & ignore error)
+    my_json.dump(false, true);
 }
 ```

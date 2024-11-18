@@ -18,9 +18,13 @@ pub struct VcpkgPortVersions {
 #[serde(rename_all = "kebab-case")]
 pub struct VcpkgPortTreeVersion {
     pub git_tree: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_semver: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_string: Option<String>,
     pub port_version: u32,
 }

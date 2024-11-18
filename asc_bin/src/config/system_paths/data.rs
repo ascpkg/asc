@@ -25,28 +25,40 @@ impl DataPath {
         )
     }
 
-    pub fn vcpkg_port_json_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
+    pub fn vcpkg_ports_dir_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
         build(
             vcpkg_clone_dir,
             vec![
-                String::from(VCPKG_VERSIONS_DIR_NAME),
                 VCPKG_PORTS_DIR_NAME[..VCPKG_PORTS_DIR_NAME.len() - 1].to_string(),
-                format!("{port_name}/{VCPKG_JSON_FILE_NAME}"),
+                port_name.to_string(),
             ],
             false,
+            true,
+        )
+    }
+
+    pub fn vcpkg_ports_vcpkg_json_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
+        build(
+            vcpkg_clone_dir,
+            vec![
+                VCPKG_PORTS_DIR_NAME[..VCPKG_PORTS_DIR_NAME.len() - 1].to_string(),
+                port_name.to_string(),
+                VCPKG_JSON_FILE_NAME.to_string(),
+            ],
+            true,
             false,
         )
     }
 
-    pub fn vcpkg_port_file_cmake_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
+    pub fn vcpkg_ports_port_file_cmake_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
         build(
             vcpkg_clone_dir,
             vec![
-                String::from(VCPKG_VERSIONS_DIR_NAME),
                 VCPKG_PORTS_DIR_NAME[..VCPKG_PORTS_DIR_NAME.len() - 1].to_string(),
-                format!("{port_name}/{VCPKG_PORT_FILE_CMAKE_FILE_NAME}"),
+                port_name.to_string(),
+                VCPKG_PORT_FILE_CMAKE_FILE_NAME.to_string(),
             ],
-            false,
+            true,
             false,
         )
     }
