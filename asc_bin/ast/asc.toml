@@ -16,6 +16,6 @@ std_c = "11"
 std_cxx = "17"
 
 [dependencies]
-fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt"], features = [] }
-llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["clangParse"], features = ["clang"] }
+fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
+llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
 

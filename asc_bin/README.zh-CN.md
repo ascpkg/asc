@@ -1,6 +1,6 @@
 # C/C++ 包管理和源码树自动编译工具 (类似 Rust Cargo)
 
-[英文](README.en-US.md)
+[English](README.md)
 
 # 1. 特性
 - 创建 asc包/工作区 或者将现有源码树初始化为 asc包/工作区

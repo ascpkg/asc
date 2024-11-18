@@ -1,24 +1,18 @@
 # set cmake version required
-cmake_minimum_required(VERSION {{cmake_version}})
+cmake_minimum_required(VERSION 3.20)
 
 # set project name
-project ({{project}} C CXX)
+project (ast C CXX)
 
-{{#if (or std_c std_cxx)}}
-{{#if std_c}}
 # set c standard version
-set(CMAKE_C_STANDARD {{std_c}})
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-{{/if}}
 
-{{#if std_cxx}}
 # set c++ standard version
-set(CMAKE_CXX_STANDARD {{std_cxx}})
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-{{/if}}
-{{/if}}
 
 # configure msvc
 if(MSVC)
@@ -40,22 +34,30 @@ if(MSVC)
 endif(MSVC)
 
 # version
-set({{project_upper}}_VERSION_MAJOR {{build_year}})
-set({{project_upper}}_VERSION_MINOR {{build_month}})
-set({{project_upper}}_VERSION_MICRO {{build_day}})
-set(VERSION_STRING "{{build_year}}.{{build_month}}.{{build_day}}")
-{{#if is_workspace}}
-configure_file(${CMAKE_SOURCE_DIR}/{{project}}/version.h.in ${CMAKE_BINARY_DIR}/{{project}}/version.h @ONLY)
-{{else}}
-configure_file(${CMAKE_SOURCE_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h @ONLY)
-{{/if}}
+set(AST_VERSION_MAJOR 2024)
+set(AST_VERSION_MINOR 11)
+set(AST_VERSION_MICRO 19)
+set(VERSION_STRING "2024.11.19")
+configure_file(${CMAKE_SOURCE_DIR}/ast/version.h.in ${CMAKE_BINARY_DIR}/ast/version.h @ONLY)
 
-{{{user_cmake_txt}}}
-{{#if is_workspace}}
-configure_file(${CMAKE_SOURCE_DIR}/{{project}}/config.h.cm ${CMAKE_BINARY_DIR}/{{project}}/config.h)
-{{else}}
-configure_file(${CMAKE_SOURCE_DIR}/config.h.cm ${CMAKE_BINARY_DIR}/config.h)
-{{/if}}
+# check compiler, os, header, library, symbol
+# check headers
+include(CheckIncludeFiles)
+check_include_files("stdlib.h" HAVE_STDLIB_H)
+
+# check types
+include(CheckTypeSize)
+# check_type_size(size_t SIZE_T)
+
+# check functions
+include(CheckFunctionExists)
+check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
+
+# check symbols
+include(CheckSymbolExists)
+check_symbol_exists(O_BINARY "fcntl.h" HAVE_O_BINARY)
+
+configure_file(${CMAKE_SOURCE_DIR}/ast/config.h.cm ${CMAKE_BINARY_DIR}/ast/config.h)
 
 # package
 include(CMakePackageConfigHelpers)
@@ -71,35 +73,20 @@ set(SUPPORT_FLAG_VISIBILITY 1)
 set(VERSION ${VERSION_STRING})
 
 # glob sources
-{{#each sources_group_by_dir as |group|}}
 FILE(
     GLOB
-    {{group.dir}}
-    {{#each group.files as |path|}}
-    "{{path}}"
-    {{/each}}
+    src
+    "../../src/lib.cpp"
+    "../../src/lib.h"
 )
-{{/each}}
 
 # group sources
-{{#each sources_group_by_dir as |group|}}
-SOURCE_GROUP("{{group.original_dir}}" FILES {{group.variable}})
-{{/each}}
+SOURCE_GROUP("src" FILES ${src})
 
-{{#if library}}
 # generate library
 add_library(
-{{else}}
-# generate executable
-add_executable(
-{{/if}}
     ${PROJECT_NAME}
-{{#if shared_library}}
-    SHARED
-{{/if}}
-    {{#each sources_group_by_dir as |group|}}
-    {{group.variable}}
-    {{/each}}
+    ${src}
 )
 
 if(DEFINED VCPKG_TARGET_TRIPLET)
@@ -114,12 +101,9 @@ if(DEFINED VCPKG_TARGET_TRIPLET)
     endif()
 endif()
 
-{{#if find_packages}}
 # find package
-{{#each find_packages as |package|}}
-find_package({{package}} CONFIG REQUIRED)
-{{/each}}
-{{/if}}
+find_package(fmt CONFIG REQUIRED)
+find_package(Clang CONFIG REQUIRED)
 
 # set include dirs
 target_include_directories(
@@ -127,37 +111,23 @@ target_include_directories(
     PRIVATE
     ${CMAKE_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_BINARY_DIR}
-{{#each include_directories as |directory|}}
-    {{directory}}
-{{/each}}
+    ${CLANG_INCLUDE_DIRS}
 )
 
-{{#if (or public_libraries private_libraries) }}
 # link libraries
 target_link_libraries(
     ${PROJECT_NAME}
-    {{#if public_libraries}}
-    PUBLIC
-    {{#each public_libraries as |lib|}}
-    {{lib}}
-    {{/each}}
-    {{/if}}
-    {{#if private_libraries}}
     PRIVATE
-    {{#each private_libraries as |lib|}}
-    {{lib}}
-    {{/each}}
-    {{/if}}
+    fmt::fmt
+    libclang
 )
-{{/if}}
 
 # export dynamic library symbols
 if(BUILD_SHARED_LIBS)
     add_definitions(-DBUILD_SHARED_LIBS)
-    add_definitions(-D{{project_upper}}_EXPORTS)
+    add_definitions(-DAST_EXPORTS)
 endif()
 
-{{#if library}}
 # export library
 add_library(
     ${PROJECT_NAME}::${PROJECT_NAME}
@@ -171,35 +141,30 @@ target_include_directories(
     INTERFACE
     $<INSTALL_INTERFACE:include>
 )
-{{/if}}
 
 # install archive, library, bin
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}
-    ARCHIVE DESTINATION {{install_lib_dir}}
-    LIBRARY DESTINATION {{install_lib_dir}}
-    RUNTIME DESTINATION {{install_bin_dir}}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
 )
 
-{{#if library}}
 # install headers
-{{#each install_headers as |header|}}
-install(FILES "{{header.src}}" DESTINATION include/${PROJECT_NAME}/{{header.dst}})
-{{/each}}
+install(FILES "../../src/lib.h" DESTINATION include/${PROJECT_NAME}/)
 
 # install package config
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}-config.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    INSTALL_DESTINATION "{{install_share_dir}}/${PROJECT_NAME}"
+    INSTALL_DESTINATION "share/${PROJECT_NAME}"
 )
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" DESTINATION "{{install_share_dir}}/${PROJECT_NAME}")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" DESTINATION "share/${PROJECT_NAME}")
 
 # install cmake targets
 install(
     EXPORT ${PROJECT_NAME}-targets
-    DESTINATION {{install_share_dir}}/${PROJECT_NAME}
+    DESTINATION share/${PROJECT_NAME}
     NAMESPACE ${PROJECT_NAME}::
 )
-{{/if}}

@@ -212,7 +212,12 @@ fn group_sources(
 
             // prepare install headers's src and dst
             let src = if header.starts_with(&options.source_dir) {
-                header.clone()
+                util::fs::replace_common_prefix(
+                    &header,
+                    &options.source_dir,
+                    &options.target_dir,
+                    "../../",
+                )
             } else {
                 format!(
                     "${{CMAKE_CURRENT_BINARY_DIR}}/{}",

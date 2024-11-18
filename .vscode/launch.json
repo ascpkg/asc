@@ -235,26 +235,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Cargo run test_clang_parse",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=test_clang_parse",
-                    "--package=asc"
-                ],
-                "filter": {
-                    "name": "test_clang_parse",
-                    "kind": "bin"
-                }
-            },
-            "args": [
-            ],
-            "cwd": "${workspaceFolder}/test_sources/test_package"
-        },
-        
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "Cargo run asc publish",
             "cargo": {
                 "args": [
@@ -271,6 +251,26 @@
                 "publish"
             ],
             "cwd": "${workspaceFolder}/test_sources/test_c"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run test_clang_parse",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=test_clang_parse",
+                    "--package=asc"
+                ],
+                "filter": {
+                    "name": "test_clang_parse",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+            ],
+            "cwd": "${workspaceFolder}/test_sources/test_package"
         },
     ]
 }

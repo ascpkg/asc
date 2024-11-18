@@ -317,7 +317,7 @@ impl ScanArgs {
 
         cmake::lists::gen_workspace(
             &self.cmake_minimum_version,
-            &util::fs::get_cwd_name(),
+            &util::fs::get_file_name(&cwd),
             &members,
         );
 
