@@ -5,6 +5,7 @@ edition = "2024"
 description = "scan necessary source files"
 license = "LGPL-3.0+"
 repository = ""
+branch = "main"
 
 [[lib]]
 name = "ast"
@@ -12,9 +13,9 @@ source_dir = "src"
 source_file = "lib.cpp"
 shared = false
 std_c = "11"
-std_cxx = "20"
-
-[features]
+std_cxx = "17"
 
 [dependencies]
+fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt"], features = [] }
 llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["clangParse"], features = ["clang"] }
+

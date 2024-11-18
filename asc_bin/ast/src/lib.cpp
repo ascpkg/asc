@@ -3,16 +3,19 @@
 
 // c++
 #include <filesystem>
-#include <format>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
+#include <sstream>
 #include <vector>
 
 // clang
 #include <clang-c/Index.h>
+
+// fmt
+#include <fmt/format.h>
 
 // lib
 #include "lib.h"
@@ -84,7 +87,7 @@ public:
 
 			for (auto &[header, sources] : necessaries) {
 				// skip parsed
-				if (parsed_files.contains(header)) {
+				if (parsed_files.find(header) != parsed_files.end()) {
 					continue;
 				}
 				parsed_files.insert(header);
@@ -120,7 +123,7 @@ public:
 							auto i = m_result.source_include_headers.find(source);
 							if (i != m_result.source_include_headers.end()) {
 								for (const auto h : i->second) {
-									if (!necessaries.contains(h)) {
+									if (necessaries.find(h) == necessaries.end()) {
 										insert_map_set(header_sources_to_insert, h, source);
 									}
 								}
@@ -145,7 +148,7 @@ public:
 			necessary_sources.insert(sources.begin(), sources.end());
 		}
 		for (auto iter = m_result.source_symbols.begin(); iter != m_result.source_symbols.end();) {
-			if (!necessary_sources.contains(iter->first)) {
+			if (necessary_sources.find(iter->first) == necessary_sources.end()) {
 				// remove unnecessary source file and its symbols
 				iter = m_result.source_symbols.erase(iter);
 			}
@@ -163,7 +166,7 @@ public:
 
 		for (const auto &[header, sources] : m_result.header_include_by_sources) {
 			for (const auto &source : sources) {
-				text << std::format("{}\t\t{}\n", header, source);
+				text << fmt::format("{}\t\t{}\n", header, source);
 			}
 		}
 
@@ -173,7 +176,7 @@ public:
 
 		for (const auto &[source, symbols] : m_result.source_symbols) {
 			for (const auto &symbol : symbols) {
-				text << std::format("{}\t\t{}\n", source, symbol);
+				text << fmt::format("{}\t\t{}\n", source, symbol);
 			}
 		}
 
@@ -205,7 +208,7 @@ public:
 		);
 		if (translation_unit == nullptr) {
 			clang_disposeIndex(index);
-			std::cerr << std::format("clang_parseTranslationUnit error, source_path: {}\n", source_path);
+			std::cerr << fmt::format("clang_parseTranslationUnit error, source_path: {}\n", source_path);
 			return result;
 		}
 
@@ -272,7 +275,7 @@ public:
 			}
 
 			std::string func_name = cx_string_to_string(clang_getCursorSpelling(cursor));
-			symbol_signature += std::format(
+			symbol_signature += fmt::format(
 				"{} {}{}{}{}{}(",
 				func_type,
 				namespace_,
@@ -300,43 +303,43 @@ public:
 
 			CXType return_type = clang_getResultType(clang_getCursorType(cursor));
 			CXString return_type_name = clang_getTypeSpelling(return_type);
-			symbol_signature += std::format(") -> {}", cx_string_to_string(return_type_name));
+			symbol_signature += fmt::format(") -> {}", cx_string_to_string(return_type_name));
 			break;
 		}
 
 		case CXCursor_ClassDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = std::format("class {}", cx_string_to_string(name));
+			symbol_signature = fmt::format("class {}", cx_string_to_string(name));
 			break;
 		}
 
 		case CXCursor_StructDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = std::format("struct {}", cx_string_to_string(name));
+			symbol_signature = fmt::format("struct {}", cx_string_to_string(name));
 			break;
 		}
 
 		case CXCursor_EnumDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = std::format("enum {}", cx_string_to_string(name));
+			symbol_signature = fmt::format("enum {}", cx_string_to_string(name));
 			break;
 		}
 
 		case CXCursor_UnionDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = std::format("union {}", cx_string_to_string(name));
+			symbol_signature = fmt::format("union {}", cx_string_to_string(name));
 			break;
 		}
 
 		case CXCursor_VarDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = std::format("var {}", cx_string_to_string(name));
+			symbol_signature = fmt::format("var {}", cx_string_to_string(name));
 			break;
 		}
 
 		case CXCursor_TypedefDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = std::format("typedef {}", cx_string_to_string(name));
+			symbol_signature = fmt::format("typedef {}", cx_string_to_string(name));
 			break;
 		}
 
