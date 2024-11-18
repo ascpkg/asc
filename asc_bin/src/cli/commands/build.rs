@@ -5,7 +5,8 @@ use crate::{cmake, config, config::relative_paths, util};
 
 #[derive(Args, Debug, Default, Clone)]
 pub struct BuildArgs {
-    pub name: Option<String>,
+    #[clap(long)]
+    pub target: Option<String>,
 
     #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
@@ -23,11 +24,14 @@ impl BuildArgs {
             return false;
         }
 
-        let options = ScanOptions {
+        let mut options = ScanOptions {
             target_dir: relative_paths::ASC_TARGET_DIR_NAME.to_string(),
             cmake_config: self.config.as_ref().to_string(),
             ..Default::default()
         };
+        if let Some(t) = &self.target {
+            options.project = t.clone();
+        }
         cmake::build::exec(&options);
 
         return true;
