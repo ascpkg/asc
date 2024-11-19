@@ -1,10 +1,14 @@
 [package]
-name = "asc"
-version = "2024.11.13"
+name = "asc_bin"
+version = "2024.11.19"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"
 repository = "https://github.com/ascpkg/asc/tree/main/asc_bin"
+
+[[bin]]
+name = "asc"
+path = "src/main.rs"
 
 [[bin]]
 name = "test_cli"
@@ -21,12 +25,12 @@ path = "src/tests/cli.rs"
 
 [dependencies]
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
-config_file_derives = { version = "2024.11.16", path = "../config_file_derives" }
-config_file_macros = { version = "2024.11.16", path = "../config_file_macros" }
-config_file_types = { version = "2024.11.17", path = "../config_file_types" }
+config_file_derives = { version = "2024.11.19", path = "../config_file_derives" }
+config_file_macros = { version = "2024.11.19", path = "../config_file_macros" }
+config_file_types = { version = "2024.11.19", path = "../config_file_types" }
 chrono = { version = "0.4.38" }
 # clang-sys = { version = "1.8.1", features = ["clang_10_0"] }
-clap = { version = "4.5.20", features = ["derive"] }
+clap = { version = "4.5.20", features = ["derive", "color"] }
 directories = { version = "5.0.1" }
 handlebars = { version = "6.1.0" }
 struct_iterable = { version = "0.1.1" }

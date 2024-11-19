@@ -31,6 +31,7 @@ use strum_macros::{AsRefStr, FromRepr};
 
 #[derive(Parser)]
 #[command(version)]
+/// C/C++'s package manager
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

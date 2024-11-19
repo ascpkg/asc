@@ -9,18 +9,30 @@ use crate::errors::ErrorTag;
 use crate::{config, config::relative_paths, templates, util};
 
 #[derive(Args, Debug, Clone, Default)]
+/// new package/workspace of binary/static library/shared library
 pub struct NewArgs {
+    // Examples:
+    //     asc new test_bin
+    //     asc new --lib test_static_lib
+    //     asc new --lib --shared test_shared_lib
+    //     asc new --workspace test_workspace --lib --shared --member=a --member=b --member=c
+
+    /// new package/workspace name
     pub name: Option<String>,
 
+    /// new library (default bin)
     #[clap(long, default_value_t = false)]
     pub lib: bool,
 
+    /// new shared library (default static library)
     #[clap(long, default_value_t = false)]
     pub shared: bool,
 
+    /// new workspace (default package)
     #[clap(long, default_value_t = false)]
     pub workspace: bool,
 
+    /// new workspace members (--member=a --member=b --member=c)
     #[clap(long)]
     pub member: Vec<String>,
 }

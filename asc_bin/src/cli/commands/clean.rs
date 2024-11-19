@@ -9,6 +9,7 @@ use crate::{
 };
 
 #[derive(Args, Debug, Clone)]
+/// clean .asc and target dir
 pub struct CleanArgs {}
 
 impl CleanArgs {

@@ -8,16 +8,27 @@ use crate::util;
 use crate::{config, config::relative_paths};
 
 #[derive(Args, Debug, Clone, Default)]
+/// init directory as package/workspace of binary/static library/shared library
 pub struct InitArgs {
+    // Examples:
+    //     asc init test_bin
+    //     asc init --lib test_static_lib
+    //     asc init --lib --shared test_shared_lib
+    //     asc init --workspace test_workspace --lib --shared --member=a --member=b --member=c
+
+    /// new library (default bin)
     #[clap(long, default_value_t = false)]
     pub lib: bool,
 
+    /// new shared library (default static library)
     #[clap(long, default_value_t = false)]
     pub shared: bool,
 
+    /// new workspace (default package)
     #[clap(long, default_value_t = false)]
     pub workspace: bool,
 
+    /// new workspace members (--member=a --member=b --member=c)
     #[clap(long)]
     pub member: Vec<String>,
 }

@@ -3,14 +3,14 @@ use clap::Args;
 use crate::dependency;
 
 #[derive(Args, Debug, Clone)]
+/// remove dependency from package or workspace memeber's asc.toml
 pub struct RemoveArgs {
+    /// dependency name
     pub dependency: String,
 
+    /// workspace member name
     #[clap(long)]
     pub package: Option<String>,
-
-    #[clap(long)]
-    pub recurse: bool,
 }
 
 impl RemoveArgs {

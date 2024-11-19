@@ -4,10 +4,13 @@ use super::{scan::ScanOptions, ConfigType};
 use crate::{cmake, config, config::relative_paths, util};
 
 #[derive(Args, Debug, Default, Clone)]
+/// install executable/headers/libraries
 pub struct InstallArgs {
+    /// install prefix
     #[clap(long, default_value = relative_paths::ASC_TARGET_INSTALLED_DIR)]
     pub prefix: String,
 
+    /// cmake config
     #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }

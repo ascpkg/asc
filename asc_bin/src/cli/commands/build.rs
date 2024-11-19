@@ -4,10 +4,13 @@ use super::{scan::ScanOptions, ConfigType};
 use crate::{cmake, config, config::relative_paths, util};
 
 #[derive(Args, Debug, Default, Clone)]
+/// build all, package or workspace member
 pub struct BuildArgs {
+    /// build single target (default all)
     #[clap(long)]
     pub target: Option<String>,
 
+    /// cmake config
     #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }

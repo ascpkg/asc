@@ -29,7 +29,9 @@ pub struct ScanOptions {
 }
 
 #[derive(Args, Debug, Clone)]
+/// scan necessary sources, generate cmake and vcpkg configurations 
 pub struct ScanArgs {
+    /// for cmake cmake_minimum_required
     #[clap(long, default_value = "3.20")]
     pub cmake_minimum_version: String,
 }

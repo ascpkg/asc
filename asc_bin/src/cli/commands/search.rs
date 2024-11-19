@@ -3,27 +3,12 @@ use clap::Args;
 use crate::vcpkg;
 
 #[derive(Args, Debug, Clone)]
+/// search package with extractly name or startswith/endswith/contains text
 pub struct SearchArgs {
-    // abc - equals with abc
-    // ad* - startswith ad
-    // *bc - endswith bc
-    // *test* - contains test
+    /// extractly match (spdlog), startswith (log*), endswith (*log), contains (*log*)
     pub name: String,
 
-    // 1.0 - equals to 1.0
-    // <1.0 - less than 1.0
-    // <=1.0 - less or equal than 1.0
-    // >1.0 - greater than 1.0
-    // >=1.0 - greater or equal than 1.0
-    // 1.0<2.0 - greater than 1.0 and less than 2.0
-    // 1.0=<2.0 - greater or equal than 1.0 and less than 2.0
-    // 1.0<=2.0 - greater than 1.0 and less or equal than 2.0
-    // 1.0=<=2.0 - greater or equal than 1.0 and less or equal than 2.0
-    pub version: Option<String>,
-
-    // same as version
-    pub date: Option<String>,
-
+    /// list all versions
     #[clap(long, default_value_t = false)]
     pub list: bool,
 }

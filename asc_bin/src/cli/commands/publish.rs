@@ -13,7 +13,9 @@ use crate::{
 use super::VcpkgArgs;
 
 #[derive(Args, Debug, Default, Clone)]
+/// publish package to vcpkg registry
 pub struct PublishArgs {
+    /// package or workspace memeber name
     #[clap(long)]
     package: Option<String>,
 }

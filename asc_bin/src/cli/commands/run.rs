@@ -11,11 +11,17 @@ use super::ConfigType;
 use clap::Args;
 
 #[derive(Args, Debug, Default, Clone)]
+/// run package or workspace memeber bin
 pub struct RunArgs {
-    name: Option<String>,
+    /// binary name
+    #[clap(long)]
+    bin: Option<String>,
 
+    /// command line arguments
+    #[clap(long)]
     args: Option<Vec<String>>,
 
+    /// cmake config
     #[clap(long, default_value = ConfigType::Debug.as_ref())]
     config: ConfigType,
 }
@@ -60,7 +66,7 @@ impl RunArgs {
         } else {
             for bin in &project_conf.bins {
                 bin_names.push(bin.name.clone());
-                if let Some(n) = &self.name {
+                if let Some(n) = &self.bin {
                     if &bin.name == n {
                         bin_name = bin.name.clone();
                         break;

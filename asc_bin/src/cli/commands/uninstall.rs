@@ -3,6 +3,7 @@ use clap::Args;
 use crate::{config::relative_paths, util};
 
 #[derive(Args, Debug, Clone)]
+/// uninstall installed executable/headers/libraries
 pub struct UninstallArgs {}
 
 impl UninstallArgs {
