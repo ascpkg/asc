@@ -20,5 +20,5 @@ fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [],
 llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
 
 [std_dependencies]
-std_cxx = { name = "stdc++", check = "HAVE_STD_CXX_LIB"}
-std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_CXX_FILESYSTEM_LIB"}
+std_cxx = { name = "stdc++", check = "HAVE_CXX_LIBRARY OR HAVE_STD_CXX_LIBRARY"}
+std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}

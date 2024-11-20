@@ -52,11 +52,11 @@ fn main() {
     } else {
         if let Ok(text) = std::fs::read_to_string(paths.config_h_path()) {
             for line in text.split("\n") {
-                if line.contains("#define HAVE_STD_CXX_LIB 1") {
+                if line.contains("#define HAVE_CXX_LIBRARY 1") || line.contains("#define HAVE_STD_CXX_LIBRARY 1") {
                     // link stdc++
                     println!("cargo:rustc-link-lib=stdc++");
                 }
-                if line.contains("#define HAVE_CXX_FILESYSTEM_LIB 1") {
+                if line.contains("#undef HAVE_STD_CXX_FS_LIBRARY") {
                     // link stdc++fs
                     println!("cargo:rustc-link-lib=stdc++fs");
                 }
