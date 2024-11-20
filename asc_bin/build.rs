@@ -64,6 +64,11 @@ fn main() {
         }
     }
 
+    if !cfg!(target_os = "windows") {
+        // add executable directory to deps search paths
+        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN");
+    }
+
     // generate bindings
     println!("cargo:rerun-if-changed={}", paths.header_path());
     if std::fs::metadata(paths.header_path()).is_err() {
