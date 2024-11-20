@@ -1,6 +1,6 @@
 [package]
 name = "asc_bin"
-version = "2024.11.19"
+version = "2024.11.20"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"
@@ -10,9 +10,9 @@ repository = "https://github.com/ascpkg/asc/tree/main/asc_bin"
 name = "asc"
 path = "src/main.rs"
 
-[[bin]]
-name = "test_cli"
-path = "src/tests/cli.rs"
+# [[bin]]
+# name = "test_cli"
+# path = "src/tests/cli.rs"
 
 # [[bin]]
 # name = "test_header_sources_impl"

@@ -36,26 +36,34 @@ endif(MSVC)
 # version
 set(AST_VERSION_MAJOR 2024)
 set(AST_VERSION_MINOR 11)
-set(AST_VERSION_MICRO 19)
-set(VERSION_STRING "2024.11.19")
+set(AST_VERSION_MICRO 20)
+set(VERSION_STRING "2024.11.20")
 configure_file(${CMAKE_SOURCE_DIR}/ast/version.h.in ${CMAKE_BINARY_DIR}/ast/version.h @ONLY)
 
 # check compiler, os, header, library, symbol
-# check headers
-include(CheckIncludeFiles)
-check_include_files("stdlib.h" HAVE_STDLIB_H)
 
-# check types
-include(CheckTypeSize)
-# check_type_size(size_t SIZE_T)
+# check <filesystem> header
+include(CheckIncludeFileCXX)
+include(CheckCXXSourceCompiles)
+check_include_file_cxx("filesystem" HAVE_CXX17_FILESYSTEM)
+set(HAVE_CXX_FILESYSTEM_LIB FALSE)
+if(HAVE_CXX17_FILESYSTEM)
+    # check stdc++fs library
+    check_cxx_source_compiles(
+        "#include <filesystem>
+        int main() {
+            std::filesystem::path p;
+            return 0;
+        }"
+        HAVE_CXX_FILESYSTEM_LIB
+    )
+else()
+    # check <experimental/filesystem> header
+    check_include_file_cxx("experimental/filesystem" HAVE_CXX14_EXPERIMENTAL_FILESYSTEM)
+endif()
 
-# check functions
-include(CheckFunctionExists)
-check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
-
-# check symbols
-include(CheckSymbolExists)
-check_symbol_exists(O_BINARY "fcntl.h" HAVE_O_BINARY)
+# check stdc++ library
+find_library(HAVE_STD_CXX_LIB stdc++)
 
 configure_file(${CMAKE_SOURCE_DIR}/ast/config.h.cm ${CMAKE_BINARY_DIR}/ast/config.h)
 
@@ -79,14 +87,21 @@ FILE(
     "../../src/lib.cpp"
     "../../src/lib.h"
 )
+FILE(
+    GLOB
+    target_ast
+    "../../target/ast/config.h"
+)
 
 # group sources
 SOURCE_GROUP("src" FILES ${src})
+SOURCE_GROUP("target/ast" FILES ${target_ast})
 
 # generate library
 add_library(
     ${PROJECT_NAME}
     ${src}
+    ${target_ast}
 )
 
 if(DEFINED VCPKG_TARGET_TRIPLET)
@@ -115,11 +130,19 @@ target_include_directories(
 )
 
 # link libraries
+set(LINK_LIBS "")
+list(APPEND LINK_LIBS fmt::fmt)
+list(APPEND LINK_LIBS libclang)
+if(HAVE_STD_CXX_LIB)
+list(APPEND LINK_LIBS stdc++)
+endif()
+if(NOT HAVE_CXX_FILESYSTEM_LIB)
+list(APPEND LINK_LIBS stdc++fs)
+endif()
 target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE
-    fmt::fmt
-    libclang
+    ${LINK_LIBS}
 )
 
 # export dynamic library symbols
@@ -152,6 +175,7 @@ install(
 )
 
 # install headers
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h" DESTINATION include/${PROJECT_NAME}/)
 install(FILES "../../src/lib.h" DESTINATION include/${PROJECT_NAME}/)
 
 # install package config

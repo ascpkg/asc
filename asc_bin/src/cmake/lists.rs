@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::clang;
 use crate::cli;
 use crate::config::project::DependencyConfig;
+use crate::config::project::StdDependencyConfig;
 use crate::config::relative_paths;
 use crate::templates;
 use crate::util;
@@ -48,8 +49,8 @@ struct CMakeListsData {
     std_cxx: String,
     include_directories: Vec<String>,
     find_packages: Vec<String>,
-    public_libraries: Vec<String>,
     private_libraries: Vec<String>,
+    std_libraries: Vec<(String, String)>,
     install_headers: Vec<InstallHeader>,
 }
 
@@ -58,6 +59,7 @@ pub fn gen(
     source_mappings: &clang::parser::SourceMappings,
     is_workspace: bool,
     dependencies: &BTreeMap<String, DependencyConfig>,
+    link_std_dependencies: &BTreeMap<String, StdDependencyConfig>,
 ) {
     // output default config.in.cm if not exists
     if !util::fs::is_file_exists(relative_paths::CONFIG_H_CM_FILE_NAME) {
@@ -128,6 +130,9 @@ pub fn gen(
                     .join(" "),
             );
         }
+    }
+    for (_, dep) in link_std_dependencies {
+        data.std_libraries.push((dep.name.clone(), dep.check.clone()));
     }
 
     for (dir, sources) in &group_sources {

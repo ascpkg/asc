@@ -14,10 +14,19 @@ fn main() {
             &paths.profile,
         );
         if std::fs::metadata(&library_path).is_err() {
-            panic!("build ast error");
+            panic!("build ast error, library_path: {library_path}");
         }
     }
 
+    // search lib in ast target dir
+    println!("cargo:rustc-link-search={}", paths.library_dir());
+
+    // search lib in vcpkg installed dir
+    let triplet = get_default_vcpkg_triplet();
+    println!("cargo:rustc-link-search={}", paths.vcpkg_lib_path(&triplet));
+
+    // link ast
+    println!("cargo:rustc-link-lib={}", library_name);
     // link fmt
     if paths.profile == "Release" {
         println!("cargo:rustc-link-lib=fmt");
@@ -25,9 +34,13 @@ fn main() {
         println!("cargo:rustc-link-lib=fmtd");
     }
     // link libclang
-    println!("cargo:rustc-link-lib=libclang");
-    // link libcmt
     if cfg!(target_os = "windows") {
+        println!("cargo:rustc-link-lib=libclang");
+    } else {
+        println!("cargo:rustc-link-lib=clang");
+    }
+    if cfg!(target_os = "windows") {
+        // link libcmt
         println!(
             "cargo:rustc-link-lib={}",
             if paths.profile == "Release" {
@@ -36,16 +49,20 @@ fn main() {
                 "libcmtd"
             }
         );
+    } else {
+        if let Ok(text) = std::fs::read_to_string(paths.config_h_path()) {
+            for line in text.split("\n") {
+                if line.contains("#define HAVE_STD_CXX_LIB 1") {
+                    // link stdc++
+                    println!("cargo:rustc-link-lib=stdc++");
+                }
+                if line.contains("#define HAVE_CXX_FILESYSTEM_LIB 1") {
+                    // link stdc++fs
+                    println!("cargo:rustc-link-lib=stdc++fs");
+                }
+            }
+        }
     }
-    // link ast
-    println!("cargo:rustc-link-lib={}", library_name);
-
-    // search lib in ast target dir
-    println!("cargo:rustc-link-search={}", paths.library_dir());
-
-    // search lib in vcpkg installed dir
-    let triplet = get_default_vcpkg_triplet();
-    println!("cargo:rustc-link-search={}", paths.vcpkg_lib_path(&triplet));
 
     // generate bindings
     println!("cargo:rerun-if-changed={}", paths.header_path());
@@ -126,11 +143,25 @@ impl PathBuilder {
         )
     }
 
-    fn library_dir(&self) -> String {
+    fn config_h_path(&self) -> String {
         format!(
-            "{}/{}/target/{}/{}",
-            self.cargo_manifest_dir, self.library_name, self.library_name, self.profile
+            "{}/{}/target/{}/config.h",
+            self.cargo_manifest_dir, self.library_name, self.library_name
         )
+    }
+
+    fn library_dir(&self) -> String {
+        if cfg!(target_os = "windows") {
+            format!(
+                "{}/{}/target/{}/{}",
+                self.cargo_manifest_dir, self.library_name, self.library_name, self.profile
+            )
+        } else {
+            format!(
+                "{}/{}/target/{}",
+                self.cargo_manifest_dir, self.library_name, self.library_name
+            )
+        }
     }
 
     fn bindings_path(&self) -> std::path::PathBuf {
@@ -144,7 +175,7 @@ impl PathBuilder {
         format!(
             "{}/{}{}",
             self.library_dir(),
-            self.library_name,
+            if cfg!(target_os = "windows") { self.library_name.clone() } else { format!("lib{}", self.library_name) },
             platform::get_lib_extension()
         )
     }
@@ -395,7 +426,7 @@ fn is_executable(path: &std::path::PathBuf) -> bool {
     #[cfg(target_family = "unix")]
     {
         use std::os::unix::fs::MetadataExt;
-        if let Ok(metadata) = fs::metadata(path) {
+        if let Ok(metadata) = std::fs::metadata(path) {
             return metadata.mode() & 0o111 != 0;
         }
     }

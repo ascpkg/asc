@@ -132,22 +132,27 @@ target_include_directories(
 {{/each}}
 )
 
-{{#if (or public_libraries private_libraries) }}
+{{#if (or private_libraries std_libraries) }}
 # link libraries
+{{/if}}
+set(LINK_LIBS "")
+{{#each private_libraries as |lib|}}
+list(APPEND LINK_LIBS {{lib}})
+{{/each}}
+{{#each std_libraries as |lib|}}
+{{#if lib.1}}
+if({{lib.1}})
+{{/if}}
+list(APPEND LINK_LIBS {{lib.0}})
+{{#if lib.1}}
+endif()
+{{/if}}
+{{/each}}
+{{#if (or private_libraries std_libraries) }}
 target_link_libraries(
     ${PROJECT_NAME}
-    {{#if public_libraries}}
-    PUBLIC
-    {{#each public_libraries as |lib|}}
-    {{lib}}
-    {{/each}}
-    {{/if}}
-    {{#if private_libraries}}
     PRIVATE
-    {{#each private_libraries as |lib|}}
-    {{lib}}
-    {{/each}}
-    {{/if}}
+    ${LINK_LIBS}
 )
 {{/if}}
 

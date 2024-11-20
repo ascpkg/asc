@@ -40,6 +40,12 @@ pub struct DependencyConfig {
 }
 
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
+pub struct StdDependencyConfig {
+    pub name: String,
+    pub check: String,
+}
+
+#[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 pub struct WorkSpaceConfig {
     pub members: BTreeSet<String>,
 }
@@ -59,6 +65,8 @@ pub struct ProjectConfig {
     pub features: BTreeMap<String, BTreeSet<String>>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub dependencies: BTreeMap<String, DependencyConfig>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub std_dependencies: BTreeMap<String, StdDependencyConfig>,
 
     #[serde(skip)]
     pub path: String,

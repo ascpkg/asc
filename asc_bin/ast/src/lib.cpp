@@ -2,13 +2,22 @@
 #include <stdlib.h>
 
 // c++
+#include "config.h"
+#if defined(HAVE_CXX17_FILESYSTEM)
 #include <filesystem>
+namespace std_fs = std::filesystem;
+#endif
+#if defined(HAVE_CXX14_EXPERIMENTAL_FILESYSTEM)
+#include <experimental/filesystem>
+namespace std_fs = std::experimental::filesystem;
+#endif
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <set>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 // clang
@@ -444,12 +453,12 @@ public:
 
 	static std::vector<std::string> find_source_files(const std::string source_dir, const std::string &exclude_path) {
 		std::vector<std::string> source_paths;
-		if (!std::filesystem::exists(source_dir) || !std::filesystem::is_directory(source_dir)) {
+		if (!std_fs::exists(source_dir) || !std_fs::is_directory(source_dir)) {
 			return source_paths;
 		}
 
-		for (const auto &entry : std::filesystem::recursive_directory_iterator(source_dir)) {
-			if (!std::filesystem::is_regular_file(entry)) {
+		for (const auto &entry : std_fs::recursive_directory_iterator(source_dir)) {
+			if (!std_fs::is_regular_file(entry)) {
 				continue;
 			}
 

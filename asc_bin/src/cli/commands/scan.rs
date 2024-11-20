@@ -7,6 +7,7 @@ use crate::cmake;
 use crate::config;
 use crate::config::project::DependencyConfig;
 use crate::config::project::ProjectConfig;
+use crate::config::project::StdDependencyConfig;
 use crate::config::relative_paths;
 use crate::errors::ErrorTag;
 use crate::graph;
@@ -87,6 +88,7 @@ impl ScanArgs {
                         ),
                         true,
                         &project_conf.dependencies,
+                        &project_conf.std_dependencies,
                         false,
                         false,
                         &bin_entry.std_c,
@@ -120,6 +122,7 @@ impl ScanArgs {
                         ),
                         true,
                         &project_conf.dependencies,
+                        &project_conf.std_dependencies,
                         is_shared_lib,
                         !is_shared_lib,
                         &lib_entry.std_c,
@@ -162,6 +165,7 @@ impl ScanArgs {
         taget_dir: &str,
         is_workspace: bool,
         dependencies: &BTreeMap<String, DependencyConfig>,
+        std_dependencies: &BTreeMap<String, StdDependencyConfig>,
         is_shared_lib: bool,
         is_static_lib: bool,
         std_c: &str,
@@ -217,7 +221,7 @@ impl ScanArgs {
         tracing::info!("\n{mermaid_flowchart}");
 
         tracing::warn!("output {}", relative_paths::CMAKE_LISTS_TXT_FILE_NAME);
-        cmake::lists::gen(&options, &source_mappings, is_workspace, dependencies);
+        cmake::lists::gen(&options, &source_mappings, is_workspace, dependencies, std_dependencies);
 
         return true;
     }
@@ -269,6 +273,7 @@ impl ScanArgs {
                             ),
                             true,
                             &project_conf.dependencies,
+                            &project_conf.std_dependencies,
                             false,
                             false,
                             &bin_entry.std_c,
@@ -303,6 +308,7 @@ impl ScanArgs {
                             ),
                             true,
                             &project_conf.dependencies,
+                            &project_conf.std_dependencies,
                             is_shared_lib,
                             !is_shared_lib,
                             &lib_entry.std_c,
