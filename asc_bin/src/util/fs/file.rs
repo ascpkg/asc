@@ -16,6 +16,25 @@ pub fn is_cxx_source(name: &String) -> bool {
     return false;
 }
 
+fn is_executable(path: &std::path::PathBuf) -> bool {
+    #[cfg(target_family = "unix")]
+    {
+        use std::os::unix::fs::MetadataExt;
+        if let Ok(metadata) = std::fs::metadata(path) {
+            return metadata.mode() & 0o111 != 0;
+        }
+    }
+
+    #[cfg(target_family = "windows")]
+    {
+        if path.with_extension(".exe").exists() {
+            return true;
+        }
+    }
+
+    false
+}
+
 pub fn find_source_files(dir: &String) -> Vec<String> {
     let mut files = Vec::new();
 
@@ -53,6 +72,24 @@ pub fn find_patch_files(dir: &String) -> Vec<String> {
                 if let Some(file_name) = path.to_str() {
                     files.push(file_name.replace(r"\", "/"));
                 }
+            }
+        }
+    }
+
+    files
+}
+
+pub fn find_executable_files(dir: &String) -> Vec<String> {
+    let mut files = Vec::new();
+
+    let walker = walkdir::WalkDir::new(dir.clone())
+        .into_iter()
+        .filter_map(|e| e.ok());
+    for entry in walker {
+        let path = entry.path();
+        if is_executable(&std::path::PathBuf::from(path)) {
+            if let Some(file_name) = path.to_str() {
+                files.push(file_name.replace(r"\", "/"));
             }
         }
     }

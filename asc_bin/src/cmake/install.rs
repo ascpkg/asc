@@ -33,5 +33,16 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
             data.files.push(path);
         }
     }
+
+    let mut parsed = std::collections::HashSet::new();
+    
+    let mut deps = std::collections::HashSet::new();
+    for f in &data.files {
+        parsed.insert(f.clone());
+        for lib in &util::deps::find_import_libraries(&f) {
+            deps.insert(lib.clone());
+        }
+    }
+
     data.dump(true, false);
 }
