@@ -34,10 +34,12 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
     let wrapper_type = match config_file_ext.as_str() {
         "json" => quote! { config_file_types::json::JsonConfigFileWrapper },
         "toml" => quote! { config_file_types::toml::TomlConfigFileWrapper },
+        "xml" => quote! { config_file_types::xml::XmlConfigFileWrapper },
+        "yml" => quote! { config_file_types::yml::YmlConfigFileWrapper },
         _ => {
             return Err(Error::new_spanned(
                 input,
-                "Unsupported format. Use either 'json' or 'toml'",
+                "Unsupported format. Use either 'json', 'toml', 'xml', or 'yml'",
             ))
         }
     };

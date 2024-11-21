@@ -1,6 +1,3 @@
-# Wrap struct to file configuration
-
-```rust
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
@@ -89,4 +86,3 @@ fn main() {
     // load from file or panic
     println!("{:#?}\n\n", MyYmlConfig::load("target/debug/test.yml", false).unwrap());
 }
-```

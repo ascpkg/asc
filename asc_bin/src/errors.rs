@@ -36,6 +36,12 @@ pub enum ErrorTag {
     // json
     JsonSerializeError,
     JsonDeserializeError,
+    // xml
+    XmlSerializeError,
+    XmlDeserializeError,
+    // yml
+    YmlSerializeError,
+    YmlDeserializeError,
     // handlebars
     RenderHandlebarsError,
     // vcpkg

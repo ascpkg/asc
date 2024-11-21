@@ -11,12 +11,9 @@ pub struct JsonConfigFileWrapper<T> {
 
 generate_wrapper_methods!(
     JsonConfigFileWrapper,
-    serde_json,
-    from_str,
-    to_string,
-    to_string_pretty,
-    "from_str",
-    "to_string",
+    serde_json::from_str,
+    serde_json::to_string,
+    serde_json::to_string_pretty,
     "JsonDeserializeError",
     "JsonSerializeError"
 );

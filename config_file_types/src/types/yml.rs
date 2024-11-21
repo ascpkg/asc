@@ -1,19 +1,19 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use toml;
+use serde_yml;
 
 use config_file_macros::generate_wrapper_methods;
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct TomlConfigFileWrapper<T> {
+pub struct YmlConfigFileWrapper<T> {
     inner: T,
     path: String,
 }
 
 generate_wrapper_methods!(
-    TomlConfigFileWrapper,
-    toml::from_str,
-    toml::to_string,
-    toml::to_string_pretty,
-    "TomlDeserializeError",
-    "TomlSerializeError"
+    YmlConfigFileWrapper,
+    serde_yml::from_str,
+    serde_yml::to_string,
+    serde_yml::to_string,
+    "YmlDeserializeError",
+    "YmlSerializeError"
 );

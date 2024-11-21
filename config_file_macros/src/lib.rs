@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! generate_wrapper_methods {
-    ($wrapper:ident, $format:ident, $deserialize_method:ident, $serialize_method:ident, $serialize_pretty_method:ident, $deserialize_func_str:expr, $serialize_func_str:expr, $deserialize_error:expr, $serialize_error:expr) => {
+    ($wrapper:ident, $deserialize_method:path, $serialize_method:path, $serialize_pretty_method:path, $deserialize_error:expr, $serialize_error:expr) => {
         impl<T> $wrapper<T>
         where
             T: DeserializeOwned + Serialize,
@@ -25,12 +25,12 @@ macro_rules! generate_wrapper_methods {
 
             // read from str
             pub fn loads(text: &str, ignore_error: bool) -> Option<T> {
-                match $format::$deserialize_method(text) {
+                match $deserialize_method(text) {
                     Ok(c) => Some(c),
                     Err(e) => {
                         if !ignore_error {
                             tracing::error!(
-                                func = $deserialize_func_str,
+                                func = stringify!($deserialize_method),
                                 error_tag = $deserialize_error,
                                 error_str = e.to_string(),
                                 message = text,
@@ -78,9 +78,9 @@ macro_rules! generate_wrapper_methods {
             // write to str
             pub fn dumps_data(data: &T, pretty: bool, ignore_error: bool) -> String {
                 let f = if !pretty {
-                    $format::$serialize_method
+                    $serialize_method
                 } else {
-                    $format::$serialize_pretty_method
+                    $serialize_pretty_method
                 };
                 match f(data) {
                     Ok(text) => {
@@ -136,7 +136,11 @@ macro_rules! generate_wrapper_methods {
                     Err(e) => {
                         if !ignore_error {
                             tracing::error!(
-                                func = $serialize_func_str,
+                                func = if !pretty {
+                                    stringify!($serialize_method)
+                                } else {
+                                    stringify!($serialize_pretty_method)
+                                },
                                 error_tag = $serialize_error,
                                 error_str = e.to_string(),
                             );
