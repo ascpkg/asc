@@ -15,6 +15,10 @@ pub static LIB_HPP_FILE_NAME: &str = "lib.hpp";
 pub static LIB_CPP_FILE_NAME: &str = "lib.cpp";
 pub static EXPORT_H_FILE_NAME: &str = "export.h";
 
+pub static VCPKG_INSTALLED_DIR_NAME: &str = "vcpkg_installed";
+pub static VCPKG_BIN_DIR_NAME: &str = "bin";
+pub static VCPKG_LIB_DIR_NAME: &str = "lib";
+
 pub fn clean_target_files() -> bool {
     if util::fs::is_dir_exists(ASC_TARGET_DIR_NAME) {
         if !util::fs::remove_dirs(ASC_TARGET_DIR_NAME) {
@@ -52,4 +56,18 @@ pub fn uninstall_installed_files() -> bool {
     }
 
     return has_error;
+}
+
+pub fn vcpkg_installed_bin_dir_path(profile: &str, triplet: &str) -> String {
+    format!(
+        "{ASC_TARGET_DIR_NAME}/{VCPKG_INSTALLED_DIR_NAME}/{triplet}/{}{VCPKG_BIN_DIR_NAME}",
+        if profile == "release" { "" } else { "debug/" }
+    )
+}
+
+pub fn vcpkg_installed_lib_dir_path(profile: &str, triplet: &str) -> String {
+    format!(
+        "{ASC_TARGET_DIR_NAME}/{VCPKG_INSTALLED_DIR_NAME}/{triplet}/{}{VCPKG_LIB_DIR_NAME}",
+        if profile == "release" { "" } else { "debug/" }
+    )
 }

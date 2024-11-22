@@ -16,7 +16,6 @@ pub struct NewArgs {
     //     asc new --lib test_static_lib
     //     asc new --lib --shared test_shared_lib
     //     asc new --workspace test_workspace --lib --shared --member=a --member=b --member=c
-
     /// new package/workspace name
     pub name: Option<String>,
 

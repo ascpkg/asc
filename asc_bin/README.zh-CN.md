@@ -3,11 +3,12 @@
 [English](README.md)
 
 # 1. 特性
-- 创建 asc包/工作区 或者将现有源码树初始化为 asc包/工作区
+- 创建 asc package/workspace 或者将现有源码树初始化为 asc package/workspace
 - 通过 vcpkg 搜索/添加/移除/安装依赖
-- 使用 libclang 自动扫描源码树，并输入依赖图
+- 使用 libclang 自动扫描源码树，并输出依赖图
 - 自动生成 cmake 和 vcpkg 配置
 - 编译/运行/安装/卸载/清理 目标
+- 制作 7z/tar.xz/inno setup
 
 
 
@@ -23,15 +24,15 @@ Commands:
   init       将现有源码目录初始为化 包含二进制/静态库/动态库的 asc package/workspace
   vcpkg      更新 vcpkg 源码，构建版本约束索引，修改和查看配置
   search     精确查找或者根据前缀/后缀/子串来查找 package，列出指定 package 所有版本
-  add        将依赖添加到 asc package/workspace 的 asc.toml
-  remove     从 asc package/workspace 的 asc.toml 移除依赖
-  scan       扫描需要参与编译的源码, 生成cmake和vcpkg配置
+  add        将依赖添加到 asc package/workspace member 的 asc.toml
+  remove     从 asc package/workspace member 的 asc.toml 移除依赖
+  scan       扫描需要参与编译的源码, 生成 cmake 和 vcpkg 配置
   build      编译所有 package 或都指定 package
-  run        运行指定的二进制文件
-  clean      清理自动生成的 .asc and target 目录
-  install    部署二进制文件、头文件、库文件等
-  uninstall  清理已安装的二进制文件、头文件、库文件等
-  publish    将 package 发布到 vcpkg registry
+  run        运行指定的 bin
+  clean      清理自动生成的 .asc 和 target 目录
+  install    部署二进制文件、头文件、库文件、依赖等
+  uninstall  清理已安装的二进制文件、头文件、库文件、依赖等
+  publish    将 package 发布到自定义 vcpkg registry
   help       帮助说明
 
 Options:
@@ -138,7 +139,7 @@ Options:
       --list  list all versions
   -h, --help  Print help
 ```
-### 3.2.2. 搜索完全匹配的包
+### 3.2.2. 精确搜索指定的包
 > asc search spdlog
 ```
 2024-11-01 11:59:09.8075094  INFO asc::cli::commands::search: 33: search name="spdlog"
@@ -1208,32 +1209,42 @@ members = [
 ## 4.2. 包配置描述
 ```toml
 [package]
-name = "test_package"
-version = "2024.10.30"
+name = "ast"
+version = "2024.11.20"
 edition = "2024"
+description = "scan necessary source files"
+license = "LGPL-3.0+"
+repository = ""
+branch = "main"
 
-[features]
-
-[dependencies.arrow]
-version = "17.0.0"
-find_packages = []
-link_libraries = []
-features = [
-    "json",
-    "mimalloc@windows",
-]
+[[lib]]
+name = "ast"
+source_dir = "src"
+source_file = "lib.cpp"
+shared = false
+std_c = "11"
+std_cxx = "17"
 
 [dependencies]
-arrow = { version = "17.0.0", find_packages = [], link_libraries = [], include_directories = [], features = ["json", "mimalloc@windows"] }
-cli11 = { version = "2.3.2", find_packages = ["CLI11"], include_directories = [], link_libraries = ["CLI11::CLI11"], features = [] }
-fmt = { version = "10.0.0", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
-openssl = { version = "3.3.2#1", find_packages = ["openssl"], include_directories = [], link_libraries = ["OpenSSL::Crypto", "OpenSSL::SSL"], features = [] }
-spdlog = { version = "1.11.0#1", find_packages = ["spdlog"], include_directories = [], link_libraries = ["spdlog::spdlog"], features = [] }
+fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
+llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
+
+[std_dependencies]
+std_cxx = { name = "stdc++", check = "HAVE_CXX_LIBRARY OR HAVE_STD_CXX_LIBRARY"}
+std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
+
 ```
 
 
 # 5. 编译
 ## 5.1. cargo
+> git clone
+> cd asc/asc_bin/ast
+> asc vcpkg set
+> asc vcpkg update
+> asc vcpkg index
+> asc scan
+> asc build
 > cargo build
 
 > cargo build --release

@@ -16,9 +16,13 @@ pub fn is_cxx_source(name: &String) -> bool {
     return false;
 }
 
-fn is_executable(path: &std::path::PathBuf) -> bool {
+pub fn is_executable_or_dynamic_library(path: &str) -> bool {
     #[cfg(target_family = "unix")]
     {
+        if path.ends_with(".so") {
+            return true;
+        }
+
         use std::os::unix::fs::MetadataExt;
         if let Ok(metadata) = std::fs::metadata(path) {
             return metadata.mode() & 0o111 != 0;
@@ -27,7 +31,10 @@ fn is_executable(path: &std::path::PathBuf) -> bool {
 
     #[cfg(target_family = "windows")]
     {
-        if path.with_extension(".exe").exists() {
+        if path.ends_with(".exe") {
+            return true;
+        }
+        if path.ends_with(".dll") {
             return true;
         }
     }
@@ -79,7 +86,7 @@ pub fn find_patch_files(dir: &String) -> Vec<String> {
     files
 }
 
-pub fn find_executable_files(dir: &String) -> Vec<String> {
+pub fn find_executable_and_dynamic_library_files(dir: &String) -> Vec<String> {
     let mut files = Vec::new();
 
     let walker = walkdir::WalkDir::new(dir.clone())
@@ -87,7 +94,7 @@ pub fn find_executable_files(dir: &String) -> Vec<String> {
         .filter_map(|e| e.ok());
     for entry in walker {
         let path = entry.path();
-        if is_executable(&std::path::PathBuf::from(path)) {
+        if is_executable_or_dynamic_library(path.to_str().unwrap()) {
             if let Some(file_name) = path.to_str() {
                 files.push(file_name.replace(r"\", "/"));
             }

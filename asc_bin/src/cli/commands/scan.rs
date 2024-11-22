@@ -30,7 +30,7 @@ pub struct ScanOptions {
 }
 
 #[derive(Args, Debug, Clone)]
-/// scan necessary sources, generate cmake and vcpkg configurations 
+/// scan necessary sources, generate cmake and vcpkg configurations
 pub struct ScanArgs {
     /// for cmake cmake_minimum_required
     #[clap(long, default_value = "3.20")]
@@ -221,7 +221,13 @@ impl ScanArgs {
         tracing::info!("\n{mermaid_flowchart}");
 
         tracing::warn!("output {}", relative_paths::CMAKE_LISTS_TXT_FILE_NAME);
-        cmake::lists::gen(&options, &source_mappings, is_workspace, dependencies, std_dependencies);
+        cmake::lists::gen(
+            &options,
+            &source_mappings,
+            is_workspace,
+            dependencies,
+            std_dependencies,
+        );
 
         return true;
     }

@@ -132,7 +132,8 @@ pub fn gen(
         }
     }
     for (_, dep) in link_std_dependencies {
-        data.std_libraries.push((dep.name.clone(), dep.check.clone()));
+        data.std_libraries
+            .push((dep.name.clone(), dep.check.clone()));
     }
 
     for (dir, sources) in &group_sources {

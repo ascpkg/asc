@@ -15,7 +15,6 @@ pub struct InitArgs {
     //     asc init --lib test_static_lib
     //     asc init --lib --shared test_shared_lib
     //     asc init --workspace test_workspace --lib --shared --member=a --member=b --member=c
-
     /// new library (default bin)
     #[clap(long, default_value_t = false)]
     pub lib: bool,

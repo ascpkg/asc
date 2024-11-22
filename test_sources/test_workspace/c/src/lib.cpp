@@ -1,6 +1,9 @@
 #include "lib.hpp"
+#include <iostream>
+#include <fmt/format.h>
 
 int test(int left, int right) {
+    std::cout << fmt::format("{} + {} = {}\n", left, right, left + right);
     return left + right;
 }
 

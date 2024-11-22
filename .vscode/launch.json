@@ -24,7 +24,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -58,7 +58,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -85,7 +85,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -106,7 +106,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -127,7 +127,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -143,12 +143,33 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Cargo run asc install",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc_bin"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "install"
+            ],
+            "cwd": "${workspaceFolder}/test_sources/test_workspace"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Cargo run asc vcpkg",
             "cargo": {
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -171,7 +192,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -193,7 +214,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -216,7 +237,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -240,7 +261,7 @@
                 "args": [
                     "build",
                     "--bin=asc",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "asc",
@@ -261,7 +282,7 @@
                 "args": [
                     "build",
                     "--bin=test_clang_parse",
-                    "--package=asc"
+                    "--package=asc_bin"
                 ],
                 "filter": {
                     "name": "test_clang_parse",

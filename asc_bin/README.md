@@ -1208,32 +1208,42 @@ members = [
 ## 4.2. package
 ```toml
 [package]
-name = "test_package"
-version = "2024.10.30"
+name = "ast"
+version = "2024.11.20"
 edition = "2024"
+description = "scan necessary source files"
+license = "LGPL-3.0+"
+repository = ""
+branch = "main"
 
-[features]
-
-[dependencies.arrow]
-version = "17.0.0"
-find_packages = []
-link_libraries = []
-features = [
-    "json",
-    "mimalloc@windows",
-]
+[[lib]]
+name = "ast"
+source_dir = "src"
+source_file = "lib.cpp"
+shared = false
+std_c = "11"
+std_cxx = "17"
 
 [dependencies]
-arrow = { version = "17.0.0", find_packages = [], link_libraries = [], include_directories = [], features = ["json", "mimalloc@windows"] }
-cli11 = { version = "2.3.2", find_packages = ["CLI11"], include_directories = [], link_libraries = ["CLI11::CLI11"], features = [] }
-fmt = { version = "10.0.0", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
-openssl = { version = "3.3.2#1", find_packages = ["openssl"], include_directories = [], link_libraries = ["OpenSSL::Crypto", "OpenSSL::SSL"], features = [] }
-spdlog = { version = "1.11.0#1", find_packages = ["spdlog"], include_directories = [], link_libraries = ["spdlog::spdlog"], features = [] }
+fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
+llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
+
+[std_dependencies]
+std_cxx = { name = "stdc++", check = "HAVE_CXX_LIBRARY OR HAVE_STD_CXX_LIBRARY"}
+std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
+
 ```
 
 
 # 5. build
 ## 5.1. cargo
+> git clone
+> cd asc/asc_bin/ast
+> asc vcpkg set
+> asc vcpkg update
+> asc vcpkg index
+> asc scan
+> asc build
 > cargo build
 
 > cargo build --release

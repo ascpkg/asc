@@ -21,7 +21,7 @@ pub fn find_import_libraries(path: &str) -> Vec<String> {
         }
         goblin::Object::Mach(_mach) => match goblin::mach::Mach::parse(&content).unwrap() {
             goblin::mach::Mach::Binary(binary) => {
-                // macOS single Mach
+                // macOS single Mach-o
                 let mut results = vec![];
                 for command in binary.load_commands.iter() {
                     if let goblin::mach::load_command::CommandVariant::LoadDylib(load_dylib) =
@@ -36,7 +36,7 @@ pub fn find_import_libraries(path: &str) -> Vec<String> {
                 return results;
             }
             goblin::mach::Mach::Fat(fat) => {
-                // macOS multiple Mach
+                // macOS multiple Mach-o
                 let mut results = vec![];
                 for arch in fat.iter_arches() {
                     if let Ok(mach) =

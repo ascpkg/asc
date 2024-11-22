@@ -52,7 +52,9 @@ fn main() {
     } else {
         if let Ok(text) = std::fs::read_to_string(paths.config_h_path()) {
             for line in text.split("\n") {
-                if line.contains("#define HAVE_CXX_LIBRARY 1") || line.contains("#define HAVE_STD_CXX_LIBRARY 1") {
+                if line.contains("#define HAVE_CXX_LIBRARY 1")
+                    || line.contains("#define HAVE_STD_CXX_LIBRARY 1")
+                {
                     // link stdc++
                     println!("cargo:rustc-link-lib=stdc++");
                 }
@@ -180,7 +182,11 @@ impl PathBuilder {
         format!(
             "{}/{}{}",
             self.library_dir(),
-            if cfg!(target_os = "windows") { self.library_name.clone() } else { format!("lib{}", self.library_name) },
+            if cfg!(target_os = "windows") {
+                self.library_name.clone()
+            } else {
+                format!("lib{}", self.library_name)
+            },
             platform::get_lib_extension()
         )
     }
@@ -412,15 +418,11 @@ fn find_executable_dir_in_path(executable_name: &str) -> Option<String> {
         ":"
     };
 
-    for path in env_path.split(partition) {
-        let full_path = std::path::PathBuf::from(path).join(if cfg!(target_os = "windows") {
-            executable_name.to_string() + ".exe"
-        } else {
-            executable_name.to_string()
-        });
+    for dir in env_path.split(partition) {
+        let full_path = std::path::PathBuf::from(dir).join(executable_name);
 
-        if std::fs::metadata(&full_path).is_ok() && is_executable(&full_path) {
-            return Some(path.replace(r"\", "/"));
+        if is_executable(&full_path) {
+            return Some(dir.replace(r"\", "/"));
         }
     }
 
