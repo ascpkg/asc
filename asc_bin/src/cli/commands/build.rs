@@ -10,9 +10,9 @@ pub struct BuildArgs {
     #[clap(long)]
     pub target: Option<String>,
 
-    /// cmake config
-    #[clap(long, default_value = ConfigType::Debug.as_ref())]
-    config: ConfigType,
+    /// release mode (default false)
+    #[clap(long, default_value_t = false)]
+    release: bool,
 }
 
 impl BuildArgs {
@@ -29,7 +29,7 @@ impl BuildArgs {
 
         let mut options = ScanOptions {
             target_dir: relative_paths::ASC_TARGET_DIR_NAME.to_string(),
-            cmake_config: self.config.as_ref().to_string(),
+            cmake_config: ConfigType::from(self.release).as_ref().to_string(),
             ..Default::default()
         };
         if let Some(t) = &self.target {

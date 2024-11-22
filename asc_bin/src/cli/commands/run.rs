@@ -21,9 +21,9 @@ pub struct RunArgs {
     #[clap(long)]
     args: Option<Vec<String>>,
 
-    /// cmake config
-    #[clap(long, default_value = ConfigType::Debug.as_ref())]
-    config: ConfigType,
+    /// release mode (default false)
+    #[clap(long, default_value_t = false)]
+    release: bool,
 }
 
 impl RunArgs {
@@ -86,7 +86,7 @@ impl RunArgs {
                 "{}/{}/{}/{}",
                 relative_paths::ASC_TARGET_DIR_NAME,
                 bin_name,
-                self.config.as_ref(),
+                ConfigType::from(self.release).as_ref(),
                 bin_name
             ),
             &self

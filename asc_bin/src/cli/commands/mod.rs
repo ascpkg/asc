@@ -67,6 +67,16 @@ pub enum ConfigType {
     Release,
 }
 
+impl From<bool> for ConfigType {
+    fn from(value: bool) -> Self {
+        if value {
+            ConfigType::Release
+        } else {
+            ConfigType::Debug
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]
 #[clap(rename_all = "snake_case")]
 pub enum VcpkgAction {
