@@ -1,9 +1,11 @@
 [package]
 name = "config_file_derives"
-version = "2024.11.21"
+version = "2024.11.22"
 edition = "2021"
 description = "Automatically generate file configuration functions for the specified struct"
 license = "LGPL-3.0+"
+categories = ["Encoding"]
+keywords = ["config", "serialization", "serde", "json", "toml", "xml", "yml"]
 repository = "https://github.com/ascpkg/asc/tree/main/config_file_derives"
 
 [lib]

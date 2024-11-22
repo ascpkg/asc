@@ -2,10 +2,10 @@ use crate::{
     cli,
     cmake::project::default_vcpkg_triplet,
     config::{self, relative_paths},
-    dependency, util,
+    dependency, pack, util,
 };
 
-pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
+pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str, pack_cli: &str) {
     // run cmake --install
     let triplet = default_vcpkg_triplet();
     let install_prefix = format!("{prefix}/{triplet}");
@@ -41,6 +41,7 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
             data.files.push(path);
         }
     }
+    data.dump(true, false);
 
     // copy dependent libraries
     dependency::copy::copy_dependent_libraries(
@@ -50,5 +51,24 @@ pub fn exec(options: &cli::commands::scan::ScanOptions, prefix: &str) {
         executable_and_dynamic_library_files,
     );
 
-    data.dump(true, false);
+    // package files
+    if !pack_cli.is_empty() {
+        let name = if let Some(prj) = config::project::ProjectConfig::read_project_conf() {
+            if let Some(pkg) = prj.package {
+                pkg.name.clone()
+            } else {
+                util::fs::get_cwd_name()
+            }
+        } else {
+            util::fs::get_cwd_name()
+        };
+        pack::make_package(
+            &name,
+            format!(
+                "{install_prefix}/{}",
+                config::relative_paths::VCPKG_BIN_DIR_NAME
+            ),
+            pack_cli,
+        );
+    }
 }

@@ -59,7 +59,7 @@ pub enum Commands {
     Publish(PublishArgs),
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]
+#[derive(Clone, Debug, Default, ValueEnum, AsRefStr, FromRepr)]
 #[clap(rename_all = "PascalCase")]
 pub enum ConfigType {
     #[default]
@@ -77,7 +77,7 @@ impl From<bool> for ConfigType {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ValueEnum, AsRefStr, FromRepr)]
+#[derive(Clone, Debug, Default, ValueEnum, AsRefStr, FromRepr)]
 #[clap(rename_all = "snake_case")]
 pub enum VcpkgAction {
     #[default]

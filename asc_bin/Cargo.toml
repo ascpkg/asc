@@ -1,9 +1,11 @@
 [package]
 name = "asc_bin"
-version = "2024.11.20"
+version = "2024.11.22"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"
+categories = ["command-line-utilities", "Compilers", "Development tools"]
+keywords = ["clang", "vcpkg", "cmake", "package", "setup"]
 repository = "https://github.com/ascpkg/asc/tree/main/asc_bin"
 
 [[bin]]
@@ -29,9 +31,9 @@ path = "src/main.rs"
 
 [dependencies]
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
-config_file_derives = { version = "2024.11.21", path = "../config_file_derives" }
-config_file_macros = { version = "2024.11.21", path = "../config_file_macros" }
-config_file_types = { version = "2024.11.21", path = "../config_file_types" }
+config_file_derives = { version = "2024.11.22", path = "../config_file_derives" }
+config_file_macros = { version = "2024.11.22", path = "../config_file_macros" }
+config_file_types = { version = "2024.11.22", path = "../config_file_types" }
 chrono = { version = "0.4.38" }
 # clang-sys = { version = "1.8.1", features = ["clang_10_0"] }
 clap = { version = "4.5.20", features = ["derive", "color"] }

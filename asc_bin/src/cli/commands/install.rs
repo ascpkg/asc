@@ -13,6 +13,10 @@ pub struct InstallArgs {
     /// release mode (default false)
     #[clap(long, default_value_t = false)]
     release: bool,
+
+    /// package cli (7z, tar, issc, auto .7z on windows .tar.xz on others)
+    #[clap(long, default_value = "")]
+    pack_cli: String,
 }
 
 impl InstallArgs {
@@ -32,7 +36,7 @@ impl InstallArgs {
             cmake_config: ConfigType::from(self.release).as_ref().to_string(),
             ..Default::default()
         };
-        cmake::install::exec(&options, &self.prefix);
+        cmake::install::exec(&options, &self.prefix, &self.pack_cli);
 
         return true;
     }

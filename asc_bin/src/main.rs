@@ -13,6 +13,7 @@ pub mod dependency;
 pub mod errors;
 pub mod git;
 pub mod graph;
+pub mod pack;
 pub mod templates;
 pub mod util;
 pub mod vcpkg;
