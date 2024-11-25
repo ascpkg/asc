@@ -2,6 +2,9 @@
 
 [English](README.md)
 
+[![Crates.io](https://img.shields.io/crates/d/asc_bin.svg)](https://crates.io/crates/asc_bin)
+[![Crates.io](https://img.shields.io/crates/v/asc_bin.svg)](https://crates.io/crates/asc_bin)
+
 # 1. 特性
 - 创建 asc package/workspace 或者将现有源码树初始化为 asc package/workspace
 - 通过 vcpkg 搜索/添加/移除/安装依赖

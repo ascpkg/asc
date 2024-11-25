@@ -2,6 +2,9 @@
 
 [简体中文](README.zh-CN.md)
 
+[![Crates.io](https://img.shields.io/crates/d/asc_bin.svg)](https://crates.io/crates/asc_bin)
+[![Crates.io](https://img.shields.io/crates/v/asc_bin.svg)](https://crates.io/crates/asc_bin)
+
 # 1. Features
 - new asc package/workspace or init exits sources to asc package/workspace
 - search/add/remove/install dependencies with vcpkg

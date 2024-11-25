@@ -1,5 +1,9 @@
 # Wrap struct to file configuration
 
+[![Docs](https://docs.rs/config_file_derives/badge.svg)](https://docs.rs/config_file_derives)
+[![Crates.io](https://img.shields.io/crates/d/config_file_derives.svg)](https://crates.io/crates/config_file_derives)
+[![Crates.io](https://img.shields.io/crates/v/config_file_derives.svg)](https://crates.io/crates/config_file_derives)
+
 - hcl
 - json
 - toml
