@@ -188,10 +188,16 @@ impl VcpkgManager {
     }
 
     pub fn get_latest_commit() -> GitCommitInfo {
-        return git::log::get_latest_commit(&Self::get_vcpkg_root_dir(), git::log::GIT_LOG_FORMAT);
+        return git::log::get_latest_commit(
+            &Self::get_vcpkg_root_dir(),
+            git::log::GIT_LOG_FORMAT_COMMIT_HASH_DATE,
+        );
     }
 
     fn get_commits(&mut self) -> Vec<GitCommitInfo> {
-        return git::log::get_commits(&Self::get_vcpkg_root_dir(), git::log::GIT_LOG_FORMAT);
+        return git::log::get_commits(
+            &Self::get_vcpkg_root_dir(),
+            git::log::GIT_LOG_FORMAT_COMMIT_HASH_DATE,
+        );
     }
 }

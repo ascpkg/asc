@@ -10,3 +10,5 @@ pub static VERSION_H_IN_HBS: &str = include_str!("version.h.in.hbs");
 pub static WORKSPACE_CMAKE_LISTS_TXT_HBS: &str = include_str!("workspace.cmake.hbs");
 pub static PROJECT_CMAKE_LISTS_TXT_HBS: &str = include_str!("project.cmake.hbs");
 pub static PORT_FILE_CMAKE_HBS: &str = include_str!("portfile.cmake.hbs");
+
+pub static SETUP_ISS_HUBS: &str = include_str!("setup.iss.hbs");

@@ -19,6 +19,9 @@ pub static VCPKG_INSTALLED_DIR_NAME: &str = "vcpkg_installed";
 pub static VCPKG_BIN_DIR_NAME: &str = "bin";
 pub static VCPKG_LIB_DIR_NAME: &str = "lib";
 
+pub static VERSION_TXT_FILE_NAME: &str = "version.txt";
+pub static INNO_SETUP_ISS_FILE_NAME: &str = "setup.iss";
+
 pub fn clean_target_files() -> bool {
     if util::fs::is_dir_exists(ASC_TARGET_DIR_NAME) {
         if !util::fs::remove_dirs(ASC_TARGET_DIR_NAME) {

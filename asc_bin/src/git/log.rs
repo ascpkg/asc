@@ -2,7 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{errors::ErrorTag, util};
 
-pub static GIT_LOG_FORMAT: &str = r#"--pretty=format:{"hash": "%H", "date_time": "%ad"}"#;
+pub static GIT_LOG_FORMAT_COMMIT_HASH_DATE: &str =
+    r#"--pretty=format:{"hash": "%H", "date_time": "%ad"}"#;
+pub static GIT_LOG_FORMAT_ABBR_COMMIT_HASH_DATE: &str =
+    r#"--pretty=format:{"hash": "%h", "date_time": "%ad"}"#;
+pub static GIT_LOG_FORMAT_VERSION_STAT: &str =
+    r#"--pretty=format:commit %H%nDate:   %ad%n%n    %s%n"#;
 
 // from vcpkg (git log)
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -12,6 +17,20 @@ pub struct GitCommitInfo {
 
     pub hash: String,
     pub date_time: String,
+}
+
+pub fn get_latest_commit_stat(repo_root_dir: &str) -> String {
+    let output = util::shell::run(
+        "git",
+        &vec!["log", "-n 1", "--date=iso", "--stat", GIT_LOG_FORMAT_VERSION_STAT],
+        repo_root_dir,
+        true,
+        false,
+        false,
+    )
+    .unwrap();
+
+    return String::from_utf8_lossy(&output.stdout).trim().to_string();
 }
 
 pub fn get_latest_commit(repo_root_dir: &str, pretty_format: &str) -> GitCommitInfo {

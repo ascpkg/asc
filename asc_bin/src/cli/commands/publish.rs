@@ -84,7 +84,8 @@ impl PublishArgs {
                 return false;
             }
             Some(pkg) => {
-                let latest_commit = git::log::get_latest_commit(".", git::log::GIT_LOG_FORMAT);
+                let latest_commit =
+                    git::log::get_latest_commit(".", git::log::GIT_LOG_FORMAT_COMMIT_HASH_DATE);
 
                 let vcpkg_conf = VcpkgArgs::load_or_default();
                 let repo_root_dir = vcpkg_conf.directory.as_ref().unwrap();

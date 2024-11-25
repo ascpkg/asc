@@ -1,5 +1,5 @@
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use hcl;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use config_file_macros::generate_wrapper_methods;
 
