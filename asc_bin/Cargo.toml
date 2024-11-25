@@ -1,10 +1,10 @@
 [package]
 name = "asc_bin"
-version = "2024.11.22"
+version = "2024.11.25"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"
-categories = ["command-line-utilities", "Compilers", "Development tools"]
+categories = ["command-line-utilities", "compilers", "development-tools"]
 keywords = ["clang", "vcpkg", "cmake", "package", "setup"]
 repository = "https://github.com/ascpkg/asc/tree/main/asc_bin"
 
@@ -48,6 +48,7 @@ strum_macros = { version = "0.26.4" }
 time = { version = "0.3.36", features = ["formatting", "macros"] }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "time", "local-time", "json"] }
+uuid = { version = "1.11.0", features = ["v4", "fast-rng"]}
 walkdir = { version = "2.5.0" }
 
 [build-dependencies]

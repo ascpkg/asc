@@ -4,23 +4,24 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{uuid}}
-AppName={{name}}
-AppVersion={{version}}
-DefaultDirName={autopf64}\\{{name}}
+MinVersion=6.1.7600
+AppId=5e9d0764-30b7-4b87-8a53-8fd6e56d2885
+AppName=test_package
+AppVersion=2024.11.25
+DefaultDirName={autopf64}\test_package
 UsePreviousAppDir=no
 DisableDirPage=no
-DefaultGroupName={{name}}
+DefaultGroupName=test_package
 AllowNoIcons=yes
 DisableFinishedPage=yes
 ;PrivilegesRequired=lowest
 PrivilegesRequired=admin
-OutputDir=.\\{{target}}
-OutputBaseFilename={{name}}
+OutputDir=.\target
+OutputBaseFilename=test_package
 ;SetupIconFile=setup.ico
 Uninstallable=yes
 ;UninstallDisplayIcon=setup.ico
-UninstallDisplayName={{name}}
+UninstallDisplayName=test_package
 CreateUninstallRegKey=no
 Compression=lzma/ultra64   
 SolidCompression=yes
@@ -29,11 +30,11 @@ ArchitecturesInstallIn64BitMode=x64os arm64
 WizardStyle=modern
 AlwaysRestart=no
 RestartIfNeededByRun=no
-VersionInfoProductTextVersion="v{{version}}"
-VersionInfoProductVersion="{{version}}.0"
-VersionInfoTextVersion="v{{version}}"
-VersionInfoVersion="{{version}}.0"
-VersionInfoProductName="{{name}} - Package {{version}}"
+VersionInfoProductTextVersion="v2024.11.25"
+VersionInfoProductVersion="2024.11.25.0"
+VersionInfoTextVersion="v2024.11.25"
+VersionInfoVersion="2024.11.25.0"
+VersionInfoProductName="test_package - Package 2024.11.25"
 
 
 [Tasks]
@@ -41,14 +42,14 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 
 [Files]
-Source: "{{target}}\\{{installed}}\\{{triplet}}\\{{bin}}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs;
+Source: "target\installed\x64-windows\bin\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs;
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 
 [Icons]
-Name: "{group}\\{{name}}"; Filename: "{app}\\{{name}}.exe"
-Name: "{group}\{cm:UninstallProgram,{{name}}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\\{{name}}"; Filename: "{app}\\{{name}}.exe"; Tasks: desktopicon
+Name: "{group}\test_package"; Filename: "{app}\test_package.exe"
+Name: "{group}\{cm:UninstallProgram,test_package}"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\test_package"; Filename: "{app}\test_package.exe"; Tasks: desktopicon
 
 
 [InstallDelete]

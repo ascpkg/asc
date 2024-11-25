@@ -14,7 +14,7 @@ pub struct InstallArgs {
     #[clap(long, default_value_t = false)]
     release: bool,
 
-    /// package cli (7z, tar, issc, auto .7z on windows .tar.xz on others)
+    /// package cli (7z, tar, iscc, auto .7z on windows .tar.xz on others)
     #[clap(long, default_value = "")]
     pack_cli: String,
 }

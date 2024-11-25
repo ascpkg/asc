@@ -22,7 +22,13 @@ pub struct GitCommitInfo {
 pub fn get_latest_commit_stat(repo_root_dir: &str) -> String {
     let output = util::shell::run(
         "git",
-        &vec!["log", "-n 1", "--date=iso", "--stat", GIT_LOG_FORMAT_VERSION_STAT],
+        &vec![
+            "log",
+            "-n 1",
+            "--date=iso",
+            "--stat",
+            GIT_LOG_FORMAT_VERSION_STAT,
+        ],
         repo_root_dir,
         true,
         false,

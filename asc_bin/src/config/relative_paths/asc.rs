@@ -7,6 +7,7 @@ pub static ASC_EDITION: &str = "2024";
 pub static ASC_PROJECT_DIR_NAME: &str = ".asc";
 pub static ASC_PROJECT_INSTALLED_FILES_TOML_PATH: &str = ".asc/installed_files.toml";
 pub static ASC_TARGET_DIR_NAME: &str = "target";
+pub static ASC_INSTALLED_DIR_NAME: &str = "installed";
 pub static ASC_TARGET_INSTALLED_DIR: &str = "target/installed";
 
 pub static SRC_DIR_NAME: &str = "src";

@@ -4,7 +4,10 @@ use handlebars::Handlebars;
 
 use serde_json;
 
+use uuid::Uuid;
+
 use super::init;
+use crate::cmake::project::default_vcpkg_triplet;
 use crate::errors::ErrorTag;
 use crate::{config, config::relative_paths, templates, util};
 
@@ -42,9 +45,27 @@ impl NewArgs {
             if self.workspace {
                 return self.new_workspace();
             } else if !self.lib {
-                return self.new_bin(self.name.as_ref().unwrap());
+                let name = self.name.as_ref().unwrap();
+                let result = self.new_bin(name);
+
+                // new setup.iss
+                let cwd = util::fs::get_cwd();
+                util::fs::set_cwd(name);
+                self.new_setup_iss(name);
+                util::fs::set_cwd(&cwd);
+
+                return result;
             } else {
-                return self.new_lib(self.name.as_ref().unwrap());
+                let name = self.name.as_ref().unwrap();
+                let result = self.new_lib(name);
+
+                // new setup.iss
+                let cwd = util::fs::get_cwd();
+                util::fs::set_cwd(name);
+                self.new_setup_iss(name);
+                util::fs::set_cwd(&cwd);
+
+                return result;
             }
         }
         return false;
@@ -294,9 +315,35 @@ impl NewArgs {
             return false;
         }
 
+        // new setup.iss
+        self.new_setup_iss(name);
+
         // write asc.toml
         let result = !has_error && project.validate() && project.write_project_conf();
         util::fs::set_cwd(&cwd);
         return result;
+    }
+
+    fn new_setup_iss(&self, name: &str) {
+        let reg = Handlebars::new();
+        let text = reg
+            .render_template(
+                templates::SETUP_ISS_HUBS,
+                &serde_json::json!({
+                    "name": name,
+                    "uuid": Uuid::new_v4().to_string(),
+                    "version": config::project::ProjectConfig::version_date(),
+                    "target": config::relative_paths::ASC_TARGET_DIR_NAME,
+                    "installed": config::relative_paths::ASC_INSTALLED_DIR_NAME,
+                    "triplet": default_vcpkg_triplet(),
+                    "bin": config::relative_paths::CMAKE_INSTALL_BIN_DIR_NAME,
+                }),
+            )
+            .unwrap();
+        std::fs::write(
+            config::relative_paths::INNO_SETUP_ISS_FILE_NAME,
+            text.as_bytes(),
+        )
+        .unwrap();
     }
 }
