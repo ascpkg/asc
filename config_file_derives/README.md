@@ -1,5 +1,12 @@
 # Wrap struct to file configuration
 
+- hcl
+- json
+- toml
+- xml
+- yml
+
+
 ```rust
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -38,6 +45,15 @@ pub struct MyXmlConfig {
 #[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("yml")]
 pub struct MyYmlConfig {
+    pub dependencies: BTreeMap<String, BTreeSet<String>>,
+
+    #[serde(skip)]
+    pub path: String,
+}
+
+#[derive(Debug, Default, Clone, Ord, PartialOrd, Eq, PartialEq, Deserialize, Serialize, ConfigFile)]
+#[config_file_ext("hcl")]
+pub struct MyHclConfig {
     pub dependencies: BTreeMap<String, BTreeSet<String>>,
 
     #[serde(skip)]
@@ -88,5 +104,16 @@ fn main() {
     my_yml.dump(false, false);
     // load from file or panic
     println!("{:#?}\n\n", MyYmlConfig::load("target/debug/test.yml", false).unwrap());
+
+    // load from file or default
+    let mut my_hcl = MyHclConfig::load("target/debug/test.hcl", true).unwrap();
+    // update
+    my_hcl.dependencies.insert(String::from("a"), BTreeSet::from([String::from("b"), String::from("c")]));
+    // serialize to string (no indent & output error)
+    println!("{}\n", my_hcl.dumps(false, false));
+    // serialize to file (no indent & output error)
+    my_hcl.dump(false, false);
+    // load from file or panic
+    println!("{:#?}\n\n", MyHclConfig::load("target/debug/test.hcl", false).unwrap());
 }
 ```

@@ -32,6 +32,7 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
         .unwrap_or_else(|| "toml".to_string());
 
     let wrapper_type = match config_file_ext.as_str() {
+        "hcl" => quote! { config_file_types::hcl::HclConfigFileWrapper },
         "json" => quote! { config_file_types::json::JsonConfigFileWrapper },
         "toml" => quote! { config_file_types::toml::TomlConfigFileWrapper },
         "xml" => quote! { config_file_types::xml::XmlConfigFileWrapper },
@@ -39,7 +40,7 @@ fn impl_config_file(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream
         _ => {
             return Err(Error::new_spanned(
                 input,
-                "Unsupported format. Use either 'json', 'toml', 'xml', or 'yml'",
+                "Unsupported format. Use either 'hcl', 'json', 'toml', 'xml', or 'yml'",
             ))
         }
     };

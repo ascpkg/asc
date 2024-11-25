@@ -31,9 +31,9 @@ path = "src/main.rs"
 
 [dependencies]
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
-config_file_derives = { version = "2024.11.22", path = "../config_file_derives" }
+config_file_derives = { version = "2024.11.25", path = "../config_file_derives" }
 config_file_macros = { version = "2024.11.22", path = "../config_file_macros" }
-config_file_types = { version = "2024.11.22", path = "../config_file_types" }
+config_file_types = { version = "2024.11.25", path = "../config_file_types" }
 chrono = { version = "0.4.38" }
 # clang-sys = { version = "1.8.1", features = ["clang_10_0"] }
 clap = { version = "4.5.20", features = ["derive", "color"] }
@@ -46,7 +46,6 @@ serde_json = { version = "1.0.129" }
 strum = { version = "0.26.3" }
 strum_macros = { version = "0.26.4" }
 time = { version = "0.3.36", features = ["formatting", "macros"] }
-toml = { version = "0.8.19" }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "time", "local-time", "json"] }
 walkdir = { version = "2.5.0" }

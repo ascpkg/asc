@@ -42,6 +42,9 @@ pub enum ErrorTag {
     // yml
     YmlSerializeError,
     YmlDeserializeError,
+    // hcl
+    HclSerializeError,
+    HclDeserializeError,
     // handlebars
     RenderHandlebarsError,
     // vcpkg
