@@ -66,7 +66,6 @@ check_cxx_source_compiles(
     HAVE_STD_CXX_FS_LIBRARY
 )
 
-
 configure_file(${CMAKE_SOURCE_DIR}/ast/config.h.cm ${CMAKE_BINARY_DIR}/ast/config.h)
 
 # package
@@ -123,7 +122,7 @@ set(LIBCLANG_TAG "libclang-13.0-d7b669b-20210915")
 set(LIBCLANG_NAME "libclang")
 set(LIBCLANG_VERSION "13.0.0")
 set(LIBCLANG_DOWNLOAD_URL_PREFIX "https://github.com/ascpkg/asc/releases/download/${LIBCLANG_TAG}")
-# set url
+# set url and lib path
 if(WIN32)
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
         set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-arm64.dll.zip")
@@ -131,6 +130,7 @@ if(WIN32)
         set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-amd64.dll.zip")
     endif()
     set(LIBCLANG_URL "${LIBCLANG_DOWNLOAD_URL_PREFIX}/${LIBCLANG_ZIP_NAME}")
+    set(LIBCLANG_PATH "${CMAKE_BINARY_DIR}/libclang.dll")
 elseif(APPLE)
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
         set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-arm64.dylib.zip")
@@ -138,6 +138,7 @@ elseif(APPLE)
         set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-amd64.dylib.zip")
     endif()
     set(LIBCLANG_URL "${LIBCLANG_DOWNLOAD_URL_PREFIX}/${LIBCLANG_ZIP_NAME}")
+    set(LIBCLANG_PATH "${CMAKE_BINARY_DIR}/libclang.dylib")
 elseif(UNIX)
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
         set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-arm64.so.zip")
@@ -145,11 +146,22 @@ elseif(UNIX)
         set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-amd64.so.zip")
     endif()
     set(LIBCLANG_URL "${LIBCLANG_DOWNLOAD_URL_PREFIX}/${LIBCLANG_ZIP_NAME}")
+    set(LIBCLANG_PATH "${CMAKE_BINARY_DIR}/libclang.so")
 endif()
-# download
+
 set(LIBCLANG_ZIP_PATH "${CMAKE_BINARY_DIR}/${LIBCLANG_ZIP_NAME}")
-message("download ${LIBCLANG_URL} to ${LIBCLANG_ZIP_PATH}")
-file(DOWNLOAD ${LIBCLANG_URL} ${LIBCLANG_ZIP_PATH} TIMEOUT 60)
+if(NOT EXISTS "${LIBCLANG_ZIP_PATH}")
+    # download
+    message("download ${LIBCLANG_URL} to ${LIBCLANG_ZIP_PATH}")
+    file(DOWNLOAD ${LIBCLANG_URL} ${LIBCLANG_ZIP_PATH} TIMEOUT 60)
+endif()
+# extract
+file(ARCHIVE_EXTRACT INPUT ${LIBCLANG_ZIP_PATH} DESTINATION ${CMAKE_BINARY_DIR})
+if(NOT EXISTS ${LIBCLANG_PATH})
+    # download
+    message("download ${LIBCLANG_URL} to ${LIBCLANG_ZIP_PATH}")
+    file(DOWNLOAD ${LIBCLANG_URL} ${LIBCLANG_ZIP_PATH} TIMEOUT 60)
+endif()
 # extract
 file(ARCHIVE_EXTRACT INPUT ${LIBCLANG_ZIP_PATH} DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -173,14 +185,14 @@ set(LINK_LIBS "")
 list(APPEND LINK_LIBS fmt)
 list(APPEND LINK_LIBS libclang)
 if(HAVE_CXX_LIBRARY)
-list(APPEND LINK_LIBS c++)
+    list(APPEND LINK_LIBS c++)
 else()
-if(HAVE_STD_CXX_LIBRARY)
-list(APPEND LINK_LIBS stdc++)
-endif()
+    if(HAVE_STD_CXX_LIBRARY)
+        list(APPEND LINK_LIBS stdc++)
+    endif()
 endif()
 if(NOT HAVE_STD_CXX_FS_LIBRARY)
-list(APPEND LINK_LIBS stdc++fs)
+    list(APPEND LINK_LIBS stdc++fs)
 endif()
 target_link_libraries(
     ${PROJECT_NAME}
