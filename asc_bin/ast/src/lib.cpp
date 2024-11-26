@@ -1,5 +1,6 @@
 // c
 #include <stdlib.h>
+#include <string.h>
 
 // c++
 #include "config.h"
@@ -25,9 +26,6 @@ namespace std_fs = std::experimental::filesystem;
 
 // clang
 #include <clang-c/Index.h>
-
-// fmt
-#include <fmt/format.h>
 
 // lib
 #include "lib.h"
@@ -178,7 +176,7 @@ public:
 
 		for (const auto &[header, sources] : m_result.header_include_by_sources) {
 			for (const auto &source : sources) {
-				text << fmt::format("{}\t\t{}\n", header, source);
+				text << header << "\n\n" << source << "\n";
 			}
 		}
 
@@ -188,7 +186,7 @@ public:
 
 		for (const auto &[source, symbols] : m_result.source_symbols) {
 			for (const auto &symbol : symbols) {
-				text << fmt::format("{}\t\t{}\n", source, symbol);
+				text << source << "\n\n" << symbol << "\n";
 			}
 		}
 
@@ -220,7 +218,7 @@ public:
 		);
 		if (translation_unit == nullptr) {
 			clang_disposeIndex(index);
-			std::cerr << fmt::format("clang_parseTranslationUnit error, source_path: {}\n", source_path);
+			std::cerr << "clang_parseTranslationUnit error, source_path: " << source_path << "\n";
 			return result;
 		}
 
@@ -287,14 +285,15 @@ public:
 			}
 
 			std::string func_name = cx_string_to_string(clang_getCursorSpelling(cursor));
-			symbol_signature += fmt::format(
-				"{} {}{}{}{}{}(",
-				func_type,
-				namespace_,
-				namespace_.empty() ? "" : ":",
-				class_name,
-				class_name.empty() ? "" : ":",
-				func_name
+			symbol_signature += (
+				func_type
+				+ std::string(" ")
+				+ namespace_
+				+ (namespace_.empty() ? std::string("") : std::string("::"))
+				+ class_name
+				+ (class_name.empty() ? std::string("") : std::string("::"))
+				+ func_name
+				+ "("
 			);
 
 			int num_args = clang_Cursor_getNumArguments(cursor);
@@ -315,43 +314,43 @@ public:
 
 			CXType return_type = clang_getResultType(clang_getCursorType(cursor));
 			CXString return_type_name = clang_getTypeSpelling(return_type);
-			symbol_signature += fmt::format(") -> {}", cx_string_to_string(return_type_name));
+			symbol_signature += ") -> " + cx_string_to_string(return_type_name);
 			break;
 		}
 
 		case CXCursor_ClassDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = fmt::format("class {}", cx_string_to_string(name));
+			symbol_signature = "class " + cx_string_to_string(name);
 			break;
 		}
 
 		case CXCursor_StructDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = fmt::format("struct {}", cx_string_to_string(name));
+			symbol_signature = "struct {}" + cx_string_to_string(name);
 			break;
 		}
 
 		case CXCursor_EnumDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = fmt::format("enum {}", cx_string_to_string(name));
+			symbol_signature = "enum {}" + cx_string_to_string(name);
 			break;
 		}
 
 		case CXCursor_UnionDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = fmt::format("union {}", cx_string_to_string(name));
+			symbol_signature = "union {}" + cx_string_to_string(name);
 			break;
 		}
 
 		case CXCursor_VarDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = fmt::format("var {}", cx_string_to_string(name));
+			symbol_signature = "var {}", cx_string_to_string(name);
 			break;
 		}
 
 		case CXCursor_TypedefDecl: {
 			CXString name = clang_getCursorSpelling(cursor);
-			symbol_signature = fmt::format("typedef {}", cx_string_to_string(name));
+			symbol_signature = "typedef {}" + cx_string_to_string(name);
 			break;
 		}
 
@@ -497,6 +496,6 @@ int scan_necessary_sources(const char *entry_point_file, const char *source_dir,
 		return 0;
 	}
 
-	std::memcpy(result_buf, result.c_str(), result.size());
+	memcpy(result_buf, result.c_str(), result.size());
 	return static_cast<int>(result.size());
 }

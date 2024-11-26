@@ -118,9 +118,40 @@ if(DEFINED VCPKG_TARGET_TRIPLET)
     endif()
 endif()
 
-# find package
-find_package(fmt CONFIG REQUIRED)
-find_package(Clang CONFIG REQUIRED)
+# download libclang
+set(LIBCLANG_TAG "libclang-13.0-d7b669b-20210915")
+set(LIBCLANG_NAME "libclang")
+set(LIBCLANG_VERSION "13.0.0")
+set(LIBCLANG_DOWNLOAD_URL_PREFIX "https://github.com/ascpkg/asc/releases/download/${LIBCLANG_TAG}")
+# set url
+if(WIN32)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
+        set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-arm64.dll.zip")
+    else()
+        set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-amd64.dll.zip")
+    endif()
+    set(LIBCLANG_URL "${LIBCLANG_DOWNLOAD_URL_PREFIX}/${LIBCLANG_ZIP_NAME}")
+elseif(APPLE)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+        set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-arm64.dylib.zip")
+    else()
+        set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-amd64.dylib.zip")
+    endif()
+    set(LIBCLANG_URL "${LIBCLANG_DOWNLOAD_URL_PREFIX}/${LIBCLANG_ZIP_NAME}")
+elseif(UNIX)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+        set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-arm64.so.zip")
+    else()
+        set(LIBCLANG_ZIP_NAME "${LIBCLANG_NAME}-${LIBCLANG_VERSION}-amd64.so.zip")
+    endif()
+    set(LIBCLANG_URL "${LIBCLANG_DOWNLOAD_URL_PREFIX}/${LIBCLANG_ZIP_NAME}")
+endif()
+# download
+set(LIBCLANG_ZIP_PATH "${CMAKE_BINARY_DIR}/${LIBCLANG_ZIP_NAME}")
+message("download ${LIBCLANG_URL} to ${LIBCLANG_ZIP_PATH}")
+file(DOWNLOAD ${LIBCLANG_URL} ${LIBCLANG_ZIP_PATH} TIMEOUT 60)
+# extract
+file(ARCHIVE_EXTRACT INPUT ${LIBCLANG_ZIP_PATH} DESTINATION ${CMAKE_BINARY_DIR})
 
 # set include dirs
 target_include_directories(
@@ -128,18 +159,25 @@ target_include_directories(
     PRIVATE
     ${CMAKE_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${CLANG_INCLUDE_DIRS}
+)
+
+# set link dirs
+target_link_directories(
+    ${PROJECT_NAME}
+    PRIVATE
+    ${CMAKE_BINARY_DIR}
 )
 
 # link libraries
 set(LINK_LIBS "")
-list(APPEND LINK_LIBS fmt::fmt)
+list(APPEND LINK_LIBS fmt)
 list(APPEND LINK_LIBS libclang)
 if(HAVE_CXX_LIBRARY)
 list(APPEND LINK_LIBS c++)
-endif()
+else()
 if(HAVE_STD_CXX_LIBRARY)
 list(APPEND LINK_LIBS stdc++)
+endif()
 endif()
 if(NOT HAVE_STD_CXX_FS_LIBRARY)
 list(APPEND LINK_LIBS stdc++fs)
@@ -148,52 +186,4 @@ target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE
     ${LINK_LIBS}
-)
-
-# export dynamic library symbols
-if(BUILD_SHARED_LIBS)
-    add_definitions(-DBUILD_SHARED_LIBS)
-    add_definitions(-DAST_EXPORTS)
-endif()
-
-# export library
-add_library(
-    ${PROJECT_NAME}::${PROJECT_NAME}
-    ALIAS
-    ${PROJECT_NAME}
-)
-
-# export include path
-target_include_directories(
-    ${PROJECT_NAME}
-    INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
-
-# install archive, library, bin
-install(
-    TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-)
-
-# install headers
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/config.h" DESTINATION include/${PROJECT_NAME}/)
-install(FILES "../../src/lib.h" DESTINATION include/${PROJECT_NAME}/)
-
-# install package config
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-    INSTALL_DESTINATION "share/${PROJECT_NAME}"
-)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" DESTINATION "share/${PROJECT_NAME}")
-
-# install cmake targets
-install(
-    EXPORT ${PROJECT_NAME}-targets
-    DESTINATION share/${PROJECT_NAME}
-    NAMESPACE ${PROJECT_NAME}::
 )

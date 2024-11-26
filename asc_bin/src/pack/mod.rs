@@ -66,7 +66,10 @@ pub fn make_package(name: &str, dir: String, pack_cli: &str) {
         pack(&dir, &new_dir, command, args);
         std::fs::rename(
             format!("{}/{name}.exe", config::relative_paths::ASC_TARGET_DIR_NAME),
-            format!("{}/{new_name}.exe", config::relative_paths::ASC_TARGET_DIR_NAME),
+            format!(
+                "{}/{new_name}.exe",
+                config::relative_paths::ASC_TARGET_DIR_NAME
+            ),
         )
         .unwrap();
     }

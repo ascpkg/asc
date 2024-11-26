@@ -16,8 +16,8 @@ std_c = "11"
 std_cxx = "17"
 
 [dependencies]
-fmt = { version = "10.2.1#2", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
-llvm = { version = "11.1.0", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
+fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
+llvm = { version = "13.0.0", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
 
 [std_dependencies]
 cxx = { name = "c++", check = "HAVE_CXX_LIBRARY" }

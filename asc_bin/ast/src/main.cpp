@@ -1,6 +1,5 @@
 // c++
 #include <filesystem>
-#include <format>
 #include <iostream>
 #include <string>
 
@@ -19,9 +18,9 @@ int main(int argc, char **argv) {
 	std::string cwd = std::filesystem::current_path().string();
 	std::replace(cwd.begin(), cwd.end(), '\\', '/');
 
-	std::string source_dir = std::format("{}/src", cwd);
-	std::string target_dir = std::format("{}/target/test_package_bin", cwd);
-	std::string entry_point_file = std::format("{}/main.cpp", source_dir);
+	std::string source_dir = cwd + "/src";
+	std::string target_dir = cwd + "/target/test_package_bin";
+	std::string entry_point_file = source_dir + "/main.cpp";
 
 	std::vector<char> buf(64 * 1024, 0);
 	uint64_t len = scan_necessary_sources(entry_point_file.c_str(), source_dir.c_str(), target_dir.c_str(), buf.data(), static_cast<int>(buf.size()));
