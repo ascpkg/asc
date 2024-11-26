@@ -164,6 +164,9 @@ if(NOT EXISTS ${LIBCLANG_PATH})
 endif()
 # extract
 file(ARCHIVE_EXTRACT INPUT ${LIBCLANG_ZIP_PATH} DESTINATION ${CMAKE_BINARY_DIR})
+# copy to rust target dir
+file(COPY ${LIBCLANG_PATH} DESTINATION ../../../../target/debug/)
+file(COPY ${LIBCLANG_PATH} DESTINATION ../../../../target/release/)
 
 # set include dirs
 target_include_directories(
