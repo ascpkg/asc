@@ -1,7 +1,8 @@
 fn main() {
     // build ast lib
-    let library_name = "ast";
-    let paths = PathBuilder::new(library_name);
+    let paths = PathBuilder::new("ast");
+    println!("cargo:rerun-if-changed={}", paths.lib_ast_header_path());
+    println!("cargo:rerun-if-changed={}", paths.lib_ast_source_path());
     let library_path = paths.library_path();
     if std::fs::metadata(&library_path).is_err() {
         let ast_dir = paths.ast_dir_path();
@@ -69,7 +70,7 @@ fn main() {
     println!("cargo:rustc-link-search={}", paths.target_dir_path());
 
     // link ast
-    println!("cargo:rustc-link-lib={}", library_name);
+    println!("cargo:rustc-link-lib={}", paths.library_name);
     // link libclang
     if cfg!(target_os = "windows") {
         println!("cargo:rustc-link-lib=libclang");
@@ -114,10 +115,9 @@ fn main() {
     }
 
     // generate bindings
-    println!("cargo:rerun-if-changed={}", paths.header_path());
-    if std::fs::metadata(paths.header_path()).is_err() {
+    if std::fs::metadata(paths.lib_ast_header_path()).is_err() {
         bindgen::Builder::default()
-            .header(paths.header_path())
+            .header(paths.lib_ast_header_path())
             .generate()
             .unwrap()
             .write_to_file(paths.bindings_path())
@@ -188,9 +188,16 @@ impl PathBuilder {
         )
     }
 
-    fn header_path(&self) -> String {
+    fn lib_ast_header_path(&self) -> String {
         format!(
             "{}/{}/src/lib.h",
+            self.cargo_manifest_dir, self.library_name
+        )
+    }
+
+    fn lib_ast_source_path(&self) -> String {
+        format!(
+            "{}/{}/src/lib.cpp",
             self.cargo_manifest_dir, self.library_name
         )
     }
