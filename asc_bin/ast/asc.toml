@@ -1,6 +1,6 @@
 [package]
 name = "ast"
-version = "2024.11.20"
+version = "2024.11.26"
 edition = "2024"
 description = "scan necessary source files"
 license = "LGPL-3.0+"
@@ -16,9 +16,10 @@ std_c = "11"
 std_cxx = "17"
 
 [dependencies]
-fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
-llvm = { version = "18.1.6#1", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
+fmt = { version = "10.2.1#2", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
+llvm = { version = "11.1.0", find_packages = ["Clang"], include_directories = ["${CLANG_INCLUDE_DIRS}"], link_libraries = ["libclang"], features = ["clang"] }
 
 [std_dependencies]
-std_cxx = { name = "stdc++", check = "HAVE_CXX_LIBRARY OR HAVE_STD_CXX_LIBRARY"}
-std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
+cxx = { name = "c++", check = "HAVE_CXX_LIBRARY" }
+std_cxx = { name = "stdc++", check = "HAVE_STD_CXX_LIBRARY" }
+std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY" }

@@ -3,14 +3,17 @@
 
 // c++
 #include "config.h"
+
 #if defined(HAVE_STD_CXX_FILESYSTEM)
 #include <filesystem>
 namespace std_fs = std::filesystem;
-#endif
+#else
 #if defined(HAVE_STD_CXX_EXPERIMENTAL_FILESYSTEM)
 #include <experimental/filesystem>
 namespace std_fs = std::experimental::filesystem;
 #endif
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <map>

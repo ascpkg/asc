@@ -52,9 +52,11 @@ fn main() {
     } else {
         if let Ok(text) = std::fs::read_to_string(paths.config_h_path()) {
             for line in text.split("\n") {
-                if line.contains("#define HAVE_CXX_LIBRARY 1")
-                    || line.contains("#define HAVE_STD_CXX_LIBRARY 1")
-                {
+                if line.contains("#define HAVE_CXX_LIBRARY 1") {
+                    // link c++
+                    println!("cargo:rustc-link-lib=c++");
+                }
+                if line.contains("#define HAVE_STD_CXX_LIBRARY 1") {
                     // link stdc++
                     println!("cargo:rustc-link-lib=stdc++");
                 }
@@ -68,7 +70,11 @@ fn main() {
 
     if !cfg!(target_os = "windows") {
         // add executable directory to deps search paths
-        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN");
+        if cfg!(target_os = "macos") {
+            println!("cargo:rustc-link-arg=-Wl,-rpath,@executable_path");
+        } else {
+            println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN");
+        }
     }
 
     // generate bindings

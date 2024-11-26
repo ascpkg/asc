@@ -36,8 +36,8 @@ endif(MSVC)
 # version
 set(AST_VERSION_MAJOR 2024)
 set(AST_VERSION_MINOR 11)
-set(AST_VERSION_MICRO 20)
-set(VERSION_STRING "2024.11.20")
+set(AST_VERSION_MICRO 26)
+set(VERSION_STRING "2024.11.26")
 configure_file(${CMAKE_SOURCE_DIR}/ast/version.h.in ${CMAKE_BINARY_DIR}/ast/version.h @ONLY)
 
 # check compiler, os, header, library, symbol
@@ -135,7 +135,10 @@ target_include_directories(
 set(LINK_LIBS "")
 list(APPEND LINK_LIBS fmt::fmt)
 list(APPEND LINK_LIBS libclang)
-if(HAVE_CXX_LIBRARY OR HAVE_STD_CXX_LIBRARY)
+if(HAVE_CXX_LIBRARY)
+list(APPEND LINK_LIBS c++)
+endif()
+if(HAVE_STD_CXX_LIBRARY)
 list(APPEND LINK_LIBS stdc++)
 endif()
 if(NOT HAVE_STD_CXX_FS_LIBRARY)

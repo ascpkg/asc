@@ -1,5 +1,5 @@
 #ifndef AST_LIB
-#define ABT_LIB
+#define AST_LIB
 
 #ifdef __cplusplus
 extern "C" {
