@@ -176,7 +176,7 @@ public:
 
 		for (const auto &[header, sources] : m_result.header_include_by_sources) {
 			for (const auto &source : sources) {
-				text << header << "\n\n" << source << "\n";
+				text << header << "\t\t" << source << "\n";
 			}
 		}
 
@@ -186,7 +186,7 @@ public:
 
 		for (const auto &[source, symbols] : m_result.source_symbols) {
 			for (const auto &symbol : symbols) {
-				text << source << "\n\n" << symbol << "\n";
+				text << source << "\t\t" << symbol << "\n";
 			}
 		}
 
@@ -487,10 +487,10 @@ private:
 };
 
 
-int scan_necessary_sources(const char *entry_point_file, const char *source_dir, const char *target_dir, char *result_buf, int result_len) {
+int scan_necessary_sources(const char *entry_point_file, const char *source_dir, const char *target_dir, char *result_buf, int result_len, int include_symbols) {
 	SourceMappings mappings(source_dir, target_dir);
 	mappings.scan_necessary_sources(entry_point_file);
-	std::string result = mappings.get_result_text(false);
+	std::string result = mappings.get_result_text(1 == include_symbols);
 
 	if (result_len < result.size()) {
 		return 0;

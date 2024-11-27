@@ -7,5 +7,6 @@ extern "C" {
         target_dir: *const ::std::os::raw::c_char,
         result_buf: *mut ::std::os::raw::c_char,
         result_len: ::std::os::raw::c_int,
+        result_len: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }

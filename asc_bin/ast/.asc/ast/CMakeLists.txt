@@ -185,7 +185,6 @@ target_link_directories(
 
 # link libraries
 set(LINK_LIBS "")
-list(APPEND LINK_LIBS fmt)
 list(APPEND LINK_LIBS libclang)
 if(HAVE_CXX_LIBRARY)
     list(APPEND LINK_LIBS c++)

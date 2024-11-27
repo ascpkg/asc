@@ -39,6 +39,7 @@ pub mod parser {
                         .into_raw(),
                     result_buf.as_mut_ptr(),
                     result_buf.len() as c_int,
+                    0,
                 );
                 if result_len <= 0 {
                     tracing::error!("ast::scan_necessary_sources error");

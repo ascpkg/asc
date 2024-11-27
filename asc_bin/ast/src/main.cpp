@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	std::string entry_point_file = source_dir + "/main.cpp";
 
 	std::vector<char> buf(64 * 1024, 0);
-	uint64_t len = scan_necessary_sources(entry_point_file.c_str(), source_dir.c_str(), target_dir.c_str(), buf.data(), static_cast<int>(buf.size()));
+	uint64_t len = scan_necessary_sources(entry_point_file.c_str(), source_dir.c_str(), target_dir.c_str(), buf.data(), static_cast<int>(buf.size()), 1);
 	std::cout << buf.data();
 
 	return 0;
