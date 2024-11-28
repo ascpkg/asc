@@ -24,6 +24,7 @@ pub type RustBtreeSetOfStr = *mut std::ffi::c_void;
 pub type RustVecOfStr = *mut std::ffi::c_void;
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct ClangParsedResult {
     pub source_path: *const i8,
     pub source_dir: *const i8,

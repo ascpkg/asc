@@ -33,8 +33,33 @@ extern char *rust_vec_of_str_join(RustVecOfStr vec, const char *sep);
 extern void rust_c_str_drop(char *s);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static void replace_chars(char *str, char old_char, char new_char) {
-    if (0 == str) {
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+
+#ifndef IN
+#define IN
+#endif
+
+#ifndef OUT
+#define OUT
+#endif
+
+#ifndef IN_OUT
+#define IN_OUT
+#endif
+
+
+static void replace_chars(IN_OUT char *str, IN const char old_char, IN const char new_char) {
+    if (NULL == str) {
         return;
     }
 
@@ -46,21 +71,22 @@ static void replace_chars(char *str, char old_char, char new_char) {
     }
 }
 
-static int starts_with(const char *str, const char *sub) {
-    if (0 == str || 0 == sub) {
-        return 0;
+
+static int starts_with(IN const char *str, IN const char *sub) {
+    if (NULL == str || NULL == sub) {
+        return FALSE;
     }
 
     size_t str_len = strlen(str);
     size_t sub_len = strlen(sub);
     if (sub_len > str_len) {
-        return 0;
+        return FALSE;
     }
 
-    return 0 == strncmp(str, sub, sub_len);
+    return 0 == strncmp(str, sub, sub_len) ? TRUE : FALSE;
 }
 
-static char *get_namespaces(CXCursor cursor) {
+static char *get_namespaces(IN CXCursor cursor) {
     RustVecOfStr vec = rust_vec_of_str_new();
 
     CXCursor parent_cursor = clang_getCursorSemanticParent(cursor);
@@ -84,7 +110,7 @@ static char *get_namespaces(CXCursor cursor) {
     return text;
 }
 
-static char *get_classes(CXCursor cursor) {
+static char *get_classes(IN CXCursor cursor) {
     RustVecOfStr vec = rust_vec_of_str_new();
 
     CXCursor parent_cursor = clang_getCursorSemanticParent(cursor);
@@ -108,7 +134,7 @@ static char *get_classes(CXCursor cursor) {
     return text;
 }
 
-void store_symbol(RustBtreeMapOfStrSet map, const char *source_path, char *type_name, CXCursor cursor) {
+void store_symbol(IN_OUT RustBtreeMapOfStrSet map, IN const char *source_path, IN const char *type_name, IN CXCursor cursor) {
     CXString spell = clang_getCursorSpelling(cursor);
 
     RustVecOfStr vec = rust_vec_of_str_new();
@@ -120,42 +146,37 @@ void store_symbol(RustBtreeMapOfStrSet map, const char *source_path, char *type_
 
     // free clang resources
     clang_disposeString(spell);
-    // free resut resources
+    // free rust resources
     rust_vec_of_str_drop(vec);
     rust_c_str_drop(text);
 }
 
-static enum CXChildVisitResult visit_symbols_and_inclusions(CXCursor cursor, CXCursor parent, CXClientData client_data) {
-    ClangParsedResult *result = (ClangParsedResult *)(client_data);
+static enum CXChildVisitResult visit_symbols_and_inclusions(IN CXCursor cursor, IN CXCursor parent, IN_OUT CXClientData client_data) {
+    ClangParsedResult *result = (ClangParsedResult *)client_data;
 
     // get location
     CXSourceLocation location = clang_getCursorLocation(cursor);
-    CXFile cx_file = 0;
+    CXFile cx_file = NULL;
     unsigned int line = 0;
     unsigned int column = 0;
-    clang_getFileLocation(location, &cx_file, &line, &column, 0);
+    clang_getFileLocation(location, &cx_file, &line, &column, NULL);
     CXString cx_str_source_path = clang_getFileName(cx_file);
-    if(0 == cx_str_source_path.data) {
+
+    // skip null
+    if(NULL == cx_str_source_path.data) {
         return CXChildVisit_Continue;
     }
     char *source_path = (char *)cx_str_source_path.data;
     replace_chars(source_path, '\\', '/');
-
     // skip parsed
-    if (1 == rust_btree_set_of_str_contains(result->last_parsed_files, source_path)) {
+    if (TRUE == rust_btree_set_of_str_contains(result->last_parsed_files, source_path)) {
         return CXChildVisit_Continue;
     }
     // skip third party files
-    if (0 == starts_with(source_path, result->source_dir) && 0 == starts_with(source_path, result->target_dir)) {
+    if (FALSE == starts_with(source_path, result->source_dir) && FALSE == starts_with(source_path, result->target_dir)) {
         return CXChildVisit_Continue;
     }
     rust_btree_set_of_str_insert(result->current_parsed_files, source_path);
-
-    
-
-    printf("-------------- %s\n", result->source_dir);
-    printf("-------------- %s\n", result->target_dir);
-    printf("-------------- %s\n", result->source_path);
 
     // format symbol signature
     enum CXCursorKind cursor_type = clang_getCursorKind(cursor);
@@ -163,13 +184,13 @@ static enum CXChildVisitResult visit_symbols_and_inclusions(CXCursor cursor, CXC
     case CXCursor_InclusionDirective:
     {
         CXFile include_file = clang_getIncludedFile(cursor);
-        if (include_file != 0) {
+        if (include_file != NULL) {
             CXString cx_str_include_path = clang_getFileName(include_file);
             char *include_path = (char *)clang_getCString(cx_str_include_path);
             replace_chars(include_path, '\\', '/');
 
             // skip third-party
-            if (0 == starts_with(include_path, result->source_dir) || 0 == starts_with(include_path, result->target_dir)) {
+            if (TRUE == starts_with(include_path, result->source_dir) || TRUE == starts_with(include_path, result->target_dir)) {
                 // collect inclusions
                 rust_btree_map_of_str_set_insert(result->header_include_by_sources, include_path, source_path);
                 rust_btree_map_of_str_set_insert(result->source_include_headers, source_path, include_path);
@@ -192,16 +213,17 @@ static enum CXChildVisitResult visit_symbols_and_inclusions(CXCursor cursor, CXC
         rust_vec_of_str_push(vec, func_type);
 
         char *namespace_names = get_namespaces(cursor);
-        if (namespace_names != 0) {
+        if (strlen(namespace_names) != 0) {
             rust_vec_of_str_push(vec, namespace_names);
         }
 
         char *class_names = get_classes(cursor);
-        if (class_names != 0) {
-            if (namespace_names != 0) {
+        if (strlen(class_names) != 0) {
+            if (strlen(namespace_names) != 0) {
                 rust_vec_of_str_push(vec, "::");
             }
             rust_vec_of_str_push(vec, class_names);
+            rust_vec_of_str_push(vec, "::");
         }
 
         CXString cx_str_func_name = clang_getCursorSpelling(cursor);
@@ -294,7 +316,7 @@ static enum CXChildVisitResult visit_symbols_and_inclusions(CXCursor cursor, CXC
     return CXChildVisit_Recurse;
 }
 
-int scan_symbols_and_inclusions(ClangParsedResult *result) {
+int scan_symbols_and_inclusions(IN_OUT ClangParsedResult *result) {
     const char *args[4] = {
         "-I",
         result->source_dir,
@@ -302,21 +324,17 @@ int scan_symbols_and_inclusions(ClangParsedResult *result) {
         result->target_dir,
     };
 
-    printf("-------------- %s\n", result->source_dir);
-    printf("-------------- %s\n", result->target_dir);
-    printf("-------------- %s\n", result->source_path);
-
     CXIndex index = clang_createIndex(0, 0);
     CXTranslationUnit translation_unit = clang_parseTranslationUnit(
         index,
         result->source_path,
         args,
         4,
-        0,
+        NULL,
         0,
         CXTranslationUnit_DetailedPreprocessingRecord | CXTranslationUnit_SkipFunctionBodies | CXTranslationUnit_KeepGoing
     );
-    if (0 == translation_unit) {
+    if (NULL == translation_unit) {
         clang_disposeIndex(index);
         return AstCErrorClangParseTranslationUnit;
     }
@@ -324,12 +342,8 @@ int scan_symbols_and_inclusions(ClangParsedResult *result) {
     clang_visitChildren(
         clang_getTranslationUnitCursor(translation_unit),
         visit_symbols_and_inclusions,
-        (CXClientData)&result
+        (CXClientData)result
     );
-
-    printf("-------------- %s\n", result->source_dir);
-    printf("-------------- %s\n", result->target_dir);
-    printf("-------------- %s\n", result->source_path);
 
     clang_disposeTranslationUnit(translation_unit);
     clang_disposeIndex(index);
