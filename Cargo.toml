@@ -2,7 +2,10 @@
 resolver = "2"
 members = [
     "asc_bin",
+    "ast_c",
+    "ast_r",
     "config_file_derives",
     "config_file_macros",
     "config_file_types",
+    "test_ast",
 ]

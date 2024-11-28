@@ -293,5 +293,25 @@
             ],
             "cwd": "${workspaceFolder}/test_sources/test_package"
         },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo run test_ast",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=test_ast",
+                    "--package=test_ast"
+                ],
+                "filter": {
+                    "name": "test_ast",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+            ],
+            "cwd": "${workspaceFolder}"
+        },
     ]
 }

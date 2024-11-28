@@ -1,0 +1,12 @@
+[package]
+name = "ast_c"
+version = "2024.11.28"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+
+[build-dependencies]
+cc = { version = "1.2.1" }
