@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use directories;
 use reqwest;
 use zip;
 

@@ -9,6 +9,7 @@
 enum AstCErrorCode {
     AstCErrorNone,
     AstCErrorUnknown,
+    AstCErrorLibraryClangNotFound,
     AstCErrorClangParseTranslationUnit,
 };
 
@@ -28,7 +29,13 @@ typedef struct {
 extern "C" {
 #endif
 
-    ClangParsedResult scan_source_and_symbols(const char *source_path, const char *source_dir, const char *target_dir, const RustBtreeSetOfStr last_parsed_files);
+    ClangParsedResult scan_source_and_symbols(
+        const char *library_clang_path,
+        const char *source_path,
+        const char *source_dir,
+        const char *target_dir,
+        const RustBtreeSetOfStr last_parsed_files
+    );
 
 #ifdef __cplusplus
 }

@@ -3,6 +3,7 @@
         "vcpkg"
     ],
     "files.associations": {
-        "format": "cpp"
+        "format": "cpp",
+        "filesystem": "c"
     }
 }

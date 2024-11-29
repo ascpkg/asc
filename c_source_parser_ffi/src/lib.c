@@ -5,6 +5,9 @@
 // clang
 #include <clang-c/Index.h>
 
+// dylib
+#include "dylib.h"
+
 // self
 #include "lib.h"
 
@@ -306,15 +309,22 @@ static enum CXChildVisitResult visit_symbols_and_inclusions(IN CXCursor cursor, 
 }
 
 
-ClangParsedResult scan_source_and_symbols(IN const char *source_path, IN const char *source_dir, IN const char *target_dir, IN const RustBtreeSetOfStr last_parsed_files) {
-    const char *args[4] = {
-        "-I",
-        source_dir,
-        "-I",
-        target_dir,
-    };
-
+ClangParsedResult scan_source_and_symbols(
+    IN const char *library_clang_path,
+    IN const char *source_path,
+    IN const char *source_dir,
+    IN const char *target_dir,
+    IN const RustBtreeSetOfStr last_parsed_files
+) {
     ClangParsedResult result;
+
+    dylib_handle clang_lib = dylib_open(library_clang_path);
+    if(INVALID_DYLIB_HANDLE == clang_lib) {
+        printf(stderr, "@%s#%d dylib_open(%s) -> %s\n", __FUNCTION__, __LINE__ - 2, library_clang_path, dylib_error());
+        result.error_code = AstCErrorLibraryClangNotFound;
+        return result;
+    }
+
     result.error_code = AstCErrorNone;
     result.source_path = source_path;
     result.source_dir = source_dir;
@@ -324,6 +334,13 @@ ClangParsedResult scan_source_and_symbols(IN const char *source_path, IN const c
     result.source_symbols = rust_btree_map_of_str_set_new();
     result.source_include_headers = rust_btree_map_of_str_set_new();
     result.header_include_by_sources = rust_btree_map_of_str_set_new();
+
+    const char *args[4] = {
+        "-I",
+        source_dir,
+        "-I",
+        target_dir,
+    };
 
     CXIndex index = clang_createIndex(0, 0);
     CXTranslationUnit translation_unit = clang_parseTranslationUnit(

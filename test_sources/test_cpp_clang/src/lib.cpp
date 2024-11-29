@@ -55,7 +55,7 @@ public:
 		ParsedResult result = scan_symbols_and_inclusions(entry_point_file, m_result.source_dir, m_result.target_dir, m_result.current_parsed_files);
 		this->collect_symbols_and_inclusions(result);
 
-        // snapshot header include by sources colleced from entry point file
+        // snapshot header include by sources collected from entry point file
 		auto necessaries = result.header_include_by_sources;
 
 		// collect from other sources

@@ -59,7 +59,7 @@ impl SourceMappings {
             return;
         }
 
-        // snapshot header include by sources colleced from entry point file
+        // snapshot header include by sources collected from entry point file
         let necessaries = self.collect_symbols_and_sources(result);
 
         // collect from other sources
