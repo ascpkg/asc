@@ -211,7 +211,12 @@ impl ScanArgs {
         .unwrap_or(());
 
         tracing::warn!("scan source dependencies with clang ir");
-        let source_mappings = clang::parser::SourceMappings::scan(&options);
+        let mut source_mappings = clang::parser::SourceMappings::default();
+        source_mappings.scan_necessary_sources(
+            &options.entry_point_source,
+            &options.source_dir,
+            &options.target_dir,
+        );
 
         tracing::warn!(
             "output flow chart {}",

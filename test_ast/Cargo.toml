@@ -1,9 +1,0 @@
-[package]
-name = "test_ast"
-version = "2024.11.28"
-edition = "2021"
-
-[dependencies]
-ast_c = { version = "2024.11.28", path = "../ast_c" }
-ast_r = { version = "2024.11.28", path = "../ast_r" }
-

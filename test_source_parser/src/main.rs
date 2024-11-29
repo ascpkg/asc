@@ -1,11 +1,29 @@
+mod c_source_parser_ffi;
+
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     ffi::CString,
 };
 
-use crate::util;
+fn main() {
+    let cwd = std::env::current_dir()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .replace(r"\", "/");
 
-use super::c_source_parser_ffi;
+    let entry_point_source = format!("{cwd}/test_sources/test_package/src/main.cpp");
+    let source_dir = format!("{cwd}/test_sources/test_package/src");
+    let target_dir = format!("{cwd}/test_sources/test_package/target/test_package_bin");
+
+    // let entry_point_source = format!("{cwd}/test_sources/test_c/src/main.c");
+    // let source_dir = format!("{cwd}/test_sources/test_c/src");
+    // let target_dir = format!("{cwd}/test_sources/test_c/target/test_c");
+
+    let mut mappings = SourceMappings::default();
+    mappings.scan_necessary_sources(entry_point_source, source_dir, &target_dir);
+    println!("{:#?}", mappings);
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct SourceMappings {
@@ -16,15 +34,15 @@ pub struct SourceMappings {
 }
 
 impl SourceMappings {
-    pub fn scan_necessary_sources(
+    fn scan_necessary_sources(
         &mut self,
-        entry_point_source: &String,
-        source_dir: &String,
+        entry_point_source: String,
+        source_dir: String,
         target_dir: &String,
     ) {
         // collect from entry point file
         let result = unsafe {
-            c_source_parser_ffi::scan_source_and_symbols(
+            c_source_parser_ffi::scan_symbols_and_inclusions(
                 CString::new(entry_point_source.clone()).unwrap().into_raw(),
                 CString::new(source_dir.clone()).unwrap().into_raw(),
                 CString::new(target_dir.clone()).unwrap().into_raw(),
@@ -33,8 +51,8 @@ impl SourceMappings {
         };
         let error_code = c_source_parser_ffi::AstCErrorCode::from(result.error_code);
         if error_code != c_source_parser_ffi::AstCErrorCode::AstCErrorNone {
-            tracing::error!(
-                "c_source_parser_ffi::scan_source_and_symbols error, code: {} ({})",
+            eprintln!(
+                "ast::scan_symbols_and_inclusions error, code: {} ({})",
                 std::any::type_name_of_val(&error_code),
                 result.error_code,
             );
@@ -45,10 +63,10 @@ impl SourceMappings {
         let necessaries = self.collect_symbols_and_sources(result);
 
         // collect from other sources
-        for src_path in &util::fs::find_source_files(&source_dir) {
+        for src_path in find_source_files(&source_dir) {
             if src_path != entry_point_source {
                 let r = unsafe {
-                    c_source_parser_ffi::scan_source_and_symbols(
+                    c_source_parser_ffi::scan_symbols_and_inclusions(
                         CString::new(src_path.clone()).unwrap().into_raw(),
                         CString::new(source_dir.clone()).unwrap().into_raw(),
                         CString::new(target_dir.clone()).unwrap().into_raw(),
@@ -57,8 +75,8 @@ impl SourceMappings {
                 };
                 let error_code = c_source_parser_ffi::AstCErrorCode::from(r.error_code);
                 if error_code != c_source_parser_ffi::AstCErrorCode::AstCErrorNone {
-                    tracing::error!(
-                        "c_source_parser_ffi::scan_source_and_symbols error, code: {} ({})",
+                    eprintln!(
+                        "ast::scan_symbols_and_inclusions error, code: {} ({})",
                         std::any::type_name_of_val(&error_code),
                         r.error_code,
                     );
@@ -189,4 +207,28 @@ impl SourceMappings {
         // store necessary sources
         self.header_include_by_sources = *necessaries;
     }
+}
+
+pub fn find_source_files(dir: &String) -> Vec<String> {
+    let mut files = Vec::new();
+
+    let walker = walkdir::WalkDir::new(dir.clone())
+        .into_iter()
+        .filter_map(|e| e.ok());
+    for entry in walker {
+        let path = entry.path();
+        if let Some(ext) = path.extension() {
+            if is_source(ext) {
+                if let Some(file_name) = path.to_str() {
+                    files.push(file_name.replace(r"\", "/"));
+                }
+            }
+        }
+    }
+
+    files
+}
+
+pub fn is_source(ext: &std::ffi::OsStr) -> bool {
+    ext == "c" || ext == "cc" || ext == "cpp" || ext == "cxx"
 }

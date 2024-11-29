@@ -1,0 +1,13 @@
+[package]
+name = "c_source_parser_ffi"
+version = "2024.11.29"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+rs_container_ffi = { version = "2024.11.29", path = "../rs_container_ffi" }
+
+[build-dependencies]
+cc = { version = "1.2.1" }

@@ -1,9 +1,0 @@
-[package]
-name = "ast_r"
-version = "2024.11.28"
-edition = "2021"
-
-[lib]
-crate-type = ["staticlib"]
-
-[dependencies]

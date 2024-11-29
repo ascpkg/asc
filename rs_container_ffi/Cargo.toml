@@ -1,0 +1,9 @@
+[package]
+name = "rs_container_ffi"
+version = "2024.11.29"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
