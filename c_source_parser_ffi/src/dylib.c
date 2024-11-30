@@ -1,6 +1,9 @@
 // self
 #include "dylib.h"
 
+// c
+#include <string.h>
+
 // platforms
 #if (defined(_WIN32) || defined(_WIN64))
 #ifndef WIN32_LEAN_AND_MEAN
@@ -41,7 +44,7 @@ void dylib_close(dylib_handle handle) {
 #if (defined(_WIN32) || defined(_WIN64))
     FreeLibrary((HMODULE)handle);
 #else
-    return dlclose(handle);
+    dlclose(handle);
 #endif
 }
 
@@ -51,7 +54,7 @@ int dylib_has(dylib_handle handle, const char *name) {
 
 dylib_symbol dylib_get(dylib_handle handle, const char *name) {
     if (INVALID_DYLIB_HANDLE == handle || NULL == name || 0 == strlen(name)) {
-        return;
+        return INVALID_DYLIB_SYMBOL;
     }
 
 #if (defined(_WIN32) || defined(_WIN64))
@@ -71,7 +74,7 @@ const char *dylib_error() {
         const DWORD length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), description, description, NULL);
         return (length == 0) ? "Unknown error (FormatMessage failed)" : description;
 #else
-        const auto description = dlerror();
+        const char *description = dlerror();
         return (NULL == description) ? "No error reported by dlerror" : description;
 #endif
 }

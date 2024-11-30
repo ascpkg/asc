@@ -174,6 +174,8 @@ void store_symbol(IN_OUT RustBtreeMapOfStrSet map_source_symbol, IN const char *
 
 
 static enum CXChildVisitResult visit_symbols_and_inclusions(IN CXCursor cursor, IN CXCursor parent, IN_OUT CXClientData client_data) {
+    (void)parent;
+    
     ClangParsedResult *result = (ClangParsedResult *)client_data;
 
     // get location
