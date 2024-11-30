@@ -1,6 +1,6 @@
 [package]
 name = "asc_bin"
-version = "2024.11.30"
+version = "2024.12.1"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"
@@ -44,6 +44,7 @@ reqwest = { version = "0.12.9", features = ["blocking"] }
 struct_iterable = { version = "0.1.1" }
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.129" }
+sha1 = { version = "0.10.6" }
 strum = { version = "0.26.3" }
 strum_macros = { version = "0.26.4" }
 time = { version = "0.3.36", features = ["formatting", "macros"] }
