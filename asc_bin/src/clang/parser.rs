@@ -5,7 +5,7 @@ use std::{
 
 use crate::util;
 
-use super::c_source_parser_ffi;
+use super::{c_source_parser_ffi, download};
 
 #[derive(Debug, Default, Clone)]
 pub struct SourceMappings {
@@ -22,6 +22,21 @@ impl SourceMappings {
         source_dir: &String,
         target_dir: &String,
     ) {
+        // download if not exists
+        let lib_clang_path = download::download_lib_clang_if_not_exists();
+
+        // load library and symbols
+        let lib_clang_path_ptr = CString::new(lib_clang_path.clone()).unwrap().into_raw();
+        let error_code = unsafe { c_source_parser_ffi::load_library_clang(lib_clang_path_ptr) };
+        if error_code != c_source_parser_ffi::AstCErrorCode::AstCErrorNone {
+            tracing::error!(
+                "c_source_parser_ffi::load_library_clang error, code: {} ({})",
+                std::any::type_name_of_val(&error_code),
+                error_code as i32,
+            );
+            return;
+        }
+
         // collect from entry point file
         let result = unsafe {
             c_source_parser_ffi::scan_source_and_symbols(
@@ -77,10 +92,16 @@ impl SourceMappings {
         result: c_source_parser_ffi::ClangParsedResult,
     ) -> Box<BTreeMap<String, BTreeSet<String>>> {
         // convert from raw pointer and take ownership
+        {
+            // drop them
+            let _source_path = unsafe { CString::from_raw(result.source_path as *mut i8) };
+            let _source_dir = unsafe { CString::from_raw(result.source_dir as *mut i8) };
+            let _target_dir = unsafe { CString::from_raw(result.target_dir as *mut i8) };
+            let _last_parsed_files =
+                unsafe { Box::from_raw(result.last_parsed_files as *mut BTreeSet<String>) };
+        }
         let current_parsed_files =
             unsafe { Box::from_raw(result.current_parsed_files as *mut BTreeSet<String>) };
-        let _last_parsed_files =
-            unsafe { Box::from_raw(result.last_parsed_files as *mut BTreeSet<String>) };
         let source_symbols = unsafe {
             Box::from_raw(result.source_symbols as *mut BTreeMap<String, BTreeSet<String>>)
         };

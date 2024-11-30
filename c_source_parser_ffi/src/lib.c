@@ -3,7 +3,7 @@
 #include <string.h>
 
 // clang
-#include <clang-c/Index.h>
+#include <clang.h>
 
 // dylib
 #include "dylib.h"
@@ -37,6 +37,30 @@
 #endif
 
 
+func_ptr_clang_createIndex clang_createIndex = NULL;
+func_ptr_clang_disposeIndex clang_disposeIndex = NULL;
+func_ptr_clang_parseTranslationUnit clang_parseTranslationUnit = NULL;
+func_ptr_clang_disposeTranslationUnit clang_disposeTranslationUnit = NULL;
+func_ptr_clang_visitChildren clang_visitChildren = NULL;
+func_ptr_clang_getTranslationUnitCursor clang_getTranslationUnitCursor = NULL;
+func_ptr_clang_getCursorLocation clang_getCursorLocation = NULL;
+func_ptr_clang_getFileLocation clang_getFileLocation = NULL;
+func_ptr_clang_getCursorKind clang_getCursorKind = NULL;
+func_ptr_clang_getIncludedFile clang_getIncludedFile = NULL;
+func_ptr_clang_getFileName clang_getFileName = NULL;
+func_ptr_clang_getCString clang_getCString = NULL;
+func_ptr_clang_disposeString clang_disposeString = NULL;
+func_ptr_clang_getCursorSpelling clang_getCursorSpelling = NULL;
+func_ptr_clang_Cursor_getNumArguments clang_Cursor_getNumArguments = NULL;
+func_ptr_clang_Cursor_getArgument clang_Cursor_getArgument = NULL;
+func_ptr_clang_getCursorType clang_getCursorType = NULL;
+func_ptr_clang_getCanonicalType clang_getCanonicalType = NULL;
+func_ptr_clang_getResultType clang_getResultType = NULL;
+func_ptr_clang_getTypeSpelling clang_getTypeSpelling = NULL;
+func_ptr_clang_getCursorSemanticParent clang_getCursorSemanticParent = NULL;
+func_ptr_clang_Cursor_isNull clang_Cursor_isNull = NULL;
+
+
 static void replace_chars(IN_OUT char *str, IN const char old_char, IN const char new_char) {
     if (NULL == str) {
         return;
@@ -65,6 +89,7 @@ static int starts_with(IN const char *str, IN const char *sub) {
     return (0 == strncmp(str, sub, sub_len)) ? TRUE : FALSE;
 }
 
+
 static char *get_namespaces(IN CXCursor cursor) {
     RustVecOfStr vec = rust_vec_of_str_new();
 
@@ -89,6 +114,7 @@ static char *get_namespaces(IN CXCursor cursor) {
     return text;
 }
 
+
 static char *get_classes(IN CXCursor cursor) {
     RustVecOfStr vec = rust_vec_of_str_new();
 
@@ -112,6 +138,7 @@ static char *get_classes(IN CXCursor cursor) {
 
     return text;
 }
+
 
 void store_symbol(IN_OUT RustBtreeMapOfStrSet map_source_symbol, IN const char *source_path, IN const char *type_name, IN CXCursor cursor) {
     RustVecOfStr vec = rust_vec_of_str_new();
@@ -144,6 +171,7 @@ void store_symbol(IN_OUT RustBtreeMapOfStrSet map_source_symbol, IN const char *
     rust_c_str_drop(classes);
     rust_c_str_drop(symbol);
 }
+
 
 static enum CXChildVisitResult visit_symbols_and_inclusions(IN CXCursor cursor, IN CXCursor parent, IN_OUT CXClientData client_data) {
     ClangParsedResult *result = (ClangParsedResult *)client_data;
@@ -309,22 +337,112 @@ static enum CXChildVisitResult visit_symbols_and_inclusions(IN CXCursor cursor, 
 }
 
 
+AstCErrorCode load_library_clang(const char *library_clang_path) {
+    dylib_handle lib_clang = dylib_open(library_clang_path);
+    if(INVALID_DYLIB_HANDLE == lib_clang) {
+        return AstCErrorLibraryClangNotFound;
+    }
+
+    clang_createIndex = dylib_get(lib_clang, $clang_createIndex$);
+    if(INVALID_DYLIB_SYMBOL == clang_createIndex) {
+        return AstCErrorSymbolClangCreateIndexNotFound;
+    }
+    clang_disposeIndex = dylib_get(lib_clang, $clang_disposeIndex$);
+    if(INVALID_DYLIB_SYMBOL == clang_disposeIndex) {
+        return AstCErrorSymbolClangDisposeIndexNotFound;
+    }
+    clang_parseTranslationUnit = dylib_get(lib_clang, $clang_parseTranslationUnit$);
+    if(INVALID_DYLIB_SYMBOL == clang_parseTranslationUnit) {
+        return AstCErrorSymbolClangParseTranslationUnitNotFound;
+    }
+    clang_disposeTranslationUnit = dylib_get(lib_clang, $clang_disposeTranslationUnit$);
+    if(INVALID_DYLIB_SYMBOL == clang_disposeTranslationUnit) {
+        return AstCErrorSymbolClangDisposeTranslationUnitNotFound;
+    }
+    clang_visitChildren = dylib_get(lib_clang, $clang_visitChildren$);
+    if(INVALID_DYLIB_SYMBOL == clang_visitChildren) {
+        return AstCErrorSymbolClangVisitChildrenNotFound;
+    }
+    clang_getTranslationUnitCursor = dylib_get(lib_clang, $clang_getTranslationUnitCursor$);
+    if(INVALID_DYLIB_SYMBOL == clang_getTranslationUnitCursor) {
+        return AstCErrorSymbolClangGetTranslationUnitCursorNotFound;
+    }
+    clang_getCursorLocation = dylib_get(lib_clang, $clang_getCursorLocation$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCursorLocation) {
+        return AstCErrorSymbolClangGetCursorLocationNotFound;
+    }
+    clang_getFileLocation = dylib_get(lib_clang, $clang_getFileLocation$);
+    if(INVALID_DYLIB_SYMBOL == clang_getFileLocation) {
+        return AstCErrorSymbolClangGetFileLocationNotFound;
+    }
+    clang_getCursorKind = dylib_get(lib_clang, $clang_getCursorKind$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCursorKind) {
+        return AstCErrorSymbolClangGetCursorKindNotFound;
+    }
+    clang_getIncludedFile = dylib_get(lib_clang, $clang_getIncludedFile$);
+    if(INVALID_DYLIB_SYMBOL == clang_getIncludedFile) {
+        return AstCErrorSymbolClangGetIncludedFileNotFound;
+    }
+    clang_getFileName = dylib_get(lib_clang, $clang_getFileName$);
+    if(INVALID_DYLIB_SYMBOL == clang_getFileName) {
+        return AstCErrorSymbolClangGetFileNameNotFound;
+    }
+    clang_getCString = dylib_get(lib_clang, $clang_getCString$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCString) {
+        return AstCErrorSymbolClangGetCStringNotFound;
+    }
+    clang_disposeString = dylib_get(lib_clang, $clang_disposeString$);
+    if(INVALID_DYLIB_SYMBOL == clang_disposeString) {
+        return AstCErrorSymbolClangDisposeStringNotFound;
+    }
+    clang_getCursorSpelling = dylib_get(lib_clang, $clang_getCursorSpelling$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCursorSpelling) {
+        return AstCErrorSymbolClangGetCursorSpellingNotFound;
+    }
+    clang_Cursor_getNumArguments = dylib_get(lib_clang, $clang_Cursor_getNumArguments$);
+    if(INVALID_DYLIB_SYMBOL == clang_Cursor_getNumArguments) {
+        return AstCErrorSymbolClangCursorGetNumArgumentsNotFound;
+    }
+    clang_Cursor_getArgument = dylib_get(lib_clang, $clang_Cursor_getArgument$);
+    if(INVALID_DYLIB_SYMBOL == clang_Cursor_getArgument) {
+        return AstCErrorSymbolClangCursorGetArgumentNotFound;
+    }
+    clang_getCursorType = dylib_get(lib_clang, $clang_getCursorType$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCursorType) {
+        return AstCErrorSymbolClangGetCursorTypeNotFound;
+    }
+    clang_getCanonicalType = dylib_get(lib_clang, $clang_getCanonicalType$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCanonicalType) {
+        return AstCErrorSymbolClangGetCanonicalTypeNotFound;
+    }
+    clang_getResultType = dylib_get(lib_clang, $clang_getResultType$);
+    if(INVALID_DYLIB_SYMBOL == clang_getResultType) {
+        return AstCErrorSymbolClangGetResultTypeNotFound;
+    }
+    clang_getTypeSpelling = dylib_get(lib_clang, $clang_getTypeSpelling$);
+    if(INVALID_DYLIB_SYMBOL == clang_getTypeSpelling) {
+        return AstCErrorSymbolClangGetTypeSpellingNotFound;
+    }
+    clang_getCursorSemanticParent = dylib_get(lib_clang, $clang_getCursorSemanticParent$);
+    if(INVALID_DYLIB_SYMBOL == clang_getCursorSemanticParent) {
+        return AstCErrorSymbolClangGetCursorSemanticParentNotFound;
+    }
+    clang_Cursor_isNull = dylib_get(lib_clang, $clang_Cursor_isNull$);
+    if(INVALID_DYLIB_SYMBOL == clang_Cursor_isNull) {
+        return AstCErrorSymbolClangCursorIsNullNotFound;
+    }
+
+    return AstCErrorNone;
+}
+
+
 ClangParsedResult scan_source_and_symbols(
-    IN const char *library_clang_path,
     IN const char *source_path,
     IN const char *source_dir,
     IN const char *target_dir,
     IN const RustBtreeSetOfStr last_parsed_files
 ) {
     ClangParsedResult result;
-
-    dylib_handle clang_lib = dylib_open(library_clang_path);
-    if(INVALID_DYLIB_HANDLE == clang_lib) {
-        printf(stderr, "@%s#%d dylib_open(%s) -> %s\n", __FUNCTION__, __LINE__ - 2, library_clang_path, dylib_error());
-        result.error_code = AstCErrorLibraryClangNotFound;
-        return result;
-    }
-
     result.error_code = AstCErrorNone;
     result.source_path = source_path;
     result.source_dir = source_dir;
@@ -354,7 +472,7 @@ ClangParsedResult scan_source_and_symbols(
     );
     if (NULL == translation_unit) {
         clang_disposeIndex(index);
-        result.error_code = AstCErrorClangParseTranslationUnit;
+        result.error_code = AstCErrorSymbolClangParseTranslationUnitCall;
         return result;
     }
 

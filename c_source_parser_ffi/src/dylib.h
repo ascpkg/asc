@@ -2,6 +2,7 @@
 #define C_SOURCE_PARSER_FFI_DYLIB_API
 
 #define INVALID_DYLIB_HANDLE ((void *)0)
+#define INVALID_DYLIB_SYMBOL ((void *)0)
 
 typedef void *dylib_handle;
 typedef void *dylib_symbol;

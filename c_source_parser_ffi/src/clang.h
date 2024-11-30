@@ -1,6 +1,8 @@
 #ifndef C_SOURCE_PARSER_FFI_CLANG_API
 #define C_SOURCE_PARSER_FFI_CLANG_API
 
+// libclang-13.0-d7b669b-20210915
+
 /**
  * An "index" that consists of a set of translation units that would
  * typically be linked together into an executable or library.
@@ -32,6 +34,12 @@ typedef void *CXFile;
  */
 enum CXTranslationUnit_Flags {
     /**
+     * Used to indicate that no special translation-unit options are
+     * needed.
+     */
+    CXTranslationUnit_None = 0x0,
+  
+    /**
      * Used to indicate that the parser should construct a "detailed"
      * preprocessing record, including all macro definitions and instantiations.
      *
@@ -42,7 +50,63 @@ enum CXTranslationUnit_Flags {
      * behavior of the preprocessor.
      */
     CXTranslationUnit_DetailedPreprocessingRecord = 0x01,
-
+  
+    /**
+     * Used to indicate that the translation unit is incomplete.
+     *
+     * When a translation unit is considered "incomplete", semantic
+     * analysis that is typically performed at the end of the
+     * translation unit will be suppressed. For example, this suppresses
+     * the completion of tentative declarations in C and of
+     * instantiation of implicitly-instantiation function templates in
+     * C++. This option is typically used when parsing a header with the
+     * intent of producing a precompiled header.
+     */
+    CXTranslationUnit_Incomplete = 0x02,
+  
+    /**
+     * Used to indicate that the translation unit should be built with an
+     * implicit precompiled header for the preamble.
+     *
+     * An implicit precompiled header is used as an optimization when a
+     * particular translation unit is likely to be reparsed many times
+     * when the sources aren't changing that often. In this case, an
+     * implicit precompiled header will be built containing all of the
+     * initial includes at the top of the main file (what we refer to as
+     * the "preamble" of the file). In subsequent parses, if the
+     * preamble or the files in it have not changed, \c
+     * clang_reparseTranslationUnit() will re-use the implicit
+     * precompiled header to improve parsing performance.
+     */
+    CXTranslationUnit_PrecompiledPreamble = 0x04,
+  
+    /**
+     * Used to indicate that the translation unit should cache some
+     * code-completion results with each reparse of the source file.
+     *
+     * Caching of code-completion results is a performance optimization that
+     * introduces some overhead to reparsing but improves the performance of
+     * code-completion operations.
+     */
+    CXTranslationUnit_CacheCompletionResults = 0x08,
+  
+    /**
+     * Used to indicate that the translation unit will be serialized with
+     * \c clang_saveTranslationUnit.
+     *
+     * This option is typically used when parsing a header with the intent of
+     * producing a precompiled header.
+     */
+    CXTranslationUnit_ForSerialization = 0x10,
+  
+    /**
+     * DEPRECATED: Enabled chained precompiled preambles in C++.
+     *
+     * Note: this is a *temporary* option that is available only while
+     * we are testing C++ precompiled preamble support. It is deprecated.
+     */
+    CXTranslationUnit_CXXChainedPCH = 0x20,
+  
     /**
      * Used to indicate that function/method bodies should be skipped while
      * parsing.
@@ -51,7 +115,22 @@ enum CXTranslationUnit_Flags {
      * ignoring the usages.
      */
     CXTranslationUnit_SkipFunctionBodies = 0x40,
-
+  
+    /**
+     * Used to indicate that brief documentation comments should be
+     * included into the set of code completions returned from this translation
+     * unit.
+     */
+    CXTranslationUnit_IncludeBriefCommentsInCodeCompletion = 0x80,
+  
+    /**
+     * Used to indicate that the precompiled preamble should be created on
+     * the first parse. Otherwise it will be created on the first reparse. This
+     * trades runtime on the first parse (serializing the preamble takes time) for
+     * reduced runtime on the second parse (can now reuse the preamble).
+     */
+    CXTranslationUnit_CreatePreambleOnFirstParse = 0x100,
+  
     /**
      * Do not stop processing when fatal errors are encountered.
      *
@@ -62,6 +141,44 @@ enum CXTranslationUnit_Flags {
      * as possible should be reported. Use this flag to enable this behavior.
      */
     CXTranslationUnit_KeepGoing = 0x200,
+  
+    /**
+     * Sets the preprocessor in a mode for parsing a single file only.
+     */
+    CXTranslationUnit_SingleFileParse = 0x400,
+  
+    /**
+     * Used in combination with CXTranslationUnit_SkipFunctionBodies to
+     * constrain the skipping of function bodies to the preamble.
+     *
+     * The function bodies of the main file are not skipped.
+     */
+    CXTranslationUnit_LimitSkipFunctionBodiesToPreamble = 0x800,
+  
+    /**
+     * Used to indicate that attributed types should be included in CXType.
+     */
+    CXTranslationUnit_IncludeAttributedTypes = 0x1000,
+  
+    /**
+     * Used to indicate that implicit attributes should be visited.
+     */
+    CXTranslationUnit_VisitImplicitAttributes = 0x2000,
+  
+    /**
+     * Used to indicate that non-errors from included files should be ignored.
+     *
+     * If set, clang_getDiagnosticSetFromTU() will not report e.g. warnings from
+     * included files anymore. This speeds up clang_getDiagnosticSetFromTU() for
+     * the case where these warnings are not of interest, as for an IDE for
+     * example, which typically shows only the diagnostics in the main file.
+     */
+    CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles = 0x4000,
+  
+    /**
+     * Tells the preprocessor not to skip excluded conditional blocks.
+     */
+    CXTranslationUnit_RetainExcludedConditionalBlocks = 0x8000
 };
 
 /**
@@ -1173,7 +1290,8 @@ typedef struct {
  */
 // CINDEX_LINKAGE CXIndex clang_createIndex(int excludeDeclarationsFromPCH,
 //                                          int displayDiagnostics);
-typedef CXIndex (*clang_createIndex)(int excludeDeclarationsFromPCH, int displayDiagnostics);
+typedef CXIndex (*func_ptr_clang_createIndex)(int excludeDeclarationsFromPCH, int displayDiagnostics);
+static const char *$clang_createIndex$ = "clang_createIndex";
 
 /**
  * Destroy the given index.
@@ -1182,7 +1300,8 @@ typedef CXIndex (*clang_createIndex)(int excludeDeclarationsFromPCH, int display
  * within that index have been destroyed.
  */
 // CINDEX_LINKAGE void clang_disposeIndex(CXIndex index);
-typedef void (*clang_disposeIndex)(CXIndex index);
+typedef void (*func_ptr_clang_disposeIndex)(CXIndex index);
+static const char *$clang_disposeIndex$ = "clang_disposeIndex";
 
 /**
  * Same as \c clang_parseTranslationUnit2, but returns
@@ -1195,17 +1314,19 @@ typedef void (*clang_disposeIndex)(CXIndex index);
 //     const char *const *command_line_args, int num_command_line_args,
 //     struct CXUnsavedFile *unsaved_files, unsigned num_unsaved_files,
 //     unsigned options);
-typedef CXTranslationUnit (*clang_parseTranslationUnit)(
+typedef CXTranslationUnit (*func_ptr_clang_parseTranslationUnit)(
     CXIndex CIdx, const char *source_filename,
     const char *const *command_line_args, int num_command_line_args,
     struct CXUnsavedFile *unsaved_files, unsigned num_unsaved_files,
     unsigned options);
+static const char *$clang_parseTranslationUnit$ = "clang_parseTranslationUnit";
 
 /**
  * Destroy the specified CXTranslationUnit object.
  */
 // CINDEX_LINKAGE void clang_disposeTranslationUnit(CXTranslationUnit);
-typedef void (*clang_disposeTranslationUnit)(CXTranslationUnit);
+typedef void (*func_ptr_clang_disposeTranslationUnit)(CXTranslationUnit);
+static const char *$clang_disposeTranslationUnit$ = "clang_disposeTranslationUnit";
 
 /**
  * Visitor invoked for each cursor found by a traversal.
@@ -1248,9 +1369,10 @@ typedef enum CXChildVisitResult (*CXCursorVisitor)(CXCursor cursor,
 // CINDEX_LINKAGE unsigned clang_visitChildren(CXCursor parent,
 //                                             CXCursorVisitor visitor,
 //                                             CXClientData client_data);
-typedef unsigned (*clang_visitChildren)(CXCursor parent,
+typedef unsigned (*func_ptr_clang_visitChildren)(CXCursor parent,
                                         CXCursorVisitor visitor,
                                         CXClientData client_data);
+static const char *$clang_visitChildren$ = "clang_visitChildren";
 
 /**
  * Retrieve the cursor that represents the given translation unit.
@@ -1259,7 +1381,8 @@ typedef unsigned (*clang_visitChildren)(CXCursor parent,
  * various declarations within the given translation unit.
  */
 // CINDEX_LINKAGE CXCursor clang_getTranslationUnitCursor(CXTranslationUnit);
-typedef CXCursor (*clang_getTranslationUnitCursor)(CXTranslationUnit);
+typedef CXCursor (*func_ptr_clang_getTranslationUnitCursor)(CXTranslationUnit);
+static const char *$clang_getTranslationUnitCursor$ = "clang_getTranslationUnitCursor";
 
 /**
  * Retrieve the physical location of the source constructor referenced
@@ -1272,7 +1395,8 @@ typedef CXCursor (*clang_getTranslationUnitCursor)(CXTranslationUnit);
  * source code.
  */
 // CINDEX_LINKAGE CXSourceLocation clang_getCursorLocation(CXCursor);
-typedef CXSourceLocation (*clang_getCursorLocation)(CXCursor);
+typedef CXSourceLocation (*func_ptr_clang_getCursorLocation)(CXCursor);
+static const char *$clang_getCursorLocation$ = "clang_getCursorLocation";
 
 /**
  * Retrieve the file, line, column, and offset represented by
@@ -1300,46 +1424,53 @@ typedef CXSourceLocation (*clang_getCursorLocation)(CXCursor);
 // CINDEX_LINKAGE void clang_getFileLocation(CXSourceLocation location,
 //                                           CXFile *file, unsigned *line,
 //                                           unsigned *column, unsigned *offset);
-typedef void (*clang_getFileLocation)(CXSourceLocation location,
+typedef void (*func_ptr_clang_getFileLocation)(CXSourceLocation location,
                                       CXFile *file, unsigned *line,
                                       unsigned *column, unsigned *offset);
+static const char *$clang_getFileLocation$ = "clang_getFileLocation";
 
 /**
  * Retrieve the kind of the given cursor.
  */
 // CINDEX_LINKAGE enum CXCursorKind clang_getCursorKind(CXCursor);
-typedef enum CXCursorKind (*clang_getCursorKind)(CXCursor);
+typedef enum CXCursorKind (*func_ptr_clang_getCursorKind)(CXCursor);
+static const char *$clang_getCursorKind$ = "clang_getCursorKind";
 
 /**
  * Retrieve the file that is included by the given inclusion directive
  * cursor.
  */
 // CINDEX_LINKAGE CXFile clang_getIncludedFile(CXCursor cursor);
-typedef CXFile (*clang_getIncludedFile)(CXCursor cursor);
+typedef CXFile (*func_ptr_clang_getIncludedFile)(CXCursor cursor);
+static const char *$clang_getIncludedFile$ = "clang_getIncludedFile";
 
 /**
  * Retrieve the complete file and path name of the given file.
  */
 // CINDEX_LINKAGE CXString clang_getFileName(CXFile SFile);
-typedef CXString (*clang_getFileName)(CXFile SFile);
+typedef CXString (*func_ptr_clang_getFileName)(CXFile SFile);
+static const char *$clang_getFileName$ = "clang_getFileName";
 
 /**
  * Retrieve the character data associated with the given string.
  */
 // CINDEX_LINKAGE const char *clang_getCString(CXString string);
-typedef const char *(*clang_getCString)(CXString string);
+typedef const char *(*func_ptr_clang_getCString)(CXString string);
+static const char *$clang_getCString$ = "clang_getCString";
 
 /**
  * Free the given string.
  */
 // CINDEX_LINKAGE void clang_disposeString(CXString string);
-typedef void (*clang_disposeString)(CXString string);
+typedef void (*func_ptr_clang_disposeString)(CXString string);
+static const char *$clang_disposeString$ = "clang_disposeString";
 
 /**
  * Retrieve a name for the entity referenced by this cursor.
  */
 // CINDEX_LINKAGE CXString clang_getCursorSpelling(CXCursor);
-typedef CXString (*clang_getCursorSpelling)(CXCursor);
+typedef CXString (*func_ptr_clang_getCursorSpelling)(CXCursor);
+static const char *$clang_getCursorSpelling$ = "clang_getCursorSpelling";
 
 /**
  * Retrieve the number of non-variadic arguments associated with a given
@@ -1349,7 +1480,8 @@ typedef CXString (*clang_getCursorSpelling)(CXCursor);
  * declarations of functions or methods. For other cursors -1 is returned.
  */
 // CINDEX_LINKAGE int clang_Cursor_getNumArguments(CXCursor C);
-typedef int (*clang_Cursor_getNumArguments)(CXCursor C);
+typedef int (*func_ptr_clang_Cursor_getNumArguments)(CXCursor C);
+static const char *$clang_Cursor_getNumArguments$ = "clang_Cursor_getNumArguments";
 
 /**
  * Retrieve the argument cursor of a function or method.
@@ -1359,13 +1491,15 @@ typedef int (*clang_Cursor_getNumArguments)(CXCursor C);
  * invalid cursor is returned.
  */
 // CINDEX_LINKAGE CXCursor clang_Cursor_getArgument(CXCursor C, unsigned i);
-typedef CXCursor (*clang_Cursor_getArgument)(CXCursor C, unsigned i);
+typedef CXCursor (*func_ptr_clang_Cursor_getArgument)(CXCursor C, unsigned i);
+static const char *$clang_Cursor_getArgument$ = "clang_Cursor_getArgument";
 
 /**
  * Retrieve the type of a CXCursor (if any).
  */
 // CINDEX_LINKAGE CXType clang_getCursorType(CXCursor C);
-typedef CXType (*clang_getCursorType)(CXCursor C);
+typedef CXType (*func_ptr_clang_getCursorType)(CXCursor C);
+static const char *$clang_getCursorType$ = "clang_getCursorType";
 
 /**
  * Return the canonical type for a CXType.
@@ -1376,7 +1510,8 @@ typedef CXType (*clang_getCursorType)(CXCursor C);
  * for 'int', the canonical type for 'T' would be 'int'.
  */
 // CINDEX_LINKAGE CXType clang_getCanonicalType(CXType T);
-typedef CXType (*clang_getCanonicalType)(CXType T);
+typedef CXType (*func_ptr_clang_getCanonicalType)(CXType T);
+static const char *$clang_getCanonicalType$ = "clang_getCanonicalType";
 
 /**
  * Retrieve the return type associated with a function type.
@@ -1384,7 +1519,8 @@ typedef CXType (*clang_getCanonicalType)(CXType T);
  * If a non-function type is passed in, an invalid type is returned.
  */
 // CINDEX_LINKAGE CXType clang_getResultType(CXType T);
-typedef CXType (*clang_getResultType)(CXType T);
+typedef CXType (*func_ptr_clang_getResultType)(CXType T);
+static const char *$clang_getResultType$ = "clang_getResultType";
 
 /**
  * Pretty-print the underlying type using the rules of the
@@ -1393,7 +1529,8 @@ typedef CXType (*clang_getResultType)(CXType T);
  * If the type is invalid, an empty string is returned.
  */
 // CINDEX_LINKAGE CXString clang_getTypeSpelling(CXType CT);
-typedef CXString (*clang_getTypeSpelling)(CXType CT);
+typedef CXString (*func_ptr_clang_getTypeSpelling)(CXType CT);
+static const char *$clang_getTypeSpelling$ = "clang_getTypeSpelling";
 
 /**
  * Determine the semantic parent of the given cursor.
@@ -1429,12 +1566,14 @@ typedef CXString (*clang_getTypeSpelling)(CXType CT);
  * For global declarations, the semantic parent is the translation unit.
  */
 // CINDEX_LINKAGE CXCursor clang_getCursorSemanticParent(CXCursor cursor);
-typedef CXCursor (*clang_getCursorSemanticParent)(CXCursor cursor);
+typedef CXCursor (*func_ptr_clang_getCursorSemanticParent)(CXCursor cursor);
+static const char *$clang_getCursorSemanticParent$ = "clang_getCursorSemanticParent";
 
 /**
  * Returns non-zero if \p cursor is null.
  */
 // CINDEX_LINKAGE int clang_Cursor_isNull(CXCursor cursor);
-typedef int (*clang_Cursor_isNull)(CXCursor cursor);
+typedef int (*func_ptr_clang_Cursor_isNull)(CXCursor cursor);
+static const char *$clang_Cursor_isNull$ = "clang_Cursor_isNull";
 
 #endif // C_SOURCE_PARSER_FFI_CLANG_API
