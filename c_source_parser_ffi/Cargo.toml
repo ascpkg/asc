@@ -1,6 +1,6 @@
 [package]
 name = "c_source_parser_ffi"
-version = "2024.11.29"
+version = "2024.12.1"
 edition = "2021"
 description = "Scan C/C++ source tree to get #include dependency and symbols"
 license = "LGPL-3.0+"
@@ -9,10 +9,10 @@ keywords = ["ffi", "rust", "c", "clang"]
 repository = "https://github.com/ascpkg/asc/tree/main/c_source_parser_ffi"
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 
 [dependencies]
-rs_container_ffi = { version = "2024.11.29", path = "../rs_container_ffi" }
+rs_container_ffi = { version = "2024.12.1", path = "../rs_container_ffi" }
 
 [build-dependencies]
 cc = { version = "1.2.1" }

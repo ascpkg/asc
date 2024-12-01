@@ -20,12 +20,8 @@ impl DataPath {
         if cfg!(target_os = "windows") {
             format!(
                 "{}/{APPLICATION}/lib",
-                std::env::var("PROGRAMDATA")
-                    .unwrap_or(String::from("C:/ProgramData"))
-                    .replace(r"\", "/")
+                std::env::var("PROGRAMDATA").unwrap().replace(r"\", "/")
             )
-        } else if cfg!(target_os = "macos") {
-            format!("{}/local/lib/{APPLICATION}", std::env::var("HOME").unwrap())
         } else {
             format!(
                 "{}/.local/lib/{APPLICATION}",

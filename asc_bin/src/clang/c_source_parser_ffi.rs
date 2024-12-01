@@ -165,6 +165,7 @@ impl From<i32> for AstCErrorCode {
             5021 => AstCErrorCode::AstCErrorSymbolClangGetCursorSemanticParentCall,
             5022 => AstCErrorCode::AstCErrorSymbolClangCursorIsNullCall,
 
+            // unknown error
             _ => AstCErrorCode::AstCErrorUnknown,
         }
     }
