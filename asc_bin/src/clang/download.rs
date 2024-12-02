@@ -1,5 +1,5 @@
-use reqwest;
 use sha1::{Digest, Sha1};
+use ureq;
 use zstd;
 
 use crate::config;
@@ -84,21 +84,21 @@ pub fn download_lib_clang_if_not_exists() -> String {
         for _ in 0..3 {
             tracing::info!(message = "downloading", url = url);
 
-            let client = reqwest::blocking::Client::builder()
-                .timeout(std::time::Duration::from_secs(15))
-                .build()
-                .expect(&format!("reqwest builder error, {info}"));
-            let response = client
+            let agent = ureq::AgentBuilder::new()
+                .try_proxy_from_env(true)
+                .timeout_read(std::time::Duration::from_secs(15))
+                .timeout_write(std::time::Duration::from_secs(5))
+                .build();
+
+            let response = agent
                 .get(&url)
-                .send()
-                .expect(&format!("reqwest download error, {info}"));
-            let mut file = std::fs::File::create(&zst_path)
+                .call()
+                .expect(&format!("ureq::get error, {info}"));
+
+            let mut zst_file = std::fs::File::create(&zst_path)
                 .expect(&format!("std::fs::File::create error, {info}"));
-            let content = response
-                .bytes()
-                .expect(&format!("reqwest read response error, {info}"));
-            std::io::Write::write_all(&mut file, &content)
-                .expect(&format!("std::fs::File::write_all error, {info}"));
+            std::io::copy(&mut response.into_reader(), &mut zst_file)
+                .expect(&format!("std::io::copy error, {info}"));
 
             let calculated_sha1 = calculate_sha1(&zst_path);
             if let Some(expected_sha1) = zst_sha1.get(zst_name.as_str()) {
