@@ -3,9 +3,6 @@
 
 // bindings of rs_container_ffi/c_str.rs
 
-// rust Vec<String>
-typedef void *RustVecOfStr;
-
 // rust CString
 extern void rust_c_str_drop(char *s);
 
