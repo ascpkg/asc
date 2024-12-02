@@ -12,7 +12,6 @@ repository = "https://github.com/ascpkg/asc/tree/main/c_source_parser_ffi"
 crate-type = ["rlib"]
 
 [dependencies]
-rs_container_ffi = { version = "2024.12.2", path = "../rs_container_ffi" }
 
 [build-dependencies]
 cc = { version = "1.2.1" }

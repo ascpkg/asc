@@ -33,6 +33,7 @@ path = "src/main.rs"
 config_file_derives = { version = "2024.11.25", path = "../config_file_derives" }
 config_file_types = { version = "2024.11.25", path = "../config_file_types" }
 c_source_parser_ffi = { version = "2024.12.2", path = "../c_source_parser_ffi" }
+rs_container_ffi = { version = "2024.12.2", path = "../rs_container_ffi" }
 
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
 chrono = { version = "0.4.38" }

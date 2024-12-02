@@ -77,12 +77,19 @@ pub fn download_lib_clang_if_not_exists() -> String {
 
     let info = format!("url: '{url}', lib_path: '{lib_path}'");
 
-    // download if not exists or not file
+    // download if not exists or not file or sha1 mismatch
     let zst_sha1 = std::collections::HashMap::from(LIB_CLANG_ZST_SHA1);
     let meta = std::fs::metadata(&zst_path);
-    if meta.is_err() || !meta.unwrap().is_file() {
+    if meta.is_err()
+        || !meta.as_ref().unwrap().is_file()
+        || &calculate_sha1(&zst_path).as_str() != zst_sha1.get(zst_name.as_str()).unwrap_or(&"")
+    {
         for _ in 0..3 {
             tracing::info!(message = "downloading", url = url);
+
+            if meta.as_ref().is_ok() {
+                let _ = std::fs::remove_file(&zst_path);
+            }
 
             let agent = ureq::AgentBuilder::new()
                 .try_proxy_from_env(true)
@@ -104,7 +111,7 @@ pub fn download_lib_clang_if_not_exists() -> String {
             if let Some(expected_sha1) = zst_sha1.get(zst_name.as_str()) {
                 if &calculated_sha1.as_str() != expected_sha1 {
                     tracing::error!(
-                        message = "retrying",
+                        message = "sha1 mismatch",
                         expected = expected_sha1,
                         calculated = calculated_sha1
                     );
@@ -112,6 +119,19 @@ pub fn download_lib_clang_if_not_exists() -> String {
                 }
             }
             break;
+        }
+    }
+    let meta = std::fs::metadata(&zst_path);
+    if meta.is_ok() && meta.unwrap().is_file() {
+        let calculated_sha1 = calculate_sha1(&zst_path);
+        if let Some(expected_sha1) = zst_sha1.get(zst_name.as_str()) {
+            if &calculated_sha1.as_str() != expected_sha1 {
+                tracing::error!(
+                    message = "sha1 mismatch",
+                    expected = expected_sha1,
+                    calculated = calculated_sha1
+                );
+            }
         }
     }
 
