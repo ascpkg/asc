@@ -21,7 +21,7 @@ pub extern "C" fn rust_btree_set_of_str_drop(instance: *mut BTreeSet<String>) {
 
 /// wrap rust BTreeSet<String> insert for c
 #[no_mangle]
-pub extern "C" fn rust_btree_set_of_str_insert(instance: *mut BTreeSet<String>, value: *const i8) {
+pub extern "C" fn rust_btree_set_of_str_insert(instance: *mut BTreeSet<String>, value: *const std::ffi::c_char) {
     if instance.is_null() {
         return;
     }
@@ -36,7 +36,7 @@ pub extern "C" fn rust_btree_set_of_str_insert(instance: *mut BTreeSet<String>, 
 #[no_mangle]
 pub extern "C" fn rust_btree_set_of_str_contains(
     instance: *mut BTreeSet<String>,
-    value: *const i8,
+    value: *const std::ffi::c_char,
 ) -> i32 {
     if instance.is_null() {
         return 0;

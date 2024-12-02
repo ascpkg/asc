@@ -29,12 +29,12 @@ pub struct ClangParsedResult {
 }
 
 extern "C" {
-    pub fn load_library_clang(library_clang_path: *const i8) -> AstCErrorCode;
+    pub fn load_library_clang(library_clang_path: *const std::ffi::c_char) -> AstCErrorCode;
 
     pub fn scan_source_and_symbols(
-        source_path: *const i8,
-        source_dir: *const i8,
-        target_dir: *const i8,
+        source_path: *const std::ffi::c_char,
+        source_dir: *const std::ffi::c_char,
+        target_dir: *const std::ffi::c_char,
         last_parsed_files: RustBtreeSetOfStrConst,
     ) -> ClangParsedResult;
 }

@@ -25,8 +25,8 @@ pub extern "C" fn rust_btree_map_of_str_set_drop(
 #[no_mangle]
 pub extern "C" fn rust_btree_map_of_str_set_insert(
     instance: *mut BTreeMap<String, BTreeSet<String>>,
-    key: *const i8,
-    value: *const i8,
+    key: *const std::ffi::c_char,
+    value: *const std::ffi::c_char,
 ) {
     if instance.is_null() {
         return;
