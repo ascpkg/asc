@@ -64,17 +64,17 @@ dylib_symbol dylib_get(dylib_handle handle, const char *name) {
 #endif
 }
 
+static char error_text[512];
 const char *dylib_error() {
 #if (defined(_WIN32) || defined(_WIN64))
         const DWORD error_code = GetLastError();
         if (0 == error_code) {
             return "No error reported by GetLastError";
         }
-        char description[512];
-        const DWORD length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), description, description, NULL);
-        return (length == 0) ? "Unknown error (FormatMessage failed)" : description;
+        const DWORD length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), error_text, sizeof(error_text), NULL);
+        return (length == 0) ? "Unknown error (FormatMessage failed)" : error_text;
 #else
-        const char *description = dlerror();
-        return (NULL == description) ? "No error reported by dlerror" : description;
+        const char *error_text = dlerror();
+        return (NULL == error_text) ? "No error reported by dlerror" : error_text;
 #endif
 }
