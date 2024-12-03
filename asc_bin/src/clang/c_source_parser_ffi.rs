@@ -1,6 +1,9 @@
 // bindings of c_source_parser_ffi/src/lib.h
 #![allow(dead_code)]
 
+// instruct rustc to link rs_container_ffi (librs_container_ffi*.rlib)
+use rs_container_ffi as _;
+
 pub type RustBtreeMapOfStrSet = *mut std::ffi::c_void;
 pub type RustBtreeSetOfStr = *mut std::ffi::c_void;
 pub type RustBtreeSetOfStrConst = *const std::ffi::c_void;

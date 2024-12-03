@@ -1,6 +1,6 @@
 [package]
 name = "asc_bin"
-version = "2024.12.3"
+version = "2024.12.4"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"
@@ -32,8 +32,8 @@ path = "src/main.rs"
 [dependencies]
 config_file_derives = { version = "2024.11.25", path = "../config_file_derives" }
 config_file_types = { version = "2024.11.25", path = "../config_file_types" }
-c_source_parser_ffi = { version = "2024.12.2", path = "../c_source_parser_ffi" }
-rs_container_ffi = { version = "2024.12.2", path = "../rs_container_ffi" }
+c_source_parser_ffi = { version = "2024.12.3", path = "../c_source_parser_ffi" }
+rs_container_ffi = { version = "2024.12.3", path = "../rs_container_ffi" }
 
 basic_trie = { version = "2.0.0", features = ["serde", "serde_crate"] }
 chrono = { version = "0.4.38" }
