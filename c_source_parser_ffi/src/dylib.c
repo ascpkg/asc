@@ -64,13 +64,13 @@ dylib_symbol dylib_get(dylib_handle handle, const char *name) {
 #endif
 }
 
-static char error_text[512];
 const char *dylib_error() {
 #if (defined(_WIN32) || defined(_WIN64))
         const DWORD error_code = GetLastError();
         if (0 == error_code) {
             return "No error reported by GetLastError";
         }
+        static char error_text[512];
         const DWORD length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), error_text, sizeof(error_text), NULL);
         return (length == 0) ? "Unknown error (FormatMessage failed)" : error_text;
 #else
