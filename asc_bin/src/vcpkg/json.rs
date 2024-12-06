@@ -127,11 +127,19 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
         let mut vcpkg_conf_data =
             VcpkgConfiguration::load(relative_paths::VCPKG_CONFIGURATION_JSON_FILE_NAME, true)
                 .unwrap();
-        vcpkg_conf_data.registries = vec![VcpkgRegistry {
+        let mut reg = VcpkgRegistry::default();
+        reg.kind = String::from(VCPKG_REGISTRY_KIND_GIT);
+        reg.repository = vcpkg_args.repo.as_ref().unwrap().clone();
+        reg.baseline = VcpkgManager::get_latest_commit().hash;
+        reg.reference = String::from("vcpkg-registry");
+        for (name, _) in dependencies {
+            reg.packages.push(name.clone());
+        }
+        vcpkg_conf_data.registries = vec![reg/*VcpkgRegistry {
             kind: String::from(VCPKG_REGISTRY_DEFAULT_KIND),
             name: String::from(VCPKG_REGISTRY_DEFAULT_NAME),
             location: String::from(VCPKG_REGISTRY_DEFAULT_LOCATION),
-        }];
+        }*/];
         vcpkg_conf_data.default_registry = VcpkgDefaultRegistry {
             kind: String::from(VCPKG_REGISTRY_KIND_GIT),
             repository: vcpkg_args.repo.unwrap(),
