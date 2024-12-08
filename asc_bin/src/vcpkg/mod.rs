@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub struct VcpkgManager {
-    args: VcpkgArgs,
+    pub args: VcpkgArgs,
 }
 
 impl VcpkgManager {
@@ -39,16 +39,13 @@ impl VcpkgArgs {
     }
 
     pub fn set_defaults(&mut self) {
-        if self.repo.is_none() {
-            self.repo = Some(relative_paths::VCPKG_MICROSOFT_REPO_URL.to_string());
-        }
-
-        if self.branch.is_none() {
-            self.branch = Some(relative_paths::VCPKG_MICROSOFT_REPO_BRANCH_NAME.to_string());
-        }
-
-        if self.directory.is_none() {
-            self.directory = Some(system_paths::DataPath::vcpkg_default_clone_dir())
+        if self.repo.is_empty() {
+            self.repo.push(format!(
+                "{}?branch={}&path={}",
+                relative_paths::VCPKG_MICROSOFT_REPO_URL,
+                relative_paths::VCPKG_MICROSOFT_REPO_BRANCH_NAME,
+                system_paths::DataPath::vcpkg_default_clone_dir()
+            ));
         }
 
         if self.index_directory.is_none() {
@@ -66,20 +63,8 @@ impl VcpkgArgs {
     }
 
     pub fn update(&mut self, other: &Self, force: bool, dump: bool) -> bool {
-        if force || self.repo.is_none() {
-            if let Some(repo) = &other.repo {
-                self.repo = Some(repo.clone());
-            }
-        }
-        if force || self.branch.is_none() {
-            if let Some(branch) = &other.branch {
-                self.branch = Some(branch.clone());
-            }
-        }
-        if force || self.directory.is_none() {
-            if let Some(directory) = &other.directory {
-                self.directory = Some(directory.clone());
-            }
+        if force || self.repo.is_empty() {
+            self.repo = other.repo.clone();
         }
         if force || self.index_directory.is_none() {
             if let Some(index_directory) = &other.index_directory {

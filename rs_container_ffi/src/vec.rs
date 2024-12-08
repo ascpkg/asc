@@ -45,7 +45,10 @@ pub extern "C" fn rust_vec_of_str_reverse(instance: *mut Vec<String>) {
 /// wrap rust Vec<String> join for c
 /// must use rust_c_str_drop to free return value
 #[no_mangle]
-pub extern "C" fn rust_vec_of_str_join(instance: *mut Vec<String>, sep: *const std::ffi::c_char) -> *mut std::ffi::c_char {
+pub extern "C" fn rust_vec_of_str_join(
+    instance: *mut Vec<String>,
+    sep: *const std::ffi::c_char,
+) -> *mut std::ffi::c_char {
     if instance.is_null() {
         return std::ptr::null_mut();
     }

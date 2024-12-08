@@ -94,9 +94,12 @@ impl SourceMappings {
         // convert from raw pointer and take ownership
         {
             // drop them
-            let _source_path = unsafe { CString::from_raw(result.source_path as *mut std::ffi::c_char) };
-            let _source_dir = unsafe { CString::from_raw(result.source_dir as *mut std::ffi::c_char) };
-            let _target_dir = unsafe { CString::from_raw(result.target_dir as *mut std::ffi::c_char) };
+            let _source_path =
+                unsafe { CString::from_raw(result.source_path as *mut std::ffi::c_char) };
+            let _source_dir =
+                unsafe { CString::from_raw(result.source_dir as *mut std::ffi::c_char) };
+            let _target_dir =
+                unsafe { CString::from_raw(result.target_dir as *mut std::ffi::c_char) };
             let _last_parsed_files =
                 unsafe { Box::from_raw(result.last_parsed_files as *mut BTreeSet<String>) };
         }

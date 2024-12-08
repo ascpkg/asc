@@ -21,7 +21,10 @@ pub extern "C" fn rust_btree_set_of_str_drop(instance: *mut BTreeSet<String>) {
 
 /// wrap rust BTreeSet<String> insert for c
 #[no_mangle]
-pub extern "C" fn rust_btree_set_of_str_insert(instance: *mut BTreeSet<String>, value: *const std::ffi::c_char) {
+pub extern "C" fn rust_btree_set_of_str_insert(
+    instance: *mut BTreeSet<String>,
+    value: *const std::ffi::c_char,
+) {
     if instance.is_null() {
         return;
     }
