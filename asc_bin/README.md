@@ -24,7 +24,7 @@ Usage: asc.exe <COMMAND>
 Commands:
   new        new package/workspace of binary/static library/shared library
   init       init directory as package/workspace of binary/static library/shared library
-  vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations
+  vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations，supports the mixed use of official and private registries, with private registries being able to depend on the official ones
   search     search package with extractly name or startswith/endswith/contains text
   add        add dependency to package or workspace memeber's asc.toml
   remove     remove dependency from package or workspace memeber's asc.toml
@@ -57,9 +57,7 @@ Arguments:
   [ARGS]...  update args
 
 Options:
-      --repo <REPO>                                          vcpkg repo url
-      --branch <BRANCH>                                      vcpkg repo branch
-      --directory <DIRECTORY>                                vcpkg path
+      --registry <REGISTRY>                                  vcpkg registry url?branch=&directory=
       --index-directory <INDEX_DIRECTORY>                    vcpkg.index path
       --env-downloads <ENV_DOWNLOADS>                        vcpkg.downloads path
       --env-default-binary-cache <ENV_DEFAULT_BINARY_CACHE>  vcpkg.archives path
@@ -67,26 +65,19 @@ Options:
   -h, --help                                                 Print help
 ```
 ### 3.1.2. configure vcpkg
-> asc vcpkg set --repo="https://github.com/microsoft/vcpkg.git" --branch="master" --directory="D:/asc/data/vcpkg" --index-directory="D:/asc/data/vcpkg.index" --env-downloads="D:/asc/data/vcpkg.downloads" --env-default-binary-cache="D:/asc/data/vcpkg.archives"
+> asc vcpkg set --registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg" --index-directory="D:/asc/data/vcpkg.index" --env-downloads="D:/asc/data/vcpkg.downloads" --env-default-binary-cache="D:/asc/data/vcpkg.archives"
 ```
-2024-11-19 17:06:12.817221  INFO asc::cli::commands::vcpkg: 56: vcpkg repo="https://github.com/microsoft/vcpkg.git" branch="master"
+2024-12-09 14:43:18.4395436  INFO asc::cli::commands::vcpkg: 56: vcpkg registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg"
 ```
 ### 3.1.3. print vcpkg config
 > asc vcpkg get
 ```
-2024-11-19 17:08:34.2798973  INFO asc::cli::commands::vcpkg: 56: vcpkg
-2024-11-19 17:08:34.2828895  INFO asc::vcpkg::config: 18: VcpkgArgs {
+2024-12-09 14:47:04.359041  INFO asc::vcpkg::config: 18: VcpkgArgs {
     action: Get,
     args: [],
-    repo: Some(
-        "https://github.com/microsoft/vcpkg.git",
-    ),
-    branch: Some(
-        "master",
-    ),
-    directory: Some(
-        "D:/asc/data/vcpkg",
-    ),
+    registry: [
+        "https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg"
+    ],
     index_directory: Some(
         "D:/asc/data/vcpkg.index",
     ),

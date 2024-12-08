@@ -17,8 +17,18 @@ pub struct VcpkgConfiguration {
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct VcpkgRegistry {
     pub kind: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub name: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub location: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub baseline: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub repository: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub reference: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub packages: Vec<String>,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]

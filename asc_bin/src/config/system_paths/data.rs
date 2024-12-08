@@ -43,6 +43,10 @@ impl DataPath {
         )
     }
 
+    pub fn vcpkg_registry_clone_dir(name: &str) -> String {
+        build(&Self::prefix(), vec![String::from(name)], false, true)
+    }
+
     pub fn vcpkg_ports_dir_path(vcpkg_clone_dir: &str, port_name: &str) -> String {
         build(
             vcpkg_clone_dir,
@@ -128,10 +132,11 @@ impl DataPath {
         )
     }
 
-    pub fn vcpkg_search_index_json(index_dir: &str) -> String {
+    pub fn vcpkg_search_index_json(index_dir: &str, name: &str) -> String {
         build(
             index_dir,
-            vec![String::from(
+            vec![format!(
+                "{name}.{}",
                 relative_paths::VCPKG_SEARCH_INDEX_JSON_FILE_NAME,
             )],
             true,
@@ -139,10 +144,11 @@ impl DataPath {
         )
     }
 
-    pub fn vcpkg_tree_index_json(index_dir: &str) -> String {
+    pub fn vcpkg_tree_index_json(index_dir: &str, name: &str) -> String {
         build(
             index_dir,
-            vec![String::from(
+            vec![format!(
+                "{name}.{}",
                 relative_paths::VCPKG_TREE_INDEX_JSON_FILE_NAME,
             )],
             true,

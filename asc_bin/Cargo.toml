@@ -51,6 +51,7 @@ strum_macros = { version = "0.26.4" }
 time = { version = "0.3.36", features = ["formatting", "macros"] }
 tracing = { version = "0.1.40" }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "time", "local-time", "json"] }
+url = { version = "2.5.4" }
 uuid = { version = "1.11.0", features = ["v4", "fast-rng"]}
 walkdir = { version = "2.5.0" }
 zstd = { version = "0.13.2" }

@@ -7,7 +7,7 @@
 
 # 1. 特性
 - 创建 asc package/workspace 或者将现有源码树初始化为 asc package/workspace
-- 通过 vcpkg 搜索/添加/移除/安装依赖
+- 通过 vcpkg 搜索/添加/移除/安装依赖，支持官方和私有 registry 混合使用，私有 registry 可依赖官方
 - 使用 libclang 自动扫描源码树，并输出依赖图
 - 自动生成 cmake 和 vcpkg 配置
 - 编译/运行/安装/卸载/清理 目标
@@ -68,26 +68,19 @@ Options:
   -h, --help                                                 Print help
 ```
 ### 3.1.2. 配置 vcpkg
-> asc vcpkg set --repo="https://github.com/microsoft/vcpkg.git" --branch="master" --directory="D:/asc/data/vcpkg" --index-directory="D:/asc/data/vcpkg.index" --env-downloads="D:/asc/data/vcpkg.downloads" --env-default-binary-cache="D:/asc/data/vcpkg.archives"
+> asc vcpkg set --registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg" --index-directory="D:/asc/data/vcpkg.index" --env-downloads="D:/asc/data/vcpkg.downloads" --env-default-binary-cache="D:/asc/data/vcpkg.archives"
 ```
-2024-11-19 17:06:12.817221  INFO asc::cli::commands::vcpkg: 56: vcpkg repo="https://github.com/microsoft/vcpkg.git" branch="master"
+2024-12-09 14:43:18.4395436  INFO asc::cli::commands::vcpkg: 56: vcpkg registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg"
 ```
 ### 3.1.3. 打印 vcpkg 配置
 > asc vcpkg get
 ```
-2024-11-19 17:08:34.2798973  INFO asc::cli::commands::vcpkg: 56: vcpkg
-2024-11-19 17:08:34.2828895  INFO asc::vcpkg::config: 18: VcpkgArgs {
+2024-12-09 14:47:04.359041  INFO asc::vcpkg::config: 18: VcpkgArgs {
     action: Get,
     args: [],
-    repo: Some(
-        "https://github.com/microsoft/vcpkg.git",
-    ),
-    branch: Some(
-        "master",
-    ),
-    directory: Some(
-        "D:/asc/data/vcpkg",
-    ),
+    registry: [
+        "https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg"
+    ],
     index_directory: Some(
         "D:/asc/data/vcpkg.index",
     ),

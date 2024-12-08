@@ -5,7 +5,7 @@ pub mod json;
 pub mod search;
 pub mod update;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use struct_iterable::Iterable;
 
@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub struct VcpkgManager {
-    args: VcpkgArgs,
+    pub args: VcpkgArgs,
 }
 
 impl VcpkgManager {
@@ -39,16 +39,13 @@ impl VcpkgArgs {
     }
 
     pub fn set_defaults(&mut self) {
-        if self.repo.is_none() {
-            self.repo = Some(relative_paths::VCPKG_MICROSOFT_REPO_URL.to_string());
-        }
-
-        if self.branch.is_none() {
-            self.branch = Some(relative_paths::VCPKG_MICROSOFT_REPO_BRANCH_NAME.to_string());
-        }
-
-        if self.directory.is_none() {
-            self.directory = Some(system_paths::DataPath::vcpkg_default_clone_dir())
+        if self.registry.is_empty() {
+            self.registry.push(format!(
+                "{}?branch={}&directory={}",
+                relative_paths::VCPKG_MICROSOFT_REPO_URL,
+                relative_paths::VCPKG_MICROSOFT_REPO_BRANCH_NAME,
+                system_paths::DataPath::vcpkg_default_clone_dir()
+            ));
         }
 
         if self.index_directory.is_none() {
@@ -66,21 +63,27 @@ impl VcpkgArgs {
     }
 
     pub fn update(&mut self, other: &Self, force: bool, dump: bool) -> bool {
-        if force || self.repo.is_none() {
-            if let Some(repo) = &other.repo {
-                self.repo = Some(repo.clone());
+        let mut registries = BTreeMap::new();
+        for (registry, url, branch, vcpkg_root_dir) in self.flatten_registry() {
+            registries.insert(registry, (url, branch, vcpkg_root_dir));
+        }
+        for (registry, url, branch, vcpkg_root_dir) in other.flatten_registry() {
+            if force {
+                registries.insert(registry, (url, branch, vcpkg_root_dir));
+            } else {
+                if !registries.contains_key(&registry) {
+                    registries.insert(registry, (url, branch, vcpkg_root_dir));
+                }
             }
         }
-        if force || self.branch.is_none() {
-            if let Some(branch) = &other.branch {
-                self.branch = Some(branch.clone());
-            }
+        self.registry.clear();
+        for (_registry, (url, branch, vcpkg_root_dir)) in registries {
+            self.registry.push(format!(
+                "{}?branch={}&directory={}",
+                url, branch, vcpkg_root_dir
+            ));
         }
-        if force || self.directory.is_none() {
-            if let Some(directory) = &other.directory {
-                self.directory = Some(directory.clone());
-            }
-        }
+
         if force || self.index_directory.is_none() {
             if let Some(index_directory) = &other.index_directory {
                 self.index_directory = Some(index_directory.clone());

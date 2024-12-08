@@ -6,21 +6,17 @@ impl VcpkgManager {
     pub fn update(&mut self) -> bool {
         self.config_get(true);
 
-        // clone if not exists
-        if !util::fs::is_dir_exists(self.args.directory.as_ref().unwrap()) {
-            return git::clone::run(
-                self.args.repo.as_ref().unwrap(),
-                self.args.branch.as_ref().unwrap(),
-                self.args.directory.as_ref().unwrap(),
-                &self.args.args,
-            );
-        } else {
-            // fetch and reset
-            let repo_root_dir = self.args.directory.as_ref().unwrap();
-            let mut result = git::fetch::run(repo_root_dir);
-            result &= git::reset::run(repo_root_dir, self.args.branch.as_ref().unwrap());
-
-            return result;
+        let mut result = true;
+        for (_name, url, branch, directory) in self.args.flatten_registry() {
+            // clone if not exists
+            if !util::fs::is_dir_exists(&directory) {
+                result &= git::clone::run(&url, &branch, &directory, &self.args.args);
+            } else {
+                // fetch and reset
+                result &= git::fetch::run(&directory);
+                result &= git::reset::run(&directory, &branch);
+            }
         }
+        return result;
     }
 }

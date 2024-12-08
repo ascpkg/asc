@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
-use super::{search::get_port_version_commit_info, VcpkgManager};
+use super::search::get_port_version_commit_info;
 
 use crate::{
     cli::commands::VcpkgArgs,
@@ -24,14 +24,11 @@ static VCPKG_PORT_VERSION_KEY: &str = "version";
 static VCPKG_PORT_PLATFORM_KEY: &str = "platform";
 static VCPKG_FEATURE_PLATFORM_DELIMITER: &str = "@";
 static VCPKG_REGISTRY_KIND_GIT: &str = "git";
-static VCPKG_REGISTRY_DEFAULT_KIND: &str = "artifact";
-static VCPKG_REGISTRY_DEFAULT_NAME: &str = "microsoft";
-static VCPKG_REGISTRY_DEFAULT_LOCATION: &str =
-    "https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip";
 
 pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig>) {
-    // ascending date time commits
-    let mut sorted_commits = BTreeMap::new();
+    let mut grouped_names = BTreeMap::new();
+    // ascending date time commits group by registry
+    let mut grouped_commits = BTreeMap::new();
 
     let mut vcpkg_data = VcpkgDependency::load(relative_paths::VCPKG_JSON_FILE_NAME, true).unwrap();
     vcpkg_data.dependencies.clear();
@@ -65,48 +62,68 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
             (String::from(VCPKG_PORT_VERSION_KEY), desc.version.clone()),
         ]));
 
-        if let Some(c) = get_port_version_commit_info(port_name, &desc.version) {
-            sorted_commits.insert(c.date_time, c.hash);
+        if let Some((registry, commit)) = get_port_version_commit_info(port_name, &desc.version) {
+            grouped_names
+                .entry(registry.clone())
+                .or_insert_with(BTreeSet::new)
+                .insert(port_name.clone());
+            grouped_commits
+                .entry(registry)
+                .or_insert_with(BTreeSet::new)
+                .insert((
+                    commit.date_time,
+                    commit.hash,
+                    port_name,
+                    desc.version.clone(),
+                ));
         }
     }
 
+    tracing::info!("baselines: {:#?}", grouped_commits);
+
     let vcpkg_args = VcpkgArgs::load_or_default();
-    let vcpkg_clone_dir = vcpkg_args.directory.unwrap();
-
     let cwd = util::fs::get_cwd();
-    util::fs::set_cwd(&vcpkg_clone_dir);
-    let mut baseline = String::new();
-    for (date_time, hash) in sorted_commits {
-        let stdout = git::show::run(&vcpkg_clone_dir, &hash);
+    let mut registry_baseline = BTreeMap::new();
+    for (registry, commits) in &grouped_commits {
+        for (date_time, hash, _, _) in commits {
+            let (_registry, url, branch, vcpkg_root_dir) = vcpkg_args.get_registry(&registry);
+            util::fs::set_cwd(&vcpkg_root_dir);
 
-        if let Some(baseline_data) = VcpkgBaseline::loads(&stdout, false) {
-            // overwrite versions
-            for desc in vcpkg_data.overrides.iter_mut() {
-                if let Some(v) = baseline_data
-                    .default
-                    .get(desc.get(VCPKG_PORT_NAME_KEY).unwrap())
-                {
-                    desc.insert(
-                        String::from(VCPKG_PORT_VERSION_KEY),
-                        v.format_version_text(),
+            let stdout = git::show::run(&vcpkg_root_dir, &hash);
+
+            if let Some(baseline_data) = VcpkgBaseline::loads(&stdout, false) {
+                // overwrite versions
+                for desc in vcpkg_data.overrides.iter_mut() {
+                    if let Some(v) = baseline_data
+                        .default
+                        .get(desc.get(VCPKG_PORT_NAME_KEY).unwrap())
+                    {
+                        desc.insert(
+                            String::from(VCPKG_PORT_VERSION_KEY),
+                            v.format_version_text(),
+                        );
+                    }
+                }
+
+                // search baseline
+                let mut found = true;
+                let mut versions = vec![];
+                for name in grouped_names.get(registry).unwrap_or(&BTreeSet::new()) {
+                    if let Some(version) = baseline_data.default.get(name) {
+                        versions.push(format!("{name}={}", version.format_version_text()));
+                    } else {
+                        found = false;
+                        tracing::warn!("can't found {} in {hash} @ {date_time}", name);
+                        break;
+                    }
+                }
+                if found {
+                    tracing::info!(
+                        "set baseline to {hash} @ {date_time} ({})",
+                        versions.join(", ")
                     );
+                    registry_baseline.insert(registry, (url, branch, hash));
                 }
-            }
-
-            // search baseline
-            let mut found = true;
-            for desc in &vcpkg_data.dependencies {
-                if !baseline_data.default.contains_key(&desc.name) {
-                    found = false;
-                    tracing::warn!("can't found {} in {hash} @ {date_time}", desc.name);
-                    break;
-                }
-            }
-            if found {
-                tracing::info!("set baseline to {hash} @ {date_time}");
-                baseline = hash;
-
-                break;
             }
         }
     }
@@ -119,7 +136,7 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
         vcpkg_data.dump(true, false);
     }
 
-    if baseline.is_empty() {
+    if registry_baseline.is_empty() {
         if !vcpkg_data.dependencies.is_empty() {
             tracing::error!("can't found all dependencies in same baseline");
         }
@@ -127,16 +144,30 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
         let mut vcpkg_conf_data =
             VcpkgConfiguration::load(relative_paths::VCPKG_CONFIGURATION_JSON_FILE_NAME, true)
                 .unwrap();
-        vcpkg_conf_data.registries = vec![VcpkgRegistry {
-            kind: String::from(VCPKG_REGISTRY_DEFAULT_KIND),
-            name: String::from(VCPKG_REGISTRY_DEFAULT_NAME),
-            location: String::from(VCPKG_REGISTRY_DEFAULT_LOCATION),
-        }];
-        vcpkg_conf_data.default_registry = VcpkgDefaultRegistry {
-            kind: String::from(VCPKG_REGISTRY_KIND_GIT),
-            repository: vcpkg_args.repo.unwrap(),
-            baseline: VcpkgManager::get_latest_commit().hash,
-        };
+        vcpkg_conf_data.registries.clear();
+        for (registry, (url, branch, hash)) in registry_baseline {
+            if registry == config::relative_paths::VCPKG_DIR_NAME {
+                vcpkg_conf_data.default_registry = VcpkgDefaultRegistry {
+                    kind: String::from(VCPKG_REGISTRY_KIND_GIT),
+                    repository: url,
+                    baseline: hash.clone(),
+                };
+            } else {
+                vcpkg_conf_data.registries.push(VcpkgRegistry {
+                    kind: String::from(VCPKG_REGISTRY_KIND_GIT),
+                    reference: branch,
+                    repository: url,
+                    baseline: hash.clone(),
+                    packages: grouped_names
+                        .get(registry)
+                        .unwrap()
+                        .iter()
+                        .map(|s| s.clone())
+                        .collect::<Vec<String>>(),
+                    ..Default::default()
+                });
+            }
+        }
         // write vcpkg-configuration.json
         vcpkg_conf_data.dump(true, false);
     }

@@ -30,7 +30,10 @@ static ARCH_MAP: [(&str, &str); 8] = [
 
 pub fn gen(options: &cli::commands::scan::ScanOptions) {
     let vcpkg_conf = VcpkgArgs::load_or_default();
-    let vcpkg_clone_dir = vcpkg_conf.directory.unwrap();
+    let vcpkg_clone_dir = vcpkg_conf.get_public_registry().3;
+    if vcpkg_clone_dir.is_empty() {
+        return;
+    }
 
     let cmake_toolchain_file = format!(
         "-D CMAKE_TOOLCHAIN_FILE={}",
