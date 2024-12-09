@@ -1,4 +1,7 @@
+import http.client
 import inspect
+import json
+import re
 import os
 import platform
 import shutil
@@ -11,41 +14,79 @@ def color_print(text):
 
 def shell(args):
     color_print('    ' + ' '.join(args))
+
     subprocess.run(args)
 
 
+def is_located_china():
+    conn = http.client.HTTPSConnection("ipinfo.io")
+    conn.request("GET", "/json")
+
+    response = conn.getresponse()
+    text = response.read().decode()
+    data = json.loads(text)
+
+    return data.get('country') == 'CN'
+
+
+def get_default_proxy() -> tuple:
+    if not is_located_china():
+        return ('', '', '')
+    else:
+        if not os.environ.get('WSL_DISTRO_NAME'):
+            return ('http', 10809, '127.0.0.1')
+        else:
+            for line in subprocess.run(['ip', 'route'], stdout=subprocess.PIPE, universal_newlines=True).stdout.strip().splitlines():
+                if line.startswith('default'):
+                    host_ip = re.search(r'\s(\d+\.\d+\.\d+\.\d)\s', line).group(1)
+                    return ('http', 10809, host_ip)
+            return ('', '', '')
+
 def set_env():
     color_print(inspect.currentframe().f_code.co_name)
-    
-    # set macOS sdk env
-    # set zig path (https://github.com/ascpkg/asc/releases/tag/zig-0.13.0-cf90dfd-20240607)
+
     if platform.system() == 'Windows':
-        proxy_ip = '127.0.0.1'
-        os.environ['SDKROOT'] = r'C:\MacOSX11.3.sdk'
-        os.environ['PATH'] = r'C:\zig;' + os.environ['PATH']
+        path_delimiter = ';'
+        zig_path = r'C:\zig-windows-x86_64-0.13.0'  # https://ziglang.org/download/0.13.0/zig-windows-x86_64-0.13.0.zip
+        zig_lib_dir = rf'{zig_path}\lib'
+        mac_os_sdk_path = r'C:\MacOSX11.3.sdk'  # https://github.com/ascpkg/asc/releases/download/MacOSX11.3.sdk/MacOSX11.3.sdk.tar.xz
     else:
-        proxy_ip = '172.26.240.1'
-        os.environ['SDKROOT'] = '/opt/MacOSX11.3.sdk'
-        os.environ['PATH'] = '/opt/zig:' + os.environ['PATH']
+        path_delimiter = ':'
+        zig_path = '/mnt/c/zig-linux-x86_64-0.13.0'  # https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
+        zig_lib_dir = f'{zig_path}/lib'
+        mac_os_sdk_path = '/mnt/c/MacOSX11.3.sdk'
+
+    # set macOS sdk env
+    os.environ['SDKROOT'] = os.environ.get('SDKROOT', mac_os_sdk_path)
+
+    # set zig env
+    os.environ['ZIG'] = zig_path
+    os.environ['ZIG_LIB_DIR'] = zig_lib_dir
+    os.environ['PATH'] = os.environ['ZIG'] + path_delimiter + os.environ['PATH']
 
     # set proxy env
-    proxy_schema = 'http'
-    proxy_port = 10809
-    os.environ['HTTP_PROXY'] = os.environ.get('HTTP_PROXY', f'{proxy_schema}://{proxy_ip}:{proxy_port}')
-    os.environ['HTTPS_PROXY'] = os.environ.get('HTTPS_PROXY', f'{proxy_schema}://{proxy_ip}:{proxy_port}')
-    os.environ['NO_PROXY'] = os.environ.get('NO_PROXY', f'localhost,127.0.0.1,{proxy_ip}:{proxy_port}')
+    proxy_schema, proxy_port, proxy_ip = get_default_proxy()
+    if proxy_schema and proxy_port and proxy_ip:
+        proxy_host_port = f'{proxy_ip}:{proxy_port}'
+        proxy_schema_host_port = f'{proxy_schema}://{proxy_host_port}'
+        color_print(f'    set proxy {proxy_schema_host_port}')
+        os.environ['HTTP_PROXY'] = os.environ.get('HTTP_PROXY', proxy_schema_host_port)
+        os.environ['HTTPS_PROXY'] = os.environ.get('HTTPS_PROXY', proxy_schema_host_port)
+        os.environ['NO_PROXY'] = os.environ.get('NO_PROXY', f'localhost,127.0.0.1,{proxy_host_port}')
 
 
 def install_cargo_zig_build():
     color_print(inspect.currentframe().f_code.co_name)
 
-    shell(['cargo', 'install', 'cargo-zigbuild'])
+    installed = [line.strip() for line in subprocess.run(['cargo', '--list'], stdout=subprocess.PIPE, universal_newlines=True).stdout.strip().splitlines()]
+    if 'zigbuild' not in installed:
+        shell(['cargo', 'install', 'cargo-zigbuild'])
 
 
 def get_rust_targets(glibc_version = ''):
     return [
         'x86_64-pc-windows-msvc' if platform.system() == 'Windows' else 'x86_64-pc-windows-gnu',
-        'aarch64-pc-windows-msvc' if platform.system() == 'Windows' else 'aarch64-pc-windows-gnullvm',  # not working
+        'aarch64-pc-windows-msvc' if platform.system() == 'Windows' else 'aarch64-pc-windows-gnullvm',
         'x86_64-apple-darwin',
         'aarch64-apple-darwin',
         f'x86_64-unknown-linux-gnu{glibc_version}',
@@ -56,8 +97,11 @@ def get_rust_targets(glibc_version = ''):
 def add_rust_targets():
     color_print(inspect.currentframe().f_code.co_name)
 
+    installed = subprocess.run(['rustup', 'target', 'list', '--installed'], stdout=subprocess.PIPE, universal_newlines=True).stdout.strip().splitlines()
+
     for target in get_rust_targets():
-        shell(['rustup', 'target', 'add', target])
+        if target not in installed:
+            shell(['rustup', 'target', 'add', target])
 
 
 def build_rust_targets():
@@ -87,7 +131,7 @@ def package(target, version):
     color_print(f'    makedirs {dir_path}')
 
     # copy file
-    src_file_path = f'target/{target}/release/asc{".exe" if "-windows-msvc" in target else ""}'
+    src_file_path = f'target/{target}/release/asc{".exe" if "-windows-" in target else ""}'
     shutil.copy(src_file_path, dir_path)
     color_print(f'    copy {src_file_path} to {dir_path}')
     
