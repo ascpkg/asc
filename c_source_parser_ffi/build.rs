@@ -9,7 +9,7 @@ static C11_FLAG_MSVC: &str = "/std:c11";
 static C99_FLAG_GCC_CLANG: &str = "-std=c99";
 
 static ENV_TARGET_KEY: &str = "TARGET";
-static ENV_TARGET_VALUE_WINDOWS: &str = "windows";
+static ENV_TARGET_VALUE_WINDOWS: &str = "-windows-msvc";
 
 static ENV_KEY_CARGO_MANIFEST_DIR: &str = "CARGO_MANIFEST_DIR";
 
