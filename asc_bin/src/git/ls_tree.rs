@@ -1,6 +1,6 @@
 use crate::{config::relative_paths::VCPKG_PORTS_DIR_NAME, util};
 
-pub fn run(git_commit_hash: &str, repo_root_dir: &str) -> Vec<(String, String)> {
+pub fn run(git_commit_hash: &str, repo_root_dir: &str, silent: bool) -> Vec<(String, String)> {
     let mut results = vec![];
 
     let output = util::shell::run(
@@ -16,7 +16,7 @@ pub fn run(git_commit_hash: &str, repo_root_dir: &str) -> Vec<(String, String)> 
         repo_root_dir,
         true,
         false,
-        false,
+        silent,
     )
     .unwrap();
 

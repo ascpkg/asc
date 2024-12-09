@@ -123,7 +123,10 @@ impl VcpkgManager {
                         true,
                     )
                     .unwrap();
-                    if latest_commit.hash <= search_index.check_point.hash {
+                    if latest_commit.date_time < search_index.check_point.date_time {
+                        continue;
+                    }
+                    if latest_commit.hash == search_index.check_point.hash {
                         continue;
                     }
 
@@ -165,14 +168,12 @@ impl VcpkgManager {
                 next_index = index + 1;
             }
 
+            let mut updated = false;
             for (index, c) in commits[next_index..].iter().enumerate() {
-                if index <= next_index {
-                    continue;
-                }
-
-                let trees = self.get_git_trees(&vcpkg_root_dir, &c.hash);
+                let trees = self.get_git_trees(&vcpkg_root_dir, &c.hash, true);
                 for (git_tree, port_name) in &trees {
                     if !results.index.contains_key(git_tree) {
+                        updated = true;
                         results.index.insert(
                             git_tree.clone(),
                             VcpkgGitTreeInfo {
@@ -185,19 +186,29 @@ impl VcpkgManager {
                 }
 
                 if index % 200 == 0 || commits.len() < 1000 {
-                    results.check_point = c.clone();
-                    results.dump(false, false);
+                    if updated {
+                        updated = false;
+                        results.check_point = c.clone();
+                        results.dump(false, false);
+                    }
                     tracing::info!("[{index}] #{}# {:#?}", results.index.len(), c.date_time);
                 }
             }
 
-            results.check_point = commits[commits.len() - 1].clone();
-            results.dump(false, false);
+            if updated {
+                results.check_point = commits[commits.len() - 1].clone();
+                results.dump(false, false);
+            }
         }
     }
 
-    fn get_git_trees(&self, vcpkg_root_dir: &str, git_commit_hash: &str) -> Vec<(String, String)> {
-        return git::ls_tree::run(git_commit_hash, vcpkg_root_dir);
+    fn get_git_trees(
+        &self,
+        vcpkg_root_dir: &str,
+        git_commit_hash: &str,
+        silent: bool,
+    ) -> Vec<(String, String)> {
+        return git::ls_tree::run(git_commit_hash, vcpkg_root_dir, silent);
     }
 
     pub fn get_latest_commit(vcpkg_root_dir: &str) -> GitCommitInfo {
