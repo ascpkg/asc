@@ -267,18 +267,20 @@ def set_envs() -> tuple:
     os.environ["SDKROOT"] = os.environ.get("SDKROOT", mac_os_sdk_path)
 
     # set zig env
-    os.environ["ZIG"] = zig_path
-    os.environ["ZIG_LIB_DIR"] = zig_lib_dir
+    if platform.system() == PLATFORM_SYSTEM_WINDOWS or is_on_windows_subsystem_linux():
+        os.environ["ZIG"] = zig_path
+        os.environ["ZIG_LIB_DIR"] = zig_lib_dir
 
     # set path env
     p7zip_dir_name = "7z-windows-24.09"
     os.environ["PATH"] = os.pathsep.join(
         [
-            os.environ["ZIG"],
             os.path.join(target, p7zip_dir_name, "x64"),
             os.environ["PATH"],
         ]
     )
+    if platform.system() == PLATFORM_SYSTEM_WINDOWS or is_on_windows_subsystem_linux():
+        os.environ["PATH"] = os.pathsep.join([os.environ["ZIG"], os.environ["PATH"]])
 
     # set proxy env
     proxy_schema, proxy_ip, proxy_port = get_default_proxy()
@@ -311,23 +313,20 @@ def install_requirements(
 def install_cargo_zig_build():
     logging.info(f"{inspect.currentframe().f_code.co_name}")
 
-    if platform.system() == PLATFORM_SYSTEM_WINDOWS:
-        shell(args=["python", "-m", "pip", "install", "cargo-zigbuild"])
+    if platform.system() == PLATFORM_SYSTEM_WINDOWS or is_on_windows_subsystem_linux():
+        installed = [
+            line.strip()
+            for line in subprocess.run(
+                ["cargo", "--list"], stdout=subprocess.PIPE, universal_newlines=True
+            )
+            .stdout.strip()
+            .splitlines()
+        ]
+        if "zigbuild" not in installed:
+            shell(args=["cargo", "install", "cargo-zigbuild"])
     else:
-        if is_on_windows_subsystem_linux():
-            installed = [
-                line.strip()
-                for line in subprocess.run(
-                    ["cargo", "--list"], stdout=subprocess.PIPE, universal_newlines=True
-                )
-                .stdout.strip()
-                .splitlines()
-            ]
-            if "zigbuild" not in installed:
-                shell(args=["cargo", "install", "cargo-zigbuild"])
-        else:
-            shell(args=["apt", "install", "-y", "python3-pip"])
-            shell(args=["python3", "-m", "pip", "install", "cargo-zigbuild"])
+        shell(args=["apt", "install", "-y", "python3-pip"])
+        shell(args=["python3", "-m", "pip", "install", "cargo-zigbuild"])
 
 
 def get_rust_targets(glibc_version=""):
