@@ -342,12 +342,14 @@ def package(target, version):
     os.chdir(cwd)
 
 
-def package_rust_targets():
+def package_rust_targets() -> str:
     logging.info(f'[5] {inspect.currentframe().f_code.co_name}')
 
     version = get_package_version()
     for target in get_rust_targets():
         package(target, version)
+
+    return version
 
 
 # logger ansi color
@@ -404,10 +406,27 @@ def parse_command_lines() -> command_lines:
     return command_lines(clean_target=args.clean_target)
 
 
+def clean_target(remove: bool):
+    if remove:
+        shutil.rmtree(TARGET_DIR_NAME, ignore_errors=True)
+
+
+def check_build_results(version: str):
+    not_exists = []
+    for target in get_rust_targets():
+        ext = 'zip' if WINDOWS_TARGET_PARTTEN in target else 'tar.xz'
+        path = os.path.join(TARGET_DIR_NAME, CROSS_BUILD_DIR_NAME, f'{target}-{version}.{ext}')
+        if not os.path.exists(path):
+            not_exists.append(path)
+    if not_exists:
+        raise FileNotFoundError(f'not exists: {", ".join(not_exists)}')
+
+
 if __name__ == '__main__':
     setup_logger()
 
     cli_args = parse_command_lines()
+    clean_target(cli_args.clean_target)
 
     install_requirements()
 
@@ -417,7 +436,8 @@ if __name__ == '__main__':
 
     build_rust_targets()
 
-    package_rust_targets()
+    version = package_rust_targets()
 
-    if cli_args.clean_target:
-        shutil.rmtree(TARGET_DIR_NAME)
+    check_build_results(version)
+
+    clean_target(cli_args.clean_target)

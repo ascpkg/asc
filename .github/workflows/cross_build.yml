@@ -1,0 +1,30 @@
+name: Build Targets
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '20*'
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+
+      - name: Install xz-utils
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xz-utils
+
+      - name: Cross build
+        run: |
+          python3 cross_build.py --clean-target=True
