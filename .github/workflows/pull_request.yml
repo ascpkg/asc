@@ -27,7 +27,7 @@ jobs:
 
       - name: add rust targets
         run: |
-          python3 cross_build.py --add_rust_targets=True
+          python3 cross_build.py --add_rust_targets=True --target=x86_64-unknown-linux-gnu
 
       - name: build x86_64-unknown-linux-gnu
         run: |

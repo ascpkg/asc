@@ -68,6 +68,10 @@ def test_default_proxy(host: str, port: int) -> bool:
         conn.close()
 
 
+def is_on_windows_subsystem_linux():
+    return "WSL_DISTRO_NAME" in os.environ
+
+
 def get_default_proxy() -> tuple:
     logging.warning(inspect.currentframe().f_code.co_name)
 
@@ -80,7 +84,7 @@ def get_default_proxy() -> tuple:
         (schema, ip, port) = ("http", "127.0.0.1", 10809)
 
     # windows subsystem linux
-    if os.environ.get("WSL_DISTRO_NAME"):
+    if is_on_windows_subsystem_linux():
         for line in (
             subprocess.run(
                 ["ip", "route"], stdout=subprocess.PIPE, universal_newlines=True
@@ -217,19 +221,18 @@ def install_7zip(dir: str, name: str):
 def install_zig(dir: str, name: str):
     logging.warning(f'{inspect.currentframe().f_code.co_name}("{dir}", "{name}")')
 
-    file_name = (
-        f'{name}.{"zip" if platform.system() == PLATFORM_SYSTEM_WINDOWS else "tar.xz"}'
-    )
-    dir_path = os.path.join(dir, name)
-    file_path = os.path.join(dir, file_name)
-    url = f"https://github.com/ascpkg/asc/releases/download/zig-0.13.0-cf90dfd-20240607/{file_name}"
+    if is_on_windows_subsystem_linux():
+        file_name = f'{name}.{"zip" if platform.system() == PLATFORM_SYSTEM_WINDOWS else "tar.xz"}'
+        dir_path = os.path.join(dir, name)
+        file_path = os.path.join(dir, file_name)
+        url = f"https://github.com/ascpkg/asc/releases/download/zig-0.13.0-cf90dfd-20240607/{file_name}"
 
-    if os.path.exists(dir_path) and is_bin_exists("zig"):
-        return
-    if not os.path.exists(file_path):
-        download_file(url=url, path=file_path)
-    if os.path.exists(file_path):
-        extract_file(path=file_path, dir=dir)
+        if os.path.exists(dir_path) and is_bin_exists("zig"):
+            return
+        if not os.path.exists(file_path):
+            download_file(url=url, path=file_path)
+        if os.path.exists(file_path):
+            extract_file(path=file_path, dir=dir)
 
 
 def install_mac_os_sdk(dir: str, name: str):
@@ -308,16 +311,23 @@ def install_requirements(
 def install_cargo_zig_build():
     logging.info(f"{inspect.currentframe().f_code.co_name}")
 
-    installed = [
-        line.strip()
-        for line in subprocess.run(
-            ["cargo", "--list"], stdout=subprocess.PIPE, universal_newlines=True
-        )
-        .stdout.strip()
-        .splitlines()
-    ]
-    if "zigbuild" not in installed:
-        shell(args=["cargo", "install", "cargo-zigbuild"])
+    if platform.system() == PLATFORM_SYSTEM_WINDOWS:
+        shell(args=["python", "-m", "pip", "install", "cargo-zigbuild"])
+    else:
+        if is_on_windows_subsystem_linux():
+            installed = [
+                line.strip()
+                for line in subprocess.run(
+                    ["cargo", "--list"], stdout=subprocess.PIPE, universal_newlines=True
+                )
+                .stdout.strip()
+                .splitlines()
+            ]
+            if "zigbuild" not in installed:
+                shell(args=["cargo", "install", "cargo-zigbuild"])
+        else:
+            shell(args=["apt", "install", "-y", "python3-pip"])
+            shell(args=["python3", "-m", "pip", "install", "cargo-zigbuild"])
 
 
 def get_rust_targets(glibc_version=""):
@@ -339,7 +349,7 @@ def get_rust_targets(glibc_version=""):
     ]
 
 
-def add_rust_targets():
+def add_rust_targets(target_pattern: str):
     logging.info(f"{inspect.currentframe().f_code.co_name}")
 
     installed = (
@@ -353,6 +363,8 @@ def add_rust_targets():
     )
 
     for target in get_rust_targets():
+        if not target.startswith(target_pattern):
+            continue
         if target not in installed:
             shell(args=["rustup", TARGET, "add", target])
 
@@ -599,7 +611,7 @@ if __name__ == "__main__":
         install_cargo_zig_build()
 
     if cli_args.all or cli_args.add_rust_targets:
-        add_rust_targets()
+        add_rust_targets(cli_args.target)
 
     if cli_args.all or cli_args.build_rust_targets:
         build_rust_targets(cli_args.target)
