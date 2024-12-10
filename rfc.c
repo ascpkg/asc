@@ -11,7 +11,7 @@ struct Type_s {
     // auto generate function pointers
     // void (*test_mutable_method)(Type *self);
     // void (*test_const_method)(const Type *self);
-    // void (*test_copy_method)(const Type *self);
+    // void (*test_copy_method)(Type self);
     // void (*test_static_method)();
 };
 
@@ -47,7 +47,7 @@ void test_mutable_method(Type *self) {
 void test_const_method(const Type *self) {
 }
 
-void test_copy_method(const Type *self) {
+void test_copy_method(Type self) {
 }
 
 void test_static_method(void) {
@@ -70,13 +70,18 @@ void call() {
     //     BindType(t);
     // }
 
+    // t->test_mutable_method(t);
+    // t->test_const_method((const Type *)t);
+    // t->test_copy_method(*t);
+    // t->test_static_method();
+
     // auto call when leave scope to free resources
     // if(t) {
     //     DropType(&t);
     // }
 }
 
-Type *move() {
+Type *move1() {
     return NewType(100);
     // auto call after creation to bind struct with functions
     // Type *t = NewType(100);
@@ -86,13 +91,35 @@ Type *move() {
     // return t;
 }
 
+Type *move2() {
+    Type *t = NewType(99);
+    // auto call after creation to bind struct with functions
+    // if (t) {
+    //     BindType(t);
+    // }
+
+    // t->test_mutable_method(t);
+    // t->test_const_method((const Type *)t);
+    // t->test_copy_method(*t);
+    // t->test_static_method();
+
+    return t;
+}
+
+
 int main() {
     call();
 
-    Type *p = move();
+    Type *p1 = move1();
     // auto call when leave scope to free resources
-    // if(p) {
-    //     DropType(&p);
+    // if(p1) {
+    //     DropType(&p1);
+    // }
+
+    Type *p2 = move2();
+    // auto call when leave scope to free resources
+    // if(p2) {
+    //     DropType(&p2);
     // }
     
     return 0;
