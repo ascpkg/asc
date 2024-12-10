@@ -221,7 +221,7 @@ def install_7zip(dir: str, name: str):
 def install_zig(dir: str, name: str):
     logging.warning(f'{inspect.currentframe().f_code.co_name}("{dir}", "{name}")')
 
-    if is_on_windows_subsystem_linux():
+    if platform.system() == PLATFORM_SYSTEM_WINDOWS or is_on_windows_subsystem_linux():
         file_name = f'{name}.{"zip" if platform.system() == PLATFORM_SYSTEM_WINDOWS else "tar.xz"}'
         dir_path = os.path.join(dir, name)
         file_path = os.path.join(dir, file_name)
