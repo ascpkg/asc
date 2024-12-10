@@ -1,12 +1,10 @@
-name: Build Targets
+name: Cross Build All
 
 on:
   workflow_dispatch:
   push:
     tags:
       - '20*'
-  pull_request:
-    types: [opened, synchronize]
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,11 +18,42 @@ jobs:
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
-      - name: Install xz-utils
+      - name: install requirements
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xz-utils
+          python3 cross_build.py --install_requirements=True
 
-      - name: Cross build
+      - name: install cargo zig build
         run: |
-          python3 cross_build.py --clean-target=True
+          python3 cross_build.py --install_cargo_zig_build=True
+
+      - name: add rust targets
+        run: |
+          python3 cross_build.py --add_rust_targets=True
+
+      - name: build x86_64-pc-windows-gnu
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=x86_64-pc-windows-gnu
+
+      - name: build aarch64-pc-windows-gnullvm
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=aarch64-pc-windows-gnullvm
+
+      - name: build x86_64-apple-darwin
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=x86_64-apple-darwin
+
+      - name: build aarch64-apple-darwin
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=aarch64-apple-darwin
+
+      - name: build x86_64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=x86_64-unknown-linux-gnu
+
+      - name: build aarch64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=aarch64-unknown-linux-gnu
+
+      - name: package rust targets
+        run: |
+          python3 cross_build.py --package_rust_targets=True --check_build_results=True

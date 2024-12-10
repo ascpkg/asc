@@ -9,7 +9,7 @@ static C11_FLAG_MSVC: &str = "/std:c11";
 static C99_FLAG_GCC_CLANG: &str = "-std=c99";
 
 static ENV_TARGET_KEY: &str = "TARGET";
-static ENV_TARGET_VALUE_WINDOWS: &str = "-windows-msvc";
+static ENV_TARGET_VALUE_WINDOWS_MSVC: &str = "-windows-msvc";
 
 static ENV_KEY_CARGO_MANIFEST_DIR: &str = "CARGO_MANIFEST_DIR";
 
@@ -36,8 +36,8 @@ fn main() {
     println!("cargo:rerun-if-changed={DYLIB_C}");
 
     let compiler_flag = if std::env::var(ENV_TARGET_KEY)
-        .unwrap_or(String::from(ENV_TARGET_VALUE_WINDOWS))
-        .contains(ENV_TARGET_VALUE_WINDOWS)
+        .unwrap_or(String::from(ENV_TARGET_VALUE_WINDOWS_MSVC))
+        .contains(ENV_TARGET_VALUE_WINDOWS_MSVC)
     {
         C11_FLAG_MSVC
     } else {

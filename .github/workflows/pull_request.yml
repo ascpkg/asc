@@ -1,0 +1,34 @@
+name: Cross Build One
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+
+      - name: install requirements
+        run: |
+          python3 cross_build.py --install_requirements=True
+
+      - name: install cargo zig build
+        run: |
+          python3 cross_build.py --install_cargo_zig_build=True
+
+      - name: add rust targets
+        run: |
+          python3 cross_build.py --add_rust_targets=True
+
+      - name: build x86_64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --build_rust_targets=True --target=x86_64-unknown-linux-gnu --package_rust_targets=True --check_build_results=True
