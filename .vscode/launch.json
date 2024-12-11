@@ -164,7 +164,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Cargo run asc vcpkg",
+            "name": "Cargo run asc vcpkg get",
             "cargo": {
                 "args": [
                     "build",
@@ -178,8 +178,7 @@
             },
             "args": [
                 "vcpkg",
-                "set",
-                "--branch=master1"
+                "get",
             ],
             "cwd": "${workspaceFolder}"
         },

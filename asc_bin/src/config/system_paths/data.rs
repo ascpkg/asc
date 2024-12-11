@@ -9,7 +9,7 @@ use crate::config::relative_paths::{
 pub struct DataPath {}
 
 impl DataPath {
-    fn prefix() -> String {
+    pub fn prefix() -> String {
         if let Some(dir) = directories::ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION) {
             return dir.data_dir().to_str().unwrap().replace(r"\", "/");
         }
@@ -127,7 +127,7 @@ impl DataPath {
         build(
             &Self::prefix(),
             vec![String::from(relative_paths::VCPKG_INDEX_DIR_NAME)],
-            true,
+            false,
             true,
         )
     }
@@ -160,7 +160,7 @@ impl DataPath {
         build(
             &Self::prefix(),
             vec![String::from(relative_paths::VPCKG_DOWNLOADS_DIR_NAME)],
-            true,
+            false,
             true,
         )
     }
@@ -169,7 +169,7 @@ impl DataPath {
         build(
             &Self::prefix(),
             vec![String::from(relative_paths::VCPKG_BINARY_CACHE_DIR_NAME)],
-            true,
+            false,
             true,
         )
     }
