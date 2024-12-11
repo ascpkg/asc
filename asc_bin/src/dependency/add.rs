@@ -67,6 +67,7 @@ fn add_for_pakcage(args: &AddArgs, project_conf: &mut config::project::ProjectCo
             let mut found = false;
             let results = vcpkg::search::from_index_file(&args.dependency, true);
             for v in &results {
+                let v = v.split_once(']').unwrap().1.trim();
                 if v.starts_with(&format!("{}  ", &version)) {
                     found = true;
                 }
