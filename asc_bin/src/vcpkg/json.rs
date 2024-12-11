@@ -134,6 +134,9 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
     } else {
         // write vcpkg.json
         vcpkg_data.dump(true, false);
+
+        // auto bootstrap
+        super::bootstrap::run();
     }
 
     if registry_baseline.is_empty() {

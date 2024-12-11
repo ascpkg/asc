@@ -1,3 +1,4 @@
+pub mod bootstrap;
 pub mod cmake;
 pub mod config;
 pub mod index;
