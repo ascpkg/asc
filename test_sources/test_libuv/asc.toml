@@ -14,7 +14,7 @@ source_file = "main.cpp"
 
 [dependencies]
 fmt = { version = "11.0.2#1", find_packages = ["fmt"], include_directories = [], link_libraries = ["fmt::fmt"], features = [] }
-libuv = { version = "1.49.2", find_packages = ["libuv"], include_directories = [], link_libraries = ["libuv::uv_a"], features = [] }
+libuv = { version = "1.49.2", find_packages = ["libuv"], include_directories = [], link_libraries = ["$<IF:$<TARGET_EXISTS:libuv::uv_a>,libuv::uv_a,libuv::uv>"], features = [] }
 libmpv = { version = "0.39.0", find_packages = ["libmpv"], include_directories = [], link_libraries = ["libmpv"], features = [] }
 spdlog = { version = "1.14.1", find_packages = ["spdlog"], include_directories = [], link_libraries = ["spdlog::spdlog"], features = [] }
 

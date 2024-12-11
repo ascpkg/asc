@@ -117,7 +117,7 @@ endif()
 {{#if find_packages}}
 # find package
 {{#each find_packages as |package|}}
-find_package({{package}} CONFIG REQUIRED)
+find_package({{{package}}} CONFIG REQUIRED)
 {{/each}}
 {{/if}}
 
@@ -128,7 +128,7 @@ target_include_directories(
     ${CMAKE_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_BINARY_DIR}
 {{#each include_directories as |directory|}}
-    {{directory}}
+    {{{directory}}}
 {{/each}}
 )
 
@@ -137,13 +137,13 @@ target_include_directories(
 {{/if}}
 set(LINK_LIBS "")
 {{#each private_libraries as |lib|}}
-list(APPEND LINK_LIBS {{lib}})
+list(APPEND LINK_LIBS {{{lib}}})
 {{/each}}
 {{#each std_libraries as |lib|}}
 {{#if lib.1}}
 if({{lib.1}})
 {{/if}}
-list(APPEND LINK_LIBS {{lib.0}})
+list(APPEND LINK_LIBS {{{lib.0}}})
 {{#if lib.1}}
 endif()
 {{/if}}
