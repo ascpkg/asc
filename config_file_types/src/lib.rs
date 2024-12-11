@@ -1,6 +1,11 @@
 pub mod types;
+#[cfg(feature = "hcl")]
 pub use types::hcl;
+#[cfg(feature = "json")]
 pub use types::json;
+#[cfg(feature = "toml")]
 pub use types::toml;
+#[cfg(feature = "xml")]
 pub use types::xml;
+#[cfg(feature = "yml")]
 pub use types::yml;
