@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+    permissions: write-all
     runs-on: ubuntu-latest
 
     steps:
@@ -61,7 +62,7 @@ jobs:
       - name: list artifacts
         run: |
           echo "current_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-          echo "previous_tag=$(git tag --sort=-creatordate | grep -E '^[0-9]{4}.[0-9]{2}.[0-9]{2}' | grep -v $(git describe --tags --abbrev=0) | head -n 1)" >> $GITHUB_ENV
+          echo "previous_tag=$(git tag --sort=-creatordate | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}' | grep -v $(git describe --tags --abbrev=0) | head -n 1)" >> $GITHUB_ENV
           echo "x86_64_pc_windows_file_name=$(basename $(ls target/cross_build/x86_64-pc-windows*.zip))" >> $GITHUB_ENV
           echo "aarch64_pc_windows_file_name=$(basename $(ls target/cross_build/aarch64-pc-windows*.zip))" >> $GITHUB_ENV
           echo "x86_64_apple_darwin_file_name=$(basename $(ls target/cross_build/x86_64-apple-darwin*.xz))" >> $GITHUB_ENV
