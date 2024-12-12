@@ -15,20 +15,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
-      - name: install requirements
-        run: |
-          python3 cross_build.py --install_requirements=True
+      # - name: install requirements
+      #   run: |
+      #     python3 cross_build.py --install_requirements=True
 
       - name: install cargo zig build
         run: |
           python3 cross_build.py --install_cargo_zig_build=True
 
-      - name: add rust targets
+      - name: add rust target x86_64-unknown-linux-gnu
         run: |
           python3 cross_build.py --add_rust_targets=True --target=x86_64-unknown-linux-gnu
 
       - name: build x86_64-unknown-linux-gnu
         run: |
           python3 cross_build.py --build_rust_targets=True --target=x86_64-unknown-linux-gnu --package_rust_targets=True --check_build_results=True
+
+      - name: run asc x86_64-unknown-linux-gnu
+        run: |
+          echo "current tag: $(git describe --tags --abbrev=0)"
+          echo "previous tag: $(git tag --sort=-creatordate | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}' | grep -v $(git describe --tags --abbrev=0) | head -n 1)"
+          echo "git log stat:"
+          git log -1 --stat
+          echo "asc version:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --version
+          echo "asc help:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --help
