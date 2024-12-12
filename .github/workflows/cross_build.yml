@@ -57,3 +57,54 @@ jobs:
       - name: package rust targets
         run: |
           python3 cross_build.py --package_rust_targets=True --check_build_results=True
+
+      - name: list artifacts
+        run: |
+          echo "x86_64_pc_windows_file_name=$(basename $(ls target/cross_build/x86_64-pc-windows*.zip))" >> $GITHUB_ENV
+          echo "aarch64_pc_windows_file_name=$(basename $(ls target/cross_build/aarch64-pc-windows*.zip))" >> $GITHUB_ENV
+          echo "x86_64_apple_darwin_file_name=$(basename $(ls target/cross_build/x86_64-apple-darwin*.xz))" >> $GITHUB_ENV
+          echo "aarch64_apple_darwin_file_name=$(basename $(ls target/cross_build/aarch64-apple-darwin*.xz))" >> $GITHUB_ENV
+          echo "x86_64_unknown_linux_file_name=$(basename $(ls target/cross_build/x86_64-unknown-linux*.xz))" >> $GITHUB_ENV
+          echo "aarch64_unknown_linux_file_name=$(basename $(ls target/cross_build/aarch64-unknown-linux*.xz))" >> $GITHUB_ENV
+
+      - name: upload ${{ env.x86_64_pc_windows_file_name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.x86_64_pc_windows_file_name }}
+          path: target/cross_build/${{ env.x86_64_pc_windows_file_name }}
+          if-no-files-found: error
+
+      - name: upload ${{ env.aarch64_pc_windows_file_name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.aarch64_pc_windows_file_name }}
+          path: target/cross_build/${{ env.aarch64_pc_windows_file_name }}
+          if-no-files-found: error
+
+      - name: upload ${{ env.x86_64_apple_darwin_file_name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.x86_64_apple_darwin_file_name }}
+          path: target/cross_build/${{ env.x86_64_apple_darwin_file_name }}
+          if-no-files-found: error
+
+      - name: upload ${{ env.aarch64_apple_darwin_file_name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.aarch64_apple_darwin_file_name }}
+          path: target/cross_build/${{ env.aarch64_apple_darwin_file_name }}
+          if-no-files-found: error
+
+      - name: upload ${{ env.x86_64_unknown_linux_file_name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.x86_64_unknown_linux_file_name }}
+          path: target/cross_build/${{ env.x86_64_unknown_linux_file_name }}
+          if-no-files-found: error
+
+      - name: upload ${{ env.aarch64_unknown_linux_file_name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.aarch64_unknown_linux_file_name }}
+          path: target/cross_build/${{ env.aarch64_unknown_linux_file_name }}
+          if-no-files-found: error
