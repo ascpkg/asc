@@ -71,73 +71,33 @@ jobs:
           echo "x86_64_unknown_linux_file_name=$(basename $(ls target/cross_build/x86_64-unknown-linux*.xz))" >> $GITHUB_ENV
           echo "aarch64_unknown_linux_file_name=$(basename $(ls target/cross_build/aarch64-unknown-linux*.xz))" >> $GITHUB_ENV
 
-      - name: create release
+      - name: run asc x86_64-unknown-linux-gnu
+        run: |
+          echo "current tag: $(git describe --tags --abbrev=0)"
+          echo "previous tag: $(git tag --sort=-creatordate | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}' | grep -v $(git describe --tags --abbrev=0) | head -n 1)"
+          echo "git log stat:"
+          git log -1 --stat
+          echo "asc version:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --version
+          echo "asc help:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --help
+
+      - name: release asc
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          name: ${{ env.current_tag }}
           tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          make_latest: true
+          fail_on_unmatched_files: true
           body: |
-            **Full Changelog**: https://github.com/ascpkg/asc/compare/${{ env.previous_tag }}...${{ github.ref }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload release asset x86_64-pc-windows
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/cross_build/${{ env.x86_64_pc_windows_file_name }}
-          asset_name: ${{ env.x86_64_pc_windows_file_name }}
-          asset_content_type: application/zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload release asset aarch64-pc-windows
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/cross_build/${{ env.aarch64_pc_windows_file_name }}
-          asset_name: ${{ env.aarch64_pc_windows_file_name }}
-          asset_content_type: application/zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload release asset x86_64-apple-darwin
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/cross_build/${{ env.x86_64_apple_darwin_file_name }}
-          asset_name: ${{ env.x86_64_apple_darwin_file_name }}
-          asset_content_type: application/tar+xz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload release asset aarch64-apple-darwin
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/cross_build/${{ env.aarch64_apple_darwin_file_name }}
-          asset_name: ${{ env.aarch64_apple_darwin_file_name }}
-          asset_content_type: application/tar+xz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload release asset x86_64-unknown-linux
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/cross_build/${{ env.x86_64_unknown_linux_file_name }}
-          asset_name: ${{ env.x86_64_unknown_linux_file_name }}
-          asset_content_type: application/tar+xz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: upload release asset aarch64-unknown-linux
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/cross_build/${{ env.aarch64_unknown_linux_file_name }}
-          asset_name: ${{ env.aarch64_unknown_linux_file_name }}
-          asset_content_type: application/tar+xz
+            **Full Changelog**: https://github.com/ascpkg/asc/compare/${{ env.previous_tag }}...${{ env.current_tag }}
+          files: |
+            target/cross_build/${{ env.x86_64_pc_windows_file_name }}
+            target/cross_build/${{ env.aarch64_pc_windows_file_name }}
+            target/cross_build/${{ env.x86_64_apple_darwin_file_name }}
+            target/cross_build/${{ env.aarch64_apple_darwin_file_name }}
+            target/cross_build/${{ env.x86_64_unknown_linux_file_name }}
+            target/cross_build/${{ env.aarch64_unknown_linux_file_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
