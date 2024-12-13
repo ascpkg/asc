@@ -1,0 +1,54 @@
+name: Cross Build All On Windows
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: windows-latest
+
+    steps:
+      - name: setup visual studio
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: 'latest'
+          msbuild-architecture: x64
+
+      - name: check rust version
+        run: rustc --version
+
+      - name: check python version
+        run: python --version
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: install cargo zig build
+        run: |
+          python -m pip install cargo-zigbuild
+
+      - name: build x86_64-unknown-linux-gnu
+        run: |
+          python cross_build.py --add_rust_targets=True --build_rust_targets=True --target=x86_64-unknown-linux-gnu
+
+      # - name: install requirements
+      #   run: |
+      #     python cross_build.py --install_requirements=True
+
+      # - name: install cargo zig build
+      #   run: |
+      #     python cross_build.py --install_cargo_zig_build=True
+
+      # - name: build x86_64-pc-windows-msvc
+      #   run: |
+      #     python cross_build.py --build_rust_targets=True --target=x86_64-pc-windows-msvc
+
+      # - name: build aarch64-pc-windows-msvc
+      #   run: |
+      #     python cross_build.py --build_rust_targets=True --target=aarch64-pc-windows-msvc
