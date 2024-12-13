@@ -1,0 +1,7 @@
+args = []
+repo = "https://github.com/microsoft/vcpkg.git"
+branch = "master"
+directory = "/mnt/data/asc/vcpkg"
+index_directory = "/mnt/data/asc/vcpkg.index"
+env_downloads = "/mnt/data/asc/vcpkg.downloads"
+env_default_binary_cache = "/mnt/data/asc/vcpkg.archives"

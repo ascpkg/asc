@@ -1,0 +1,14 @@
+[os_map]
+linux = "linux"
+windows = "windows-static"
+macos = "osx"
+
+[arch_map]
+arm = "arm"
+arm64 = "arm64"
+i386 = "x86"
+x86_64 = "x64"
+aarch64 = "arm64"
+armv7l = "arm"
+x86 = "x86"
+AMD64 = "x64"

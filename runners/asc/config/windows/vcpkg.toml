@@ -1,0 +1,5 @@
+args = []
+registry = ["https://github.com/microsoft/vcpkg.git?branch=master&directory=X:/asc/data/vcpkg"]
+index_directory = "X:/asc/data/vcpkg.index"
+env_downloads = "X:/asc/data/vcpkg.downloads"
+env_default_binary_cache = "X:/asc/data/vcpkg.archives"
