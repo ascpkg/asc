@@ -1,0 +1,55 @@
+name: build linux and darwin targets
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check python and rust
+        run: |
+          python3 --version
+          rustc --version
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Prepare requirements
+        run: |
+          python3 cross_build.py --prepare_mac_os_sdk=True --prepare_cargo_zig_build=True --use_python_pip=True
+
+      - name: Build x86_64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --target=x86_64-unknown-linux-gnu
+
+      - name: Build aarch64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --target=aarch64-unknown-linux-gnu
+
+      - name: Build x86_64-apple-darwin
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --target=x86_64-apple-darwin
+
+      - name: Build aarch64-apple-darwin
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --target=aarch64-apple-darwin
+
+      - name: Run x86_64-unknown-linux-gnu
+        run: |
+          echo "latest tag: $(python3 cross_build.py --get_latest_tag=True)"
+          echo "last tag: $(python3 cross_build.py --get_last_tag=True)"
+          echo "git log stat:"
+          git log -1 --stat
+          echo "asc version:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --version
+          echo "asc help:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --help

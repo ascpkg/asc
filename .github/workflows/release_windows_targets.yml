@@ -1,0 +1,68 @@
+name: release windows targets
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '20*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    permissions: write-all
+    runs-on: windows-latest
+
+    steps:
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: 'latest'
+          msbuild-architecture: x64
+
+      - name: Check python and rust
+        run: |
+          python --version
+          rustc --version
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Prepare requirements
+        run: |
+          python cross_build.py --prepare_cargo_zig_build=True --use_python_pip=True
+
+      - name: Build x86_64-pc-windows-msvc
+        run: |
+          python cross_build.py --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=x86_64-pc-windows-msvc
+
+      - name: Build aarch64-pc-windows-msvc
+        run: |
+          python cross_build.py --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=aarch64-pc-windows-msvc
+
+      - name: Run x86_64-pc-windows-msvc
+        run: |
+          echo "latest tag: $(python cross_build.py --get_latest_tag=True)"
+          echo "last tag: $(python cross_build.py --get_last_tag=True)"
+          echo "git log stat:"
+          git log -1 --stat
+          echo "asc version:"
+          .\target\x86_64-pc-windows-msvc\release\asc.exe --version
+          echo "asc help:"
+          .\target\x86_64-pc-windows-msvc\release\asc.exe --help
+
+      - name: List artifacts
+        run: |
+          echo "latest_tag=$(python cross_build.py --get_latest_tag=True)" >> $env:GITHUB_ENV
+          echo "x86_64_pc_windows_file_name=$(python cross_build.py --get_compressed_file=x86_64-pc-windows*.zip)" >> $env:GITHUB_ENV
+          echo "aarch64_pc_windows_file_name=$(python cross_build.py --get_compressed_file=aarch64-pc-windows*.zip)" >> $env:GITHUB_ENV
+
+      - name: Upload artifacts
+        run: |
+          gh release upload ${{ env.latest_tag }} ${{ env.x86_64_pc_windows_file_name }}
+          gh release upload ${{ env.latest_tag }} ${{ env.aarch64_pc_windows_file_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

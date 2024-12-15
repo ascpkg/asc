@@ -1,0 +1,90 @@
+name: release linux and darwin targets
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '20*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    permissions: write-all
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check python and rust
+        run: |
+          python3 --version
+          rustc --version
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: List tags
+        run: |
+          echo "latest_tag=$(python3 cross_build.py --get_latest_tag=True)" >> $GITHUB_ENV
+          echo "last_tag=$(python3 cross_build.py --get_last_tag=True)" >> $GITHUB_ENV
+
+      - name: Release tag
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.latest_tag }}
+          tag_name: ${{ github.ref }}
+          make_latest: true
+          body: |
+            **Full Changelog**: https://github.com/ascpkg/asc/compare/${{ env.last_tag }}...${{ env.latest_tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare requirements
+        run: |
+          python3 cross_build.py --prepare_cargo_zig_build=True --use_python_pip=True
+
+      - name: Build x86_64-apple-darwin
+        run: |
+          python3 cross_build.py --prepare_mac_os_sdk=True --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=x86_64-apple-darwin
+
+      - name: Build aarch64-apple-darwin
+        run: |
+          python3 cross_build.py --prepare_mac_os_sdk=True --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=aarch64-apple-darwin
+
+      - name: Build x86_64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=x86_64-unknown-linux-gnu
+
+      - name: Build aarch64-unknown-linux-gnu
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=aarch64-unknown-linux-gnu
+
+      - name: Run x86_64-unknown-linux-gnu
+        run: |
+          echo "latest tag: $(python3 cross_build.py --get_latest_tag=True)"
+          echo "last tag: $(python3 cross_build.py --get_last_tag=True)"
+          echo "git log stat:"
+          git log -1 --stat
+          echo "asc version:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --version
+          echo "asc help:"
+          ./target/x86_64-unknown-linux-gnu/release/asc --help
+
+      - name: List artifacts
+        run: |
+          echo "x86_64_apple_darwin_file_name=$(python3 cross_build.py --get_compressed_file=x86_64-apple-darwin*.xz)" >> $GITHUB_ENV
+          echo "aarch64_apple_darwin_file_name=$(python3 cross_build.py --get_compressed_file=aarch64-apple-darwin*.xz)" >> $GITHUB_ENV
+          echo "x86_64_unknown_linux_file_name=$(python3 cross_build.py --get_compressed_file=x86_64-unknown-linux*.xz)" >> $GITHUB_ENV
+          echo "aarch64_unknown_linux_file_name=$(python3 cross_build.py --get_compressed_file=aarch64-unknown-linux*.xz)" >> $GITHUB_ENV
+
+      - name: Upload artifacts
+        run: |
+          gh release upload ${{ env.latest_tag }} ${{ env.x86_64_apple_darwin_file_name }}
+          gh release upload ${{ env.latest_tag }} ${{ env.aarch64_apple_darwin_file_name }}
+          gh release upload ${{ env.latest_tag }} ${{ env.x86_64_unknown_linux_file_name }}
+          gh release upload ${{ env.latest_tag }} ${{ env.aarch64_unknown_linux_file_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

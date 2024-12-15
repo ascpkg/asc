@@ -1,0 +1,62 @@
+name: release darwin targets
+
+on:
+  workflow_dispatch:
+  # push:
+  #   tags:
+  #     - '20*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    permissions: write-all
+    runs-on: macos-11
+
+    steps:
+      - name: Check python and rust
+        run: |
+          python3 --version
+          rustc --version
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Prepare requirements
+        run: |
+          python3 cross_build.py --prepare_cargo_zig_build=True --use_python_pip=True
+
+      - name: Build x86_64-apple-darwin
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=x86_64-apple-darwin
+
+      - name: Build aarch64-apple-darwin
+        run: |
+          python3 cross_build.py --add_rust_targets=True --build_rust_targets=True --package_rust_targets=True --check_build_results=True --target=aarch64-apple-darwin
+
+      - name: Run x86_64-apple-darwin
+        run: |
+          echo "latest tag: $(python3 cross_build.py --get_latest_tag=True)"
+          echo "last tag: $(python3 cross_build.py --get_last_tag=True)"
+          echo "git log stat:"
+          git log -1 --stat
+          echo "asc version:"
+          ./target/x86_64-apple-darwin/release/asc --version
+          echo "asc help:"
+          ./target/x86_64-apple-darwin/release/asc --help
+
+      - name: List artifacts
+        run: |
+          echo "latest_tag: $(python3 cross_build.py --get_latest_tag=True)" >> $GITHUB_ENV
+          echo "x86_64_apple_darwin_file_name=$(basename $(ls target/cross_build/x86_64-apple-darwin*.xz)" >> $GITHUB_ENV
+          echo "aarch64_apple_darwin_file_name=$(basename $(ls target/cross_build/aarch64-apple-darwin*.xz)" >> $GITHUB_ENV
+
+      - name: Upload artifacts
+        run: |
+          gh release upload ${{ env.latest_tag }} target/cross_build/${{ env.x86_64_apple_darwin_file_name }}
+          gh release upload ${{ env.latest_tag }} target/cross_build/${{ env.aarch64_apple_darwin_file_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
