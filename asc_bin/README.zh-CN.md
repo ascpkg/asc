@@ -4,6 +4,8 @@
 
 [![Crates.io](https://img.shields.io/crates/d/asc_bin.svg)](https://crates.io/crates/asc_bin)
 [![Crates.io](https://img.shields.io/crates/v/asc_bin.svg)](https://crates.io/crates/asc_bin)
+[![release_windows_targets](https://github.com/ascpkg/asc/actions/workflows/release_windows_targets.yml/badge.svg)](https://github.com/ascpkg/asc/actions/workflows/release_windows_targets.yml)
+[![release_linux_darwin_targets](https://github.com/ascpkg/asc/actions/workflows/release_linux_darwin_targets.yml/badge.svg)](https://github.com/ascpkg/asc/actions/workflows/release_linux_darwin_targets.yml)
 
 # 1. 特性
 - 创建 asc package/workspace 或者将现有源码树初始化为 asc package/workspace

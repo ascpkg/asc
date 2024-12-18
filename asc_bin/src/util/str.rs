@@ -58,11 +58,14 @@ mod tests {
             ("", "apple", ""),
             ("abc", "", ""),
             ("a", "a", "a"),
+            ("/a/b/c/d/e/f/g/aaaaaaaaaaaa", "/a/b/c/d/e/bbb", "/a/b/c/d/e/"),
+            ("C:/a/b/c/d/e/f/g/aaaaaaaaaaaa", "C:/a/b/c/d/e/bbb", "C:/a/b/c/d/e/"),
+            (r"C:\a\b\c\d\e\f\g\aaaaaaaaaaaa", r"C:\a\b\c\d\e\bbb",  r"C:\a\b\c\d\e\"),
         ];
 
         for (s1, s2, expected) in test_cases {
-            let result = longest_common_prefix(s1, s2);
-            assert_eq!(result, expected);
+            let common = longest_common_prefix(s1, s2);
+            assert_eq!(common, expected);
         }
     }
 
@@ -72,6 +75,7 @@ mod tests {
             ("abcdef", "zcdemf", "cde"),
             ("abcdef", "abcdef", "abcdef"),
             ("abcdef", "xyzabc", "abc"),
+            ("abcdef", "xyzdef", "def"),
             ("abc", "def", ""),
             ("abc", "abcabc", "abc"),
             ("a", "a", "a"),
@@ -82,8 +86,8 @@ mod tests {
         ];
 
         for (s1, s2, expected) in test_cases {
-            let result = longest_common_substring(s1, s2);
-            assert_eq!(result, expected);
+            let common = longest_common_substring(s1, s2);
+            assert_eq!(common, expected);
         }
     }
 }
