@@ -1,0 +1,27 @@
+[package]
+name = "test_libmpv"
+version = "2024.12.18"
+edition = "2024"
+description = ""
+license = "LGPL-3.0-or-later"
+repository = ""
+branch = "main"
+
+[[bin]]
+name = "test_libmpv"
+source_dir = "src"
+source_file = "main.cpp"
+
+[dependencies.fmt]
+version = "11.0.2#1"
+find_packages = []
+include_directories = []
+link_libraries = []
+features = []
+
+[dependencies.libmpv-0-39-0-1]
+version = "0.39.0"
+find_packages = []
+include_directories = []
+link_libraries = []
+features = []
