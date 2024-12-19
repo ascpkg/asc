@@ -14,14 +14,21 @@ source_file = "main.cpp"
 
 [dependencies.fmt]
 version = "11.0.2#1"
-find_packages = []
+find_packages = ["fmt"]
 include_directories = []
-link_libraries = []
+link_libraries = ["fmt::fmt"]
 features = []
 
 [dependencies.libmpv-0-39-0-1]
 version = "0.39.0"
-find_packages = []
+find_packages = ["libmpv"]
 include_directories = []
-link_libraries = []
+link_libraries = ["libmpv"]
+features = []
+
+[dependencies.spdlog]
+version = "1.15.0#1"
+find_packages = ["spdlog"]
+include_directories = []
+link_libraries = ["spdlog::spdlog"]
 features = []
