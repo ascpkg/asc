@@ -58,6 +58,7 @@ impl VcpkgArgs {
                 true
             }
             VcpkgAction::Index => manager.index(),
+            VcpkgAction::Flatten => manager.flatten(),
         }
     }
 

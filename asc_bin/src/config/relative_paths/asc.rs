@@ -23,6 +23,13 @@ pub static VCPKG_LIB_DIR_NAME: &str = "lib";
 pub static VERSION_TXT_FILE_NAME: &str = "version.txt";
 pub static INNO_SETUP_ISS_FILE_NAME: &str = "setup.iss";
 
+// vcpkg default repo
+pub static ASC_REGISTRY_REPO_URL: &str = "https://github.com/ascpkg/asc-registry";
+pub static ASC_REGISTRY_REPO_BRANCH_NAME: &str = "main";
+pub static ASC_REGISTRY_DIR_NAME: &str = "asc-registry";
+pub static ASC_REGISTRY_CHECK_POINT_FILE_NAME: &str = "check_point.json";
+
+
 pub fn clean_target_files() -> bool {
     if util::fs::is_dir_exists(ASC_TARGET_DIR_NAME) {
         if !util::fs::remove_dirs(ASC_TARGET_DIR_NAME) {

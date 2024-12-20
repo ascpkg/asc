@@ -9,6 +9,7 @@ pub static VCPKG_BASELINE_JSON_FILE_NAME: &str = "baseline.json";
 pub static VCPKG_PORTS_DIR_NAME: &str = "ports/";
 pub static VCPKG_SCRIPTS_DIR_NAME: &str = "scripts";
 pub static VCPKG_BUILD_SYSTEMS_DIR_NAME: &str = "buildsystems";
+pub static VCPKG_CONTROL_FILE_NAME: &str = "CONTROL";
 pub static VCPKG_CMAKE_FILE_NAME: &str = "vcpkg.cmake";
 pub static VCPKG_PORT_FILE_CMAKE_FILE_NAME: &str = "portfile.cmake";
 pub static VCPKG_BOOTSTRAP_SH_FILE_NAME: &str = "bootstrap-vcpkg.sh";

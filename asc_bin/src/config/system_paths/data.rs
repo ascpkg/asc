@@ -1,9 +1,7 @@
 use super::{build, APPLICATION, ORGANIZATION, QUALIFIER};
 
 use crate::config::relative_paths::{
-    self, VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_BUILD_SYSTEMS_DIR_NAME, VCPKG_CMAKE_FILE_NAME,
-    VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME, VCPKG_PORT_FILE_CMAKE_FILE_NAME,
-    VCPKG_SCRIPTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
+    self, ASC_REGISTRY_DIR_NAME, VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_BUILD_SYSTEMS_DIR_NAME, VCPKG_CMAKE_FILE_NAME, VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME, VCPKG_PORT_FILE_CMAKE_FILE_NAME, VCPKG_SCRIPTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME
 };
 
 pub struct DataPath {}
@@ -32,6 +30,15 @@ impl DataPath {
 
     pub fn lib_clang_dir() -> String {
         build(&Self::lib_prefix(), vec![String::from("clang")], true, true)
+    }
+
+    pub fn asc_registry_default_clone_dir() -> String {
+        build(
+            &Self::prefix(),
+            vec![String::from(ASC_REGISTRY_DIR_NAME)],
+            false,
+            true,
+        )
     }
 
     pub fn vcpkg_default_clone_dir() -> String {

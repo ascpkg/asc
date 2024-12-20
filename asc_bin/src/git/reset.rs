@@ -1,6 +1,6 @@
 use crate::util;
 
-pub fn run(repo_root_dir: &str, branch: &str) -> bool {
+pub fn run(repo_root_dir: &str, branch: &str, commit: &str) -> bool {
     util::shell::run(
         "git",
         &vec!["reset", "--hard", &format!("origin/{branch}")],

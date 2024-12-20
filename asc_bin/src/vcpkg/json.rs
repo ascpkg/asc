@@ -9,7 +9,7 @@ use crate::{
         project::{DependencyConfig, PackageConfig},
         relative_paths::{self, ASC_TOML_FILE_NAME, VCPKG_JSON_FILE_NAME},
         vcpkg::{
-            manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
+            registry_manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
             port::{VcpkgDependency, VcpkgDependencyDesc, VcpkgJsonDependency, VcpkgPortJson},
             versions_baseline::{VcpkgBaseline, VcpkgPortVersion},
             versions_port::{VcpkgPortTreeVersion, VcpkgPortVersions},

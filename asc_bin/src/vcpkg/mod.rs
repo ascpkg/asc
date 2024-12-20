@@ -1,6 +1,7 @@
 pub mod bootstrap;
 pub mod cmake;
 pub mod config;
+pub mod flatten;
 pub mod index;
 pub mod json;
 pub mod search;
@@ -50,6 +51,12 @@ impl VcpkgArgs {
                 relative_paths::VCPKG_MICROSOFT_REPO_URL,
                 relative_paths::VCPKG_MICROSOFT_REPO_BRANCH_NAME,
                 system_paths::DataPath::vcpkg_default_clone_dir()
+            ));
+            self.registry.push(format!(
+                "{}?branch={}&directory={}",
+                relative_paths::ASC_REGISTRY_REPO_URL,
+                relative_paths::ASC_REGISTRY_REPO_BRANCH_NAME,
+                system_paths::DataPath::asc_registry_default_clone_dir()
             ));
         }
 

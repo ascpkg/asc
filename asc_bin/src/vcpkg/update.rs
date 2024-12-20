@@ -14,7 +14,7 @@ impl VcpkgManager {
             } else {
                 // fetch and reset
                 result &= git::fetch::run(&directory);
-                result &= git::reset::run(&directory, &branch);
+                result &= git::reset::run(&directory, &branch, "");
             }
         }
         return result;

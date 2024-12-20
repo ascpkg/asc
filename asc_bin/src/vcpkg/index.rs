@@ -61,7 +61,7 @@ impl VcpkgManager {
         return true;
     }
 
-    fn get_vcpkg_root_dir() -> Vec<(String, String)> {
+    pub fn get_vcpkg_root_dir() -> Vec<(String, String)> {
         let mut results = vec![];
         let vcpkg_conf = VcpkgArgs::load_or_default();
         for (name, _url, _branch, directory) in vcpkg_conf.flatten_registry() {

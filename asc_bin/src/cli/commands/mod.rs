@@ -85,4 +85,5 @@ pub enum VcpkgAction {
     Set,
     Get,
     Index,
+    Flatten,
 }
