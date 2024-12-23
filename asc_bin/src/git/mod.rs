@@ -1,4 +1,5 @@
 pub mod add;
+pub mod archive;
 pub mod clone;
 pub mod commit;
 pub mod commit_amend;

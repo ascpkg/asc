@@ -29,7 +29,6 @@ pub static ASC_REGISTRY_REPO_BRANCH_NAME: &str = "main";
 pub static ASC_REGISTRY_DIR_NAME: &str = "asc-registry";
 pub static ASC_REGISTRY_CHECK_POINT_FILE_NAME: &str = "check_point.json";
 
-
 pub fn clean_target_files() -> bool {
     if util::fs::is_dir_exists(ASC_TARGET_DIR_NAME) {
         if !util::fs::remove_dirs(ASC_TARGET_DIR_NAME) {

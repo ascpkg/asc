@@ -83,9 +83,7 @@ macro_rules! generate_wrapper_methods {
                     $serialize_pretty_method
                 };
                 match f(data) {
-                    Ok(text) => {
-                        text
-                    }
+                    Ok(text) => text,
                     Err(e) => {
                         if !ignore_error {
                             tracing::error!(

@@ -102,3 +102,57 @@ pub fn get_commits(repo_root_dir: &str, pretty_format: &str) -> Vec<GitCommitInf
 
     return commits;
 }
+
+pub fn get_changed_commits(
+    repo_root_dir: &str,
+    sub_path: &str,
+) -> Vec<(GitCommitInfo, Vec<String>)> {
+    let mut commits = vec![];
+
+    let output = util::shell::run(
+        "git",
+        &vec![
+            "log",
+            "--reverse",
+            "--date=iso",
+            "--name-only",
+            GIT_LOG_FORMAT_COMMIT_HASH_DATE,
+            sub_path,
+        ],
+        repo_root_dir,
+        true,
+        false,
+        false,
+    )
+    .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    for lines in stdout.split("\n\n") {
+        let mut commit = GitCommitInfo::default();
+        let mut changed_files = vec![];
+        for line in lines.lines() {
+            if !line.starts_with("{") {
+                if line.starts_with(sub_path) {
+                    changed_files.push(line.trim().to_string());
+                }
+            } else {
+                match serde_json::from_str(line) {
+                    Err(e) => {
+                        tracing::error!(
+                            call = "serde_json::from_str",
+                            line = line,
+                            error_tag = ErrorTag::JsonDeserializeError.as_ref(),
+                            message = e.to_string()
+                        );
+                    }
+                    Ok(info) => {
+                        commit = info;
+                    }
+                }
+            }
+        }
+        commits.push((commit, changed_files));
+    }
+
+    return commits;
+}

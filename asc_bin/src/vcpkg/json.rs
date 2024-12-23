@@ -9,8 +9,8 @@ use crate::{
         project::{DependencyConfig, PackageConfig},
         relative_paths::{self, ASC_TOML_FILE_NAME, VCPKG_JSON_FILE_NAME},
         vcpkg::{
-            registry_manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
             port::{VcpkgDependency, VcpkgDependencyDesc, VcpkgJsonDependency, VcpkgPortJson},
+            registry_manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
             versions_baseline::{VcpkgBaseline, VcpkgPortVersion},
             versions_port::{VcpkgPortTreeVersion, VcpkgPortVersions},
         },
@@ -358,7 +358,7 @@ pub fn gen_port_versions(
     versions_data.versions.insert(
         0,
         VcpkgPortTreeVersion {
-            git_tree: git::rev_parse::run(&package_conf.name, repo_root_dir),
+            git_tree: git::rev_parse::run("HEAD", &package_conf.name, repo_root_dir),
             version: Some(package_conf.version.clone()),
             port_version: port_version,
             ..Default::default()

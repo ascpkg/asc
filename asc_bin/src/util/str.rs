@@ -58,9 +58,21 @@ mod tests {
             ("", "apple", ""),
             ("abc", "", ""),
             ("a", "a", "a"),
-            ("/a/b/c/d/e/f/g/aaaaaaaaaaaa", "/a/b/c/d/e/bbb", "/a/b/c/d/e/"),
-            ("C:/a/b/c/d/e/f/g/aaaaaaaaaaaa", "C:/a/b/c/d/e/bbb", "C:/a/b/c/d/e/"),
-            (r"C:\a\b\c\d\e\f\g\aaaaaaaaaaaa", r"C:\a\b\c\d\e\bbb",  r"C:\a\b\c\d\e\"),
+            (
+                "/a/b/c/d/e/f/g/aaaaaaaaaaaa",
+                "/a/b/c/d/e/bbb",
+                "/a/b/c/d/e/",
+            ),
+            (
+                "C:/a/b/c/d/e/f/g/aaaaaaaaaaaa",
+                "C:/a/b/c/d/e/bbb",
+                "C:/a/b/c/d/e/",
+            ),
+            (
+                r"C:\a\b\c\d\e\f\g\aaaaaaaaaaaa",
+                r"C:\a\b\c\d\e\bbb",
+                r"C:\a\b\c\d\e\",
+            ),
         ];
 
         for (s1, s2, expected) in test_cases {

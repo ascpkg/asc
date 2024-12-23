@@ -1,18 +1,17 @@
+use std::collections::BTreeSet;
+
 use serde::{Deserialize, Serialize};
 
 use config_file_derives::ConfigFile;
 use config_file_types;
 
 use crate::{
-    cli::commands::VcpkgArgs,
     config::relative_paths::{
         ASC_REGISTRY_CHECK_POINT_FILE_NAME, ASC_REGISTRY_DIR_NAME, VCPKG_DIR_NAME,
+        VCPKG_PORTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
     },
-    git::{
-        self,
-        log::{GitCommitInfo, GIT_LOG_FORMAT_COMMIT_HASH_DATE},
-    },
-    util,
+    git::{self, log::GitCommitInfo},
+    util::{self, shell},
 };
 
 use super::VcpkgManager;
@@ -63,11 +62,9 @@ struct AscRegistryCheckPoint {
     #[serde(skip)]
     path: String,
 
-    history: Vec<(String, GitCommitInfo)>,
-
+    modified: String,
     check_point: GitCommitInfo,
 }
-
 
 impl VcpkgManager {
     pub fn flatten(&mut self) -> bool {
@@ -84,93 +81,73 @@ impl VcpkgManager {
         )
         .unwrap();
 
+        let tmp_dir = format!("{asc_registry_dir}/tmp");
+        let tar_name = "ports.tar";
+        let tar_path = format!("{asc_registry_dir}/tmp/{tar_name}");
+
         // get vcpkg registry commits
         let vcpkg_commits =
-            git::log::get_commits(&vcpkg_registry_dir, GIT_LOG_FORMAT_COMMIT_HASH_DATE);
-        let (mut control_entry, mut vcpkg_json_entry, mut port_versions_entry, mut version_entry) =
-            (true, false, false, false);
-        for commit in vcpkg_commits {
+            git::log::get_changed_commits(&vcpkg_registry_dir, VCPKG_PORTS_DIR_NAME);
+        for (commit, changed_files) in vcpkg_commits {
             if commit.hash == sync_check_point.check_point.hash {
                 continue;
             }
 
-            // reset vcpkg registry to commit
-            git::reset::run(&vcpkg_registry_dir, "", &commit.hash);
-
-            // set vcpkg registry break changes flag
-            if &commit.hash == GIT_COMMIT_HASH_ADD_VCPKG_JSON {
-                control_entry = false;
-                vcpkg_json_entry = true;
-            } else if &commit.hash == GIT_COMMIT_HASH_ADD_PORT_VERSIONS {
-                port_versions_entry = true;
-            } else if &commit.hash == GIT_COMMIT_HASH_RENAME_TO_VERSIONS {
-                version_entry = true;
-                port_versions_entry = false;
+            // get port git trees
+            let mut ports = BTreeSet::new();
+            for file in changed_files {
+                ports.insert(
+                    file.split_at(VCPKG_PORTS_DIR_NAME.len())
+                        .1
+                        .split_once("/")
+                        .unwrap()
+                        .0
+                        .to_string(),
+                );
             }
 
-            // sync vcpkg registry and flatten it to asc registry
-            self.sync_and_flatten(
-                control_entry,
-                vcpkg_json_entry,
-                port_versions_entry,
-                version_entry,
+            // create tmp dir
+            util::fs::create_dirs(&tmp_dir);
+            // output git archive
+            git::archive::run(
                 &vcpkg_registry_dir,
-                &asc_registry_dir,
+                "tar",
+                &tar_path,
+                &commit.hash,
+                VCPKG_PORTS_DIR_NAME,
+            );
+            // extract git archive
+            shell::run("tar", &vec!["-xf", tar_name], &tmp_dir, false, false, true).unwrap();
+            util::fs::remove_file(&tar_path);
+
+            // append version to port name in CONTROL/vcpkg.json
+
+            // git add ports
+            git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], &vcpkg_registry_dir);
+            git::commit::run(
+                format!("flatten microsoft/vcpkg {}", commit.hash.split_at(7).0),
+                &vcpkg_registry_dir,
             );
 
+            // git add versions
+            git::add::run(
+                &vec![VCPKG_VERSIONS_DIR_NAME.to_string()],
+                &vcpkg_registry_dir,
+            );
+            git::commit_amend::run(&vcpkg_registry_dir);
+
+            // remove tmp dir
+            util::fs::remove_dirs(&tmp_dir);
+
             // save asc registry check point
-            let local_now = chrono::Local::now();
             sync_check_point.check_point = commit.clone();
-            sync_check_point.history.push((
-                local_now.format("%Y-%m-%d %H:%M:%S.%f %z").to_string(),
-                commit.clone(),
-            ));
+            sync_check_point.modified = chrono::Local::now()
+                .format("%Y-%m-%d %H:%M:%S.%f %z")
+                .to_string();
             sync_check_point.dump(true, false);
         }
 
         return true;
-    }
-
-    pub fn sync_and_flatten(
-        &mut self,
-        control_entry: bool,
-        vcpkg_json_entry: bool,
-        port_versions_entry: bool,
-        version_entry: bool,
-        vcpkg_registry_dir: &str,
-        asc_registry_dir: &str,
-    ) {
-        self.parse_control_or_vcpkg_json_manifiest(
-            control_entry,
-            vcpkg_json_entry,
-            vcpkg_registry_dir,
-            asc_registry_dir,
-        );
-
-        self.parse_versions(
-            port_versions_entry,
-            version_entry,
-            vcpkg_registry_dir,
-            asc_registry_dir,
-        );
-    }
-
-    pub fn parse_control_or_vcpkg_json_manifiest(
-        &mut self,
-        control_entry: bool,
-        vcpkg_json_entry: bool,
-        vcpkg_registry_dir: &str,
-        asc_registry_dir: &str,
-    ) {
-    }
-
-    pub fn parse_versions(
-        &mut self,
-        port_versions_entry: bool,
-        version_entry: bool,
-        vcpkg_registry_dir: &str,
-        asc_registry_dir: &str,
-    ) {
     }
 
     pub fn get_registry_dirs(&mut self) -> (String, String) {

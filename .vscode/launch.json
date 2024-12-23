@@ -208,6 +208,28 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Cargo run asc vcpkg flatten",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=asc",
+                    "--package=asc_bin"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "vcpkg",
+                "flatten",
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Cargo run asc search",
             "cargo": {
                 "args": [
