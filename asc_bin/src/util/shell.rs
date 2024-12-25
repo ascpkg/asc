@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+
 use crate::cli::commands::VcpkgArgs;
+
+static COMMANDS_NEED_VCPKG_ENVS: [&str; 1] = ["cmake"];
 
 pub fn run(
     command: &str,
@@ -9,7 +13,11 @@ pub fn run(
     silent: bool,
 ) -> std::io::Result<std::process::Output> {
     let vcpkg_conf = VcpkgArgs::load_or_default();
-    let envs = vcpkg_conf.get_envs();
+    let envs = if COMMANDS_NEED_VCPKG_ENVS.contains(&command) {
+        vcpkg_conf.get_envs()
+    } else {
+        HashMap::new()
+    };
 
     if !silent {
         tracing::info!(

@@ -1,4 +1,9 @@
-use crate::{config::relative_paths::VCPKG_PORTS_DIR_NAME, util};
+use std::collections::BTreeMap;
+
+use crate::{
+    config::relative_paths::{VCPKG_CONTROL_FILE_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME},
+    util,
+};
 
 pub fn run(git_commit_hash: &str, repo_root_dir: &str, silent: bool) -> Vec<(String, String)> {
     let mut results = vec![];
@@ -36,4 +41,52 @@ pub fn run(git_commit_hash: &str, repo_root_dir: &str, silent: bool) -> Vec<(Str
     }
 
     return results;
+}
+
+pub fn list_ports(
+    git_commit_hash: &str,
+    repo_root_dir: &str,
+    silent: bool,
+) -> BTreeMap<String, (String, String)> {
+    let output = util::shell::run(
+        "git",
+        &vec!["ls-tree", "-r", git_commit_hash, VCPKG_PORTS_DIR_NAME],
+        repo_root_dir,
+        true,
+        false,
+        silent,
+    )
+    .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+
+    let mut port_manifest_text = BTreeMap::new();
+    for line in stdout.lines() {
+        if line.ends_with(VCPKG_CONTROL_FILE_NAME) {
+            let parts = line.split_whitespace().collect::<Vec<&str>>();
+            let text = super::show::file_content(repo_root_dir, parts[2]);
+            let name = parts[3]
+                .rsplit_once(VCPKG_PORTS_DIR_NAME)
+                .unwrap()
+                .1
+                .split_once(VCPKG_CONTROL_FILE_NAME)
+                .unwrap()
+                .0
+                .to_string();
+            port_manifest_text.insert(name, (text, String::new()));
+        } else if line.ends_with(VCPKG_JSON_FILE_NAME) {
+            let parts = line.split_whitespace().collect::<Vec<&str>>();
+            let text = super::show::file_content(repo_root_dir, parts[2]);
+            let name = parts[3]
+                .rsplit_once(VCPKG_PORTS_DIR_NAME)
+                .unwrap()
+                .1
+                .split_once(VCPKG_JSON_FILE_NAME)
+                .unwrap()
+                .0
+                .to_string();
+            port_manifest_text.insert(name, (text, String::new()));
+        }
+    }
+    return port_manifest_text;
 }
