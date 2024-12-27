@@ -16,22 +16,16 @@ static BUILD_DEPENDS_PREFIX: &str = "Build-Depends:";
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
+#[serde(rename_all = "kebab-case")]
 pub struct VcpkgPortManifest {
     #[serde(skip)]
     path: String,
 
     name: String,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_date: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_semver: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_string: Option<String>,
 
     #[serde(default)]
@@ -43,16 +37,16 @@ pub struct VcpkgPortManifest {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     description: Vec<String>,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     supports: String,
 
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     default_features: Vec<String>,
 
-    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     features: BTreeMap<String, VcpkgPortFeature>,
 
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
 }
 
@@ -90,22 +84,16 @@ impl VcpkgPortManifest {
         }
 
         let mut data = Self::load(path, false).unwrap();
-        let mut version = vec![];
-        if let Some(v) = &data.version {
-            version.push(v.as_str());
-        }
-        if let Some(v) = &data.version_date {
-            version.push(v.as_str());
-        }
-        if let Some(v) = &data.version_semver {
-            version.push(v.as_str());
-        }
-        if let Some(v) = &data.version_string {
-            version.push(v.as_str());
-        }
 
-        let version = version.join("-").replace("_", "-").replace(".", "-");
-        data.name = format!("{}-{version}-{}", data.name, data.port_version);
+        let (name, version) = Self::build_version_suffix_name(
+            &data.name,
+            &data.version,
+            &data.version_date,
+            &data.version_semver,
+            &data.version_string,
+            data.port_version,
+        );
+        data.name = name;
 
         data.dump(true, false);
 
@@ -157,22 +145,43 @@ impl VcpkgPortManifest {
 
     pub fn get_version_from_vcpkg_json_file(text: &str) -> String {
         let data = VcpkgPortManifest::loads(text, false).unwrap();
-        let mut version = vec![];
-        if let Some(v) = &data.version {
-            version.push(v.as_str());
-        }
-        if let Some(v) = &data.version_date {
-            version.push(v.as_str());
-        }
-        if let Some(v) = &data.version_semver {
-            version.push(v.as_str());
-        }
-        if let Some(v) = &data.version_string {
-            version.push(v.as_str());
-        }
 
-        let version = version.join("-").replace("_", "-").replace(".", "-");
-        return format!("{}-{version}-{}", data.name, data.port_version);
+        let (_name, version) = Self::build_version_suffix_name(
+            &data.name,
+            &data.version,
+            &data.version_date,
+            &data.version_semver,
+            &data.version_string,
+            data.port_version,
+        );
+        return version;
+    }
+
+    fn build_version_suffix_name(
+        name: &str,
+        version: &Option<String>,
+        version_date: &Option<String>,
+        version_semver: &Option<String>,
+        version_string: &Option<String>,
+        port_version: u32,
+    ) -> (String, String) {
+        let mut versions = vec![];
+        if let Some(v) = version {
+            versions.push(v.clone());
+        }
+        if let Some(v) = version_date {
+            versions.push(v.clone());
+        }
+        if let Some(v) = version_semver {
+            versions.push(v.clone());
+        }
+        if let Some(v) = version_string {
+            versions.push(v.clone());
+        }
+        versions.push(format!("{port_version}"));
+
+        let v = versions.join("-").replace("_", "-").replace(".", "-");
+        return (format!("{name}-{v}"), v);
     }
 
     pub fn get_version_from_control_file(text: &str) -> String {
@@ -194,3 +203,79 @@ impl VcpkgPortManifest {
         return version.join("-").replace("_", "-").replace(".", "-");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VCPKG_REPO_DIR: &str = "D:/asc/data/vcpkg";
+    const FFMPEG_CONTROL_COMMIT_ID: &str = "373915929eac1d0219474c18a6e8a3134783dfc5";
+    const FFMPEG_VCPKG_JSON_COMMIT_ID: &str = "44e8841e065a1b14340c6c0bb90210b11d7c3d4d";
+
+    fn get_all_port_versions(commit_id: &str) -> BTreeMap<String, String> {
+        let mut all_port_versions = BTreeMap::new();
+        for (port, (control_file_text, vcpkg_json_file_text)) in
+            crate::git::ls_tree::list_ports(commit_id, VCPKG_REPO_DIR, true)
+        {
+            if !control_file_text.is_empty() {
+                all_port_versions.insert(
+                    port,
+                    VcpkgPortManifest::get_version_from_control_file(&control_file_text),
+                );
+            } else if !vcpkg_json_file_text.is_empty() {
+                all_port_versions.insert(
+                    port,
+                    VcpkgPortManifest::get_version_from_vcpkg_json_file(&vcpkg_json_file_text),
+                );
+            }
+        }
+        return all_port_versions;
+    }
+    
+    fn get_ffmpeg_control() -> String {
+        crate::git::show::file_content(VCPKG_REPO_DIR, FFMPEG_CONTROL_COMMIT_ID)
+    }
+
+    fn get_ffmpeg_vcpkg_json() -> String {
+        crate::git::show::file_content(VCPKG_REPO_DIR, FFMPEG_VCPKG_JSON_COMMIT_ID)
+    }
+
+    #[test]
+    fn test_get_version_from_control_file() {
+        assert_eq!(
+            String::from("4-3-2-11"),
+            VcpkgPortManifest::get_version_from_control_file(&get_ffmpeg_control())
+        );
+    }
+
+    #[test]
+    fn test_get_version_from_vcpkg_json_file() {
+        assert_eq!(
+            String::from("4-4-0"),
+            VcpkgPortManifest::get_version_from_vcpkg_json_file(&get_ffmpeg_vcpkg_json())
+        );
+    }
+
+    #[test]
+    fn test_update_control_file() {
+        let path = "ffmpeg.CONTROL";
+        std::fs::write(path, get_ffmpeg_control().as_bytes()).unwrap();
+
+        // let all_port_versions = get_all_port_versions(FFMPEG_CONTROL_COMMIT_ID);
+        // VcpkgPortManifest::update_control_file(path, &all_port_versions);
+
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_update_vcpkg_json_file() {
+        let path = "ffmpeg.vcpkg.json";
+        std::fs::write(path, get_ffmpeg_vcpkg_json().as_bytes()).unwrap();
+
+        // let all_port_versions = get_all_port_versions(FFMPEG_VCPKG_JSON_COMMIT_ID);
+        // VcpkgPortManifest::update_vcpkg_json_file(path, &all_port_versions);
+
+        std::fs::remove_file(path).unwrap();
+    }
+}
+

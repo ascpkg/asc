@@ -40,16 +40,27 @@
             ],
             "cwd": "${workspaceFolder}"
         },
+       
         {
-            "name": "Cargo test",
             "type": "lldb",
             "request": "launch",
-            "program": "cargo",
-            "args": [
-                "test",
-            ]
+            "name": "Debug asc tests",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=asc",
+                    "--package=asc_bin"
+                ],
+                "filter": {
+                    "name": "asc",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
         },
-        
+
         {
             "type": "lldb",
             "request": "launch",
