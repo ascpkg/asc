@@ -58,6 +58,18 @@ public:
                     SPDLOG_ERROR("uv_udp_recv_start error, error_code: {}, error_str: {}", error_code, uv_strerror(error_code));
                     break;
                 }
+
+                error_code = uv_signal_init(uv_loop, &m_signal_handler);
+                if (error_code < 0) {
+                    SPDLOG_ERROR("uv_signal_init error, error_code: {}, error_str: {}", error_code, uv_strerror(error_code));
+                    break;
+                }
+                m_signal_handler.data = &m_udp_socket;
+                error_code = uv_signal_start(&m_signal_handler, teardown, SIGINT);  // Catch SIGINT signal (Ctrl+C)
+                if (error_code < 0) {
+                    SPDLOG_ERROR("uv_signal_start error, error_code: {}, error_str: {}", error_code, uv_strerror(error_code));
+                    break;
+                }
             }
 
             return true;
@@ -67,14 +79,18 @@ public:
         return false;
     }
 
-    static void teardown(uv_loop_t *uv_loop) {
-        if (uv_loop != nullptr) {
-            uv_walk(uv_loop, close_handle, nullptr);
-            uv_stop(uv_loop);
-        }
+    void stop() {
+        raise(SIGINT);
+    }
 
-        if (uv_loop != nullptr) {
-            uv_loop_close(uv_loop);
+    static void teardown(uv_signal_t *handle, int signum) {
+        if (handle->loop != nullptr) {
+            if(handle->data != nullptr) {
+                uv_udp_recv_stop((uv_udp_t *)handle->data);
+            }
+            uv_walk(handle->loop, close_handle, nullptr);
+            uv_stop(handle->loop);
+            uv_loop_close(handle->loop);
         }
     }
 
@@ -128,6 +144,8 @@ protected:
 
 private:
     uv_udp_t m_udp_socket;
+
+    uv_signal_t m_signal_handler;
 
     uv_udp_recv_cb m_recv_cb;
 
@@ -201,14 +219,14 @@ int main(int argc, char **argv) {
     }
 
     UdpSock udp_send_sock;
-    if (!udp_send_sock.setup("192.168.91.181", 20000, uv_loop, nullptr)) {
+    if (!udp_send_sock.setup(/*"192.168.91.181"*/"127.0.0.1", 20000, uv_loop, nullptr)) {
         return false;
     }
     
-    //UdpSock udp_recv_sock;
-    //if (!udp_recv_sock.setup("0.0.0.0", 9999, uv_loop, on_udp_recv)) {
-    //    return false;
-    //}
+    UdpSock udp_recv_sock;
+    if (!udp_recv_sock.setup("0.0.0.0", 20000, uv_loop, on_udp_recv)) {
+       return false;
+    }
 
     std::thread sender_thread([&udp_send_sock]{
         for(int i = 0; i < 10; i++) {
@@ -238,8 +256,6 @@ int main(int argc, char **argv) {
     });
     
     sender_thread.join();
-    UdpSock::teardown(uv_loop);
+    udp_recv_sock.stop();
     uv_loop_thread.join();
 }
-
-
