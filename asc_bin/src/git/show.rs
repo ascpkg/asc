@@ -1,16 +1,9 @@
-use crate::{config::relative_paths, util};
+use crate::util;
 
-pub fn run(repo_root_dir: &str, hash: &str) -> String {
+pub fn commit_file_content(repo_root_dir: &str, commit_hash: &str, path: &str) -> String {
     let output = util::shell::run(
         "git",
-        &vec![
-            "show",
-            &format!(
-                "{}:{}",
-                hash,
-                relative_paths::vcpkg_versions_baseline_json()
-            ),
-        ],
+        &vec!["show", &format!("{commit_hash}:{path}")],
         repo_root_dir,
         true,
         false,
@@ -20,10 +13,10 @@ pub fn run(repo_root_dir: &str, hash: &str) -> String {
     String::from_utf8_lossy(&output.stdout).to_string()
 }
 
-pub fn file_content(repo_root_dir: &str, hash: &str, path: &str) -> String {
+pub fn tree_file_content(repo_root_dir: &str, tree_hash: &str) -> String {
     let output = util::shell::run(
         "git",
-        &vec!["show", &format!("{hash}:{path}")],
+        &vec!["show", tree_hash],
         repo_root_dir,
         true,
         false,

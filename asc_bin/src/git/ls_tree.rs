@@ -60,32 +60,34 @@ pub fn list_ports(
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
 
+    let control_file_delimiter = format!("/{VCPKG_CONTROL_FILE_NAME}");
+    let vcpkg_json_file_delimiter = format!("/{VCPKG_JSON_FILE_NAME}");
     let mut port_manifest_text = BTreeMap::new();
     for line in stdout.lines() {
         if line.ends_with(VCPKG_CONTROL_FILE_NAME) {
             let parts = line.split_whitespace().collect::<Vec<&str>>();
-            let text = super::show::file_content(repo_root_dir, parts[2], parts[3]);
+            let text = super::show::tree_file_content(repo_root_dir, parts[2]);
             let name = parts[3]
                 .rsplit_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
                 .1
-                .split_once(VCPKG_CONTROL_FILE_NAME)
+                .split_once(&control_file_delimiter)
                 .unwrap()
                 .0
                 .to_string();
             port_manifest_text.insert(name, (text, String::new()));
         } else if line.ends_with(VCPKG_JSON_FILE_NAME) {
             let parts = line.split_whitespace().collect::<Vec<&str>>();
-            let text = super::show::file_content(repo_root_dir, parts[2], parts[3]);
+            let text = super::show::tree_file_content(repo_root_dir, parts[2]);
             let name = parts[3]
                 .rsplit_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
                 .1
-                .split_once(VCPKG_JSON_FILE_NAME)
+                .split_once(&vcpkg_json_file_delimiter)
                 .unwrap()
                 .0
                 .to_string();
-            port_manifest_text.insert(name, (text, String::new()));
+            port_manifest_text.insert(name, (String::new(), text));
         }
     }
     return port_manifest_text;

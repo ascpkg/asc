@@ -81,6 +81,7 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
 
     tracing::info!("baselines: {:#?}", grouped_commits);
 
+    let vcpkg_versions_baseline_json = relative_paths::vcpkg_versions_baseline_json();
     let vcpkg_args = VcpkgArgs::load_or_default();
     let cwd = util::fs::get_cwd();
     let mut registry_baseline = BTreeMap::new();
@@ -89,7 +90,11 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
             let (_registry, url, branch, vcpkg_root_dir) = vcpkg_args.get_registry(&registry);
             util::fs::set_cwd(&vcpkg_root_dir);
 
-            let stdout = git::show::run(&vcpkg_root_dir, &hash);
+            let stdout = git::show::commit_file_content(
+                &vcpkg_root_dir,
+                &hash,
+                &vcpkg_versions_baseline_json,
+            );
 
             if let Some(baseline_data) = VcpkgBaseline::loads(&stdout, false) {
                 // overwrite versions

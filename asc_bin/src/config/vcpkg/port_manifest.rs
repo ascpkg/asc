@@ -31,11 +31,10 @@ pub struct VcpkgPortManifest {
     #[serde(default)]
     pub port_version: u32,
 
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     homepage: String,
 
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    description: Vec<String>,
+    description: Option<VcpkgPortDescription>,
 
     #[serde(default, skip_serializing_if = "String::is_empty")]
     supports: String,
@@ -48,6 +47,13 @@ pub struct VcpkgPortManifest {
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+enum VcpkgPortDescription {
+    Single(String),
+    Multiple(Vec<String>),
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -68,7 +74,7 @@ enum VcpkgPortDependency {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 struct ComplexDependency {
     name: String,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     features: Vec<String>,
     default_features: Option<bool>,
     platform: Option<String>,
@@ -247,7 +253,7 @@ mod tests {
 
     fn get_ffmpeg_control() -> String {
         let vcpkg_root_dir = get_vcpkg_root_dir();
-        crate::git::show::file_content(
+        crate::git::show::commit_file_content(
             &vcpkg_root_dir,
             FFMPEG_CONTROL_COMMIT_ID,
             "ports/ffmpeg/CONTROL",
@@ -256,7 +262,7 @@ mod tests {
 
     fn get_ffmpeg_vcpkg_json() -> String {
         let vcpkg_root_dir = get_vcpkg_root_dir();
-        crate::git::show::file_content(
+        crate::git::show::commit_file_content(
             &vcpkg_root_dir,
             FFMPEG_VCPKG_JSON_COMMIT_ID,
             "ports/ffmpeg/vcpkg.json",
@@ -284,10 +290,12 @@ mod tests {
         let path = "ffmpeg.CONTROL";
         std::fs::write(path, get_ffmpeg_control().as_bytes()).unwrap();
 
-        // let all_port_versions = get_all_port_versions(FFMPEG_CONTROL_COMMIT_ID);
-        // VcpkgPortManifest::update_control_file(path, &all_port_versions);
+        let all_port_versions = get_all_port_versions(FFMPEG_CONTROL_COMMIT_ID);
+        VcpkgPortManifest::update_control_file(&path, &all_port_versions);
 
-        std::fs::remove_file(path).unwrap();
+        assert!(false);
+
+        // std::fs::remove_file(path).unwrap();
     }
 
     #[test]
