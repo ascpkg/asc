@@ -64,7 +64,7 @@ pub fn list_ports(
     for line in stdout.lines() {
         if line.ends_with(VCPKG_CONTROL_FILE_NAME) {
             let parts = line.split_whitespace().collect::<Vec<&str>>();
-            let text = super::show::file_content(repo_root_dir, parts[2]);
+            let text = super::show::file_content(repo_root_dir, parts[2], parts[3]);
             let name = parts[3]
                 .rsplit_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
@@ -76,7 +76,7 @@ pub fn list_ports(
             port_manifest_text.insert(name, (text, String::new()));
         } else if line.ends_with(VCPKG_JSON_FILE_NAME) {
             let parts = line.split_whitespace().collect::<Vec<&str>>();
-            let text = super::show::file_content(repo_root_dir, parts[2]);
+            let text = super::show::file_content(repo_root_dir, parts[2], parts[3]);
             let name = parts[3]
                 .rsplit_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()

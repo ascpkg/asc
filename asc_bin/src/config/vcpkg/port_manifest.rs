@@ -54,7 +54,7 @@ pub struct VcpkgPortManifest {
 struct VcpkgPortFeature {
     description: String,
 
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
 }
 
@@ -70,7 +70,7 @@ struct ComplexDependency {
     name: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     features: Vec<String>,
-    default_features: bool,
+    default_features: Option<bool>,
     platform: Option<String>,
 }
 
@@ -198,6 +198,9 @@ impl VcpkgPortManifest {
             } else if line.starts_with(PORT_VERSION_PREFIX) {
                 version.push(line.split_at(PORT_VERSION_PREFIX.len()).1.trim());
             }
+            if version.len() == 2 {
+                break;
+            }
         }
 
         return version.join("-").replace("_", "-").replace(".", "-");
@@ -208,14 +211,24 @@ impl VcpkgPortManifest {
 mod tests {
     use super::*;
 
-    const VCPKG_REPO_DIR: &str = "D:/asc/data/vcpkg";
     const FFMPEG_CONTROL_COMMIT_ID: &str = "373915929eac1d0219474c18a6e8a3134783dfc5";
     const FFMPEG_VCPKG_JSON_COMMIT_ID: &str = "44e8841e065a1b14340c6c0bb90210b11d7c3d4d";
 
+    pub fn get_vcpkg_root_dir() -> String {
+        let vcpkg_conf = crate::cli::commands::VcpkgArgs::load_or_default();
+        for (name, _url, _branch, directory) in vcpkg_conf.flatten_registry() {
+            if name == crate::config::relative_paths::VCPKG_DIR_NAME {
+                return directory;
+            }
+        }
+        return String::new();
+    }
+
     fn get_all_port_versions(commit_id: &str) -> BTreeMap<String, String> {
         let mut all_port_versions = BTreeMap::new();
+        let vcpkg_root_dir = get_vcpkg_root_dir();
         for (port, (control_file_text, vcpkg_json_file_text)) in
-            crate::git::ls_tree::list_ports(commit_id, VCPKG_REPO_DIR, true)
+            crate::git::ls_tree::list_ports(commit_id, &vcpkg_root_dir, true)
         {
             if !control_file_text.is_empty() {
                 all_port_versions.insert(
@@ -231,13 +244,23 @@ mod tests {
         }
         return all_port_versions;
     }
-    
+
     fn get_ffmpeg_control() -> String {
-        crate::git::show::file_content(VCPKG_REPO_DIR, FFMPEG_CONTROL_COMMIT_ID)
+        let vcpkg_root_dir = get_vcpkg_root_dir();
+        crate::git::show::file_content(
+            &vcpkg_root_dir,
+            FFMPEG_CONTROL_COMMIT_ID,
+            "ports/ffmpeg/CONTROL",
+        )
     }
 
     fn get_ffmpeg_vcpkg_json() -> String {
-        crate::git::show::file_content(VCPKG_REPO_DIR, FFMPEG_VCPKG_JSON_COMMIT_ID)
+        let vcpkg_root_dir = get_vcpkg_root_dir();
+        crate::git::show::file_content(
+            &vcpkg_root_dir,
+            FFMPEG_VCPKG_JSON_COMMIT_ID,
+            "ports/ffmpeg/vcpkg.json",
+        )
     }
 
     #[test]
@@ -278,4 +301,3 @@ mod tests {
         std::fs::remove_file(path).unwrap();
     }
 }
-
