@@ -102,7 +102,7 @@ impl DataPath {
                 format!("{}-", port_name.chars().nth(0).unwrap()),
                 format!("{}.json", port_name),
             ],
-            false,
+            true,
             false,
         )
     }
@@ -114,7 +114,7 @@ impl DataPath {
                 String::from(VCPKG_VERSIONS_DIR_NAME),
                 String::from(VCPKG_BASELINE_JSON_FILE_NAME),
             ],
-            false,
+            true,
             false,
         )
     }

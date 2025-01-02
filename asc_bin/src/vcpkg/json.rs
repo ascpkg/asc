@@ -335,36 +335,47 @@ fn update_vcpkg_json_fields(
 
 pub fn gen_port_versions(
     repo_root_dir: &String,
-    package_conf: &PackageConfig,
+    name: &str,
+    version: &Option<String>,
+    version_date: &Option<String>,
+    version_semver: &Option<String>,
+    version_string: &Option<String>,
     port_version: u32,
 ) -> bool {
     let mut versions_data = VcpkgPortVersions::load(
-        &config::system_paths::DataPath::vcpkg_versions_port_json_path(
-            repo_root_dir,
-            &package_conf.name,
-        ),
+        &config::system_paths::DataPath::vcpkg_versions_port_json_path(repo_root_dir, name),
         true,
     )
     .unwrap();
 
-    if !versions_data.versions.is_empty() {
-        if versions_data.versions[0].version.as_ref().unwrap() == &package_conf.version
-            && versions_data.versions[0].port_version == port_version
-        {
-            tracing::warn!(
-                message = "the version was not changed",
-                version = package_conf.version,
-                port_version = port_version,
-            );
-            return false;
+    let mut baseline_version = String::new();
+    for vv in [version, version_date, version_semver, version_string] {
+        if let Some(v) = vv {
+            baseline_version = v.clone();
+            if !versions_data.versions.is_empty() {
+                if versions_data.versions[0].version.as_ref().unwrap() == v
+                    && versions_data.versions[0].port_version == port_version
+                {
+                    tracing::warn!(
+                        message = "the port version was not changed",
+                        name = name,
+                        version = v,
+                        port_version = port_version,
+                    );
+                    versions_data.versions.clear();
+                }
+            }
         }
     }
 
     versions_data.versions.insert(
         0,
         VcpkgPortTreeVersion {
-            git_tree: git::rev_parse::run("HEAD", &package_conf.name, repo_root_dir),
-            version: Some(package_conf.version.clone()),
+            git_tree: git::rev_parse::run("HEAD", name, repo_root_dir),
+            version: version.clone(),
+            version_date: version_date.clone(),
+            version_semver: version_semver.clone(),
+            version_string: version_string.clone(),
             port_version: port_version,
             ..Default::default()
         },
@@ -377,11 +388,12 @@ pub fn gen_port_versions(
         true,
     )
     .unwrap();
-    if let Some(v) = baseline_data.default.get(&package_conf.name) {
-        if v.baseline == package_conf.version && v.port_version == port_version {
+    if let Some(v) = baseline_data.default.get(name) {
+        if v.baseline == baseline_version && v.port_version == port_version {
             tracing::warn!(
-                message = "the version was not changed",
-                version = package_conf.version,
+                message = "the baseline version was not changed",
+                name = name,
+                version = baseline_version,
                 port_version = port_version,
             );
             return result;
@@ -389,9 +401,9 @@ pub fn gen_port_versions(
     }
 
     baseline_data.default.insert(
-        package_conf.name.clone(),
+        name.to_string(),
         VcpkgPortVersion {
-            baseline: package_conf.version.clone(),
+            baseline: baseline_version,
             port_version: port_version,
         },
     );

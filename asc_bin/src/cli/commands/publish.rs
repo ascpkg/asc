@@ -119,7 +119,15 @@ impl PublishArgs {
                     );
                 }
 
-                result &= vcpkg::json::gen_port_versions(&repo_root_dir, pkg, port_version);
+                result &= vcpkg::json::gen_port_versions(
+                    &repo_root_dir,
+                    &pkg.name,
+                    &Some(pkg.version.clone()),
+                    &None,
+                    &None,
+                    &None,
+                    port_version,
+                );
                 if result {
                     git::add::run(
                         &vec![

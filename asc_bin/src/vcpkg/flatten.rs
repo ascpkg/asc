@@ -12,6 +12,7 @@ use crate::{
     },
     git,
     util::{self, shell},
+    vcpkg,
 };
 
 use super::VcpkgManager;
@@ -71,23 +72,24 @@ impl VcpkgManager {
         {
             tracing::warn!(
                 "========== {} / {total} = {}% ==========",
-                next_index + index, (index + next_index) as f32 * 100.0 / total
+                next_index + index,
+                (index + next_index) as f32 * 100.0 / total
             );
 
             // get all ports
             let mut all_port_versions = BTreeMap::new();
-            for (port, (control_file_text, vcpkg_json_file_text)) in
-                git::ls_tree::list_ports(&commit.hash, &vcpkg_registry_dir, true)
-            {
+            let all_ports_manifest =
+                git::ls_tree::list_ports(&commit.hash, &vcpkg_registry_dir, true);
+            for (port, (control_file_text, vcpkg_json_file_text)) in &all_ports_manifest {
                 if !control_file_text.is_empty() {
                     all_port_versions.insert(
-                        port,
-                        VcpkgPortManifest::get_version_from_control_file(&control_file_text),
+                        port.clone(),
+                        VcpkgPortManifest::get_version_from_control_file(control_file_text),
                     );
                 } else if !vcpkg_json_file_text.is_empty() {
                     all_port_versions.insert(
-                        port,
-                        VcpkgPortManifest::get_version_from_vcpkg_json_file(&vcpkg_json_file_text),
+                        port.clone(),
+                        VcpkgPortManifest::get_version_from_vcpkg_json_file(vcpkg_json_file_text),
                     );
                 }
             }
@@ -168,6 +170,56 @@ impl VcpkgManager {
                 ),
                 &asc_registry_dir,
             );
+
+            // generate manifests
+            for port_name in &changed_ports {
+                if let Some(version) = all_port_versions.get(port_name) {
+                    let new_name = format!("{port_name}-{version}");
+                    if let Some((control_file_text, vcpkg_json_file_text)) =
+                        all_ports_manifest.get(port_name)
+                    {
+                        if !control_file_text.is_empty() {
+                            let (
+                                version,
+                                version_date,
+                                version_semver,
+                                version_string,
+                                port_version,
+                            ) = VcpkgPortManifest::get_versions_from_control_file(
+                                control_file_text,
+                            );
+                            vcpkg::json::gen_port_versions(
+                                &asc_registry_dir,
+                                &new_name,
+                                &version,
+                                &version_date,
+                                &version_semver,
+                                &version_string,
+                                port_version,
+                            );
+                        } else if !vcpkg_json_file_text.is_empty() {
+                            let (
+                                version,
+                                version_date,
+                                version_semver,
+                                version_string,
+                                port_version,
+                            ) = VcpkgPortManifest::get_versions_from_vcpkg_json_file(
+                                vcpkg_json_file_text,
+                            );
+                            vcpkg::json::gen_port_versions(
+                                &asc_registry_dir,
+                                &new_name,
+                                &version,
+                                &version_date,
+                                &version_semver,
+                                &version_string,
+                                port_version,
+                            );
+                        }
+                    }
+                }
+            }
 
             // git add versions
             git::add::run(

@@ -1,5 +1,7 @@
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 use config_file_derives::ConfigFile;
 use config_file_types;
@@ -13,6 +15,9 @@ static VERSION_SEMVER_PREFIX: &str = "Version-Semver:";
 static VERSION_STRING_PREFIX: &str = "Version-String:";
 static PORT_VERSION_PREFIX: &str = "Port-Version:";
 static BUILD_DEPENDS_PREFIX: &str = "Build-Depends:";
+
+const REGEX_PORT_NAME_MULTIPLE_DASHES: &str = r"-+";
+const REGEX_PORT_NAME_INVALID_CHARS: &str = r"[^a-zA-Z0-9\-]";
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
@@ -202,6 +207,25 @@ impl VcpkgPortManifest {
         return version;
     }
 
+    pub fn get_versions_from_vcpkg_json_file(
+        text: &str,
+    ) -> (
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        u32,
+    ) {
+        let data = VcpkgPortManifest::loads(text, false).unwrap();
+        return (
+            data.version,
+            data.version_date,
+            data.version_semver,
+            data.version_string,
+            data.port_version.unwrap_or(0),
+        );
+    }
+
     fn build_version_suffix_name(
         name: &str,
         version: &Option<String>,
@@ -229,34 +253,94 @@ impl VcpkgPortManifest {
             versions.push(String::from("0"));
         }
 
-        let v = versions.join("-").replace("_", "-").replace(".", "-").replace("/", "-");
+        let s = versions.join("-");
+        let re_invalid_chars = Regex::new(REGEX_PORT_NAME_INVALID_CHARS).unwrap();
+        let s = re_invalid_chars.replace_all(&s, "-");
+        let re_multiple_dashes = Regex::new(REGEX_PORT_NAME_MULTIPLE_DASHES).unwrap();
+        let v = re_multiple_dashes.replace_all(&s, "-").to_string();
         return (format!("{name}-{v}"), v);
     }
 
     pub fn get_version_from_control_file(text: &str) -> String {
-        let mut version = vec![];
+        let (version, version_date, version_semver, version_string, port_version) =
+            Self::get_versions_from_control_file(text);
+
+        return Self::build_version_suffix_name(
+            "",
+            &version,
+            &version_date,
+            &version_semver,
+            &version_string,
+            &Some(port_version),
+        )
+        .1;
+    }
+
+    pub fn get_versions_from_control_file(
+        text: &str,
+    ) -> (
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        u32,
+    ) {
+        let mut version = None;
+        let mut vesion_date = None;
+        let mut version_semver = None;
+        let mut version_string = None;
+        let mut port_version = 0u32;
+
+        let mut versions = 0;
         for line in text.lines() {
             if line.starts_with(VERSION_PREFIX) {
-                version.push(line.split_at(VERSION_PREFIX.len()).1.trim());
+                versions += 1;
+                version = Some(line.split_at(VERSION_PREFIX.len()).1.trim().to_string());
             } else if line.starts_with(VERSION_DATE_PREFIX) {
-                version.push(line.split_at(VERSION_DATE_PREFIX.len()).1.trim());
+                versions += 1;
+                vesion_date = Some(
+                    line.split_at(VERSION_DATE_PREFIX.len())
+                        .1
+                        .trim()
+                        .to_string(),
+                );
             } else if line.starts_with(VERSION_SEMVER_PREFIX) {
-                version.push(line.split_at(VERSION_SEMVER_PREFIX.len()).1.trim());
+                versions += 1;
+                version_semver = Some(
+                    line.split_at(VERSION_SEMVER_PREFIX.len())
+                        .1
+                        .trim()
+                        .to_string(),
+                );
             } else if line.starts_with(VERSION_STRING_PREFIX) {
-                version.push(line.split_at(VERSION_STRING_PREFIX.len()).1.trim());
+                versions += 1;
+                version_string = Some(
+                    line.split_at(VERSION_STRING_PREFIX.len())
+                        .1
+                        .trim()
+                        .to_string(),
+                );
             } else if line.starts_with(PORT_VERSION_PREFIX) {
-                version.push(line.split_at(PORT_VERSION_PREFIX.len()).1.trim());
+                versions += 1;
+                port_version = line
+                    .split_at(PORT_VERSION_PREFIX.len())
+                    .1
+                    .trim()
+                    .parse::<u32>()
+                    .unwrap();
             }
-            if version.len() == 2 {
+            if versions == 2 {
                 break;
             }
         }
-        if version.len() < 2 {
-            // set default port_version to 0
-            version.push("0");
-        }
 
-        return version.join("-").replace("_", "-").replace(".", "-").replace("/", "-");
+        return (
+            version,
+            vesion_date,
+            version_semver,
+            version_string,
+            port_version,
+        );
     }
 }
 
