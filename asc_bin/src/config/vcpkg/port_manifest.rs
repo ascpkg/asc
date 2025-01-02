@@ -153,7 +153,7 @@ impl VcpkgPortManifest {
                 lines[no] = format!("{line}-{version}");
             } else if line.starts_with(BUILD_DEPENDS_PREFIX) {
                 let mut deps = line
-                    .split_at(BUILD_DEPENDS_PREFIX.len() + 1)
+                    .split_at(BUILD_DEPENDS_PREFIX.len())
                     .1
                     .trim()
                     .split(", ")
@@ -229,7 +229,7 @@ impl VcpkgPortManifest {
             versions.push(String::from("0"));
         }
 
-        let v = versions.join("-").replace("_", "-").replace(".", "-");
+        let v = versions.join("-").replace("_", "-").replace(".", "-").replace("/", "-");
         return (format!("{name}-{v}"), v);
     }
 
@@ -256,7 +256,7 @@ impl VcpkgPortManifest {
             version.push("0");
         }
 
-        return version.join("-").replace("_", "-").replace(".", "-");
+        return version.join("-").replace("_", "-").replace(".", "-").replace("/", "-");
     }
 }
 

@@ -1,91 +1,51 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use serde::{Deserialize, Serialize};
-
-use config_file_derives::ConfigFile;
-use config_file_types;
+use fs_extra;
 
 use crate::{
     config::{
         relative_paths::{
-            ASC_REGISTRY_CHECK_POINT_FILE_NAME, ASC_REGISTRY_DIR_NAME, VCPKG_DIR_NAME,
+            ASC_REGISTRY_DIR_NAME, VCPKG_CONTROL_FILE_NAME, VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME,
             VCPKG_PORTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
         },
         vcpkg::port_manifest::VcpkgPortManifest,
     },
-    git::{self, log::GitCommitInfo},
+    git,
     util::{self, shell},
 };
 
 use super::VcpkgManager;
 
-/*
- * delete CONTROL and add vcpkg.json
- *
- * commit 1d8f0acc9c3085d18152a3f639077a28109196b6
- * Author: nicole mazzuca <mazzucan@outlook.com>
- * Date:   Tue Jun 30 10:40:18 2020 -0700
- *
- *     [vcpkg manifest] Manifest Implementation (#11757)
- *
- */
-pub static GIT_COMMIT_HASH_ADD_VCPKG_JSON: &str = "1d8f0acc9c3085d18152a3f639077a28109196b6";
-
-/*
- * add port_versions
- *
- * commit 2f6537fa2b8928d2329e827f862692112793435d
- * Author: Victor Romero <romerosanchezv@gmail.com>
- * Date:   Thu Jan 14 16:08:36 2021 -0800
- *
- *    [vcpkg] Add version files (#15652)
- *
- *    * Add version files
- *
- *    * Remove unnecessary file
- *
- */
-pub static GIT_COMMIT_HASH_ADD_PORT_VERSIONS: &str = "2f6537fa2b8928d2329e827f862692112793435d";
-
-/*
-* rename port_versions to versions
-*
-* commit 68a74950d0400f5a803026d0860f49853984bf11
-* Author: nicole mazzuca <mazzucan@outlook.com>
-* Date:   Thu Jan 21 09:53:22 2021 -0800
-*
-*     [vcpkg] Rename `port_versions` to `versions` (#15784)
-*
-*/
-pub static GIT_COMMIT_HASH_RENAME_TO_VERSIONS: &str = "68a74950d0400f5a803026d0860f49853984bf11";
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
-#[config_file_ext("json")]
-struct AscRegistryCheckPoint {
-    #[serde(skip)]
-    path: String,
-
-    modified: String,
-    check_point: GitCommitInfo,
-}
+const FLATTEN_PREFIX: &str = "flatten https://github.com/microsoft/vcpkg/commit/";
 
 impl VcpkgManager {
     pub fn flatten(&mut self) -> bool {
         // update registries
-        self.update();
+        if self.args.sync {
+            self.update();
+        }
 
         // get registry dirs
         let (vcpkg_registry_dir, asc_registry_dir) = self.get_registry_dirs();
 
         // load asc registry check point
-        let mut sync_check_point = AscRegistryCheckPoint::load(
-            &format!("{asc_registry_dir}/{ASC_REGISTRY_CHECK_POINT_FILE_NAME}"),
-            true,
-        )
-        .unwrap();
+        let mut check_point_hash = "";
+        let check_point_stat = git::log::get_latest_commit_stat(&asc_registry_dir);
+        for line in check_point_stat.lines() {
+            if line.contains(FLATTEN_PREFIX) {
+                check_point_hash = line
+                    .split_once(FLATTEN_PREFIX)
+                    .unwrap()
+                    .1
+                    .split_whitespace()
+                    .collect::<Vec<&str>>()[0];
+                break;
+            }
+        }
 
         // prepare dirs
         let ports = VCPKG_PORTS_DIR_NAME.replace("/", "");
+        let asc_registry_ports_dir = format!("{asc_registry_dir}/{ports}");
         let tar_name = format!("{ports}.tar",);
         let tmp_dir = format!("{asc_registry_dir}/tmp");
         let tmp_tar_path = format!("{tmp_dir}/{tar_name}");
@@ -99,15 +59,20 @@ impl VcpkgManager {
         let mut next_index = 0;
         if let Some(index) = vcpkg_ports_changed_commits
             .iter()
-            .position(|c| c.0.hash == sync_check_point.check_point.hash)
+            .position(|c| c.0.hash.starts_with(check_point_hash))
         {
-            next_index = index + 1;
+            if !check_point_hash.is_empty() {
+                next_index = index + 1;
+            }
         }
-        let mut need_update = false;
+        let total = vcpkg_ports_changed_commits.len() as f32;
         for (index, (commit, changed_files)) in
             vcpkg_ports_changed_commits[next_index..].iter().enumerate()
         {
-            need_update = true;
+            tracing::warn!(
+                "========== {} / {total} = {}% ==========",
+                next_index + index, (index + next_index) as f32 * 100.0 / total
+            );
 
             // get all ports
             let mut all_port_versions = BTreeMap::new();
@@ -169,45 +134,51 @@ impl VcpkgManager {
                 );
             }
 
+            // move versioned ports
+            let mut versioned_ports = Vec::new();
+            for port_name in &changed_ports {
+                if let Some(version) = all_port_versions.get(port_name) {
+                    let path = format!("{tmp_ports_path}/{port_name}-{version}");
+                    if util::fs::is_dir_exists(&path) {
+                        versioned_ports.push(path);
+                    } else {
+                        tracing::warn!("{port_name} {version} was not found");
+                    }
+                } else {
+                    tracing::warn!("{port_name} version was not found");
+                }
+            }
+            if !versioned_ports.is_empty() {
+                let mut options = fs_extra::dir::CopyOptions::new();
+                options.overwrite = true;
+                fs_extra::move_items(&versioned_ports, &asc_registry_ports_dir, &options).unwrap();
+            }
+
             // remove tmp ports dir
             util::fs::remove_dirs(&tmp_ports_path);
 
             // git add ports
-            git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], &vcpkg_registry_dir);
+            git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], &asc_registry_dir);
             git::commit::run(
-                format!("flatten microsoft/vcpkg {}", commit.hash.split_at(7).0),
-                &vcpkg_registry_dir,
+                format!(
+                    "{FLATTEN_PREFIX}{} from {} at {}",
+                    commit.hash.split_at(7).0,
+                    commit.user_email,
+                    commit.date_time
+                ),
+                &asc_registry_dir,
             );
 
             // git add versions
             git::add::run(
                 &vec![VCPKG_VERSIONS_DIR_NAME.to_string()],
-                &vcpkg_registry_dir,
+                &asc_registry_dir,
             );
-            git::commit_amend::run(&vcpkg_registry_dir);
-
-            // save asc registry check point
-            if index % 200 == 0 || vcpkg_ports_changed_commits.len() < 1000 {
-                need_update = false;
-                sync_check_point.check_point = commit.clone();
-                sync_check_point.modified = chrono::Local::now()
-                    .format("%Y-%m-%d %H:%M:%S.%f %z")
-                    .to_string();
-                sync_check_point.dump(true, false);
-            }
+            git::commit_amend::run(&asc_registry_dir);
         }
 
         // remove tmp dir
         util::fs::remove_dirs(&tmp_dir);
-
-        // save asc registry check point
-        if need_update {
-            sync_check_point.check_point = vcpkg_ports_changed_commits.last().unwrap().0.clone();
-            sync_check_point.modified = chrono::Local::now()
-                .format("%Y-%m-%d %H:%M:%S.%f %z")
-                .to_string();
-            sync_check_point.dump(true, false);
-        }
 
         return true;
     }
@@ -217,8 +188,8 @@ impl VcpkgManager {
         port_manifest_dir: String,
         all_port_versions: &BTreeMap<String, String>,
     ) {
-        let control_file = format!("{port_manifest_dir}/CONTROL");
-        let vcpkg_json_file = format!("{port_manifest_dir}/vcpkg.json");
+        let control_file = format!("{port_manifest_dir}/{VCPKG_CONTROL_FILE_NAME}");
+        let vcpkg_json_file = format!("{port_manifest_dir}/{VCPKG_JSON_FILE_NAME}");
         if util::fs::is_file_exists(&control_file) {
             let version = VcpkgPortManifest::update_control_file(&control_file, all_port_versions);
             std::fs::rename(&port_manifest_dir, format!("{port_manifest_dir}-{version}")).unwrap();

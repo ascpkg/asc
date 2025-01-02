@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use crate::{errors::ErrorTag, util};
 
 pub static GIT_LOG_FORMAT_COMMIT_HASH_DATE: &str =
-    r#"--pretty=format:{"hash": "%H", "date_time": "%ad"}"#;
+    r#"--pretty=format:{"hash": "%H", "date_time": "%ad", "user_email": "%ae"}"#;
 pub static GIT_LOG_FORMAT_ABBR_COMMIT_HASH_DATE: &str =
-    r#"--pretty=format:{"hash": "%h", "date_time": "%ad"}"#;
+    r#"--pretty=format:{"hash": "%h", "date_time": "%ad", "user_email": "%ae"}"#;
 pub static GIT_LOG_FORMAT_VERSION_STAT: &str =
     r#"--pretty=format:commit %H%nDate:   %ad%n%n    %s%n"#;
 
@@ -17,6 +17,7 @@ pub struct GitCommitInfo {
 
     pub hash: String,
     pub date_time: String,
+    pub user_email: String,
 }
 
 pub fn get_latest_commit_stat(repo_root_dir: &str) -> String {

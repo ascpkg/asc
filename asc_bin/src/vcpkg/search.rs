@@ -21,6 +21,7 @@ pub fn get_port_version_commit_info(
                     GitCommitInfo {
                         hash: c,
                         date_time: d,
+                        user_email: String::new(),
                         path: String::new(),
                     },
                 ));

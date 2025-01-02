@@ -21,7 +21,13 @@ pub struct VcpkgArgs {
     #[serde(skip)]
     action: VcpkgAction,
 
+    /// sync registries
+    #[clap(long, default_value_t = false)]
+    #[serde(skip, default)]
+    pub sync: bool,
+
     /// update args
+    #[serde(default, skip_serializing_if="Vec::is_empty")]
     pub args: Vec<String>,
 
     /// vcpkg registry url?branch=&directory=
