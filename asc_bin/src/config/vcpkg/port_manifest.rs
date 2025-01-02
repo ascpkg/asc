@@ -23,18 +23,23 @@ pub struct VcpkgPortManifest {
 
     name: String,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_semver: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version_string: Option<String>,
 
-    #[serde(default)]
-    pub port_version: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port_version: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<VcpkgPortDescription>,
 
     #[serde(default, skip_serializing_if = "String::is_empty")]
     homepage: String,
-
-    description: Option<VcpkgPortDescription>,
 
     #[serde(default, skip_serializing_if = "String::is_empty")]
     supports: String,
@@ -72,11 +77,14 @@ enum VcpkgPortDependency {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
 struct ComplexDependency {
     name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    default_features: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     features: Vec<String>,
-    default_features: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     platform: Option<String>,
 }
 
@@ -97,9 +105,29 @@ impl VcpkgPortManifest {
             &data.version_date,
             &data.version_semver,
             &data.version_string,
-            data.port_version,
+            &data.port_version,
         );
         data.name = name;
+
+        for (_feature_name, feature_desc) in &mut data.features {
+            let mut deps = feature_desc.dependencies.clone();
+            for index in 0..deps.len() {
+                match deps[index].clone() {
+                    VcpkgPortDependency::Simple(d) => {
+                        if let Some(version) = all_port_versions.get(&d) {
+                            deps[index] = VcpkgPortDependency::Simple(format!("{d}-{version}"));
+                        }
+                    }
+                    VcpkgPortDependency::Complex(mut d) => {
+                        if let Some(version) = all_port_versions.get(&d.name) {
+                            d.name = format!("{}-{version}", d.name);
+                            deps[index] = VcpkgPortDependency::Complex(d);
+                        }
+                    }
+                }
+            }
+            feature_desc.dependencies = deps;
+        }
 
         data.dump(true, false);
 
@@ -124,23 +152,34 @@ impl VcpkgPortManifest {
             if line.starts_with(SOURCE_PREFIX) {
                 lines[no] = format!("{line}-{version}");
             } else if line.starts_with(BUILD_DEPENDS_PREFIX) {
-                let mut features = line
+                let mut deps = line
                     .split_at(BUILD_DEPENDS_PREFIX.len() + 1)
                     .1
                     .trim()
                     .split(", ")
                     .map(|s| s.to_string())
                     .collect::<Vec<String>>();
-                for index in 0..features.len() {
-                    let feature = &features[index];
-                    if feature.contains("[") && feature.contains("]") {
-                        continue;
-                    }
-                    if let Some(version) = all_port_versions.get(feature) {
-                        features[index] = format!("{feature}-{version}");
+                for index in 0..deps.len() {
+                    let dep = &deps[index];
+                    if dep.contains("[") && dep.contains("]") {
+                        let (mut name, features_and_platform) = dep.split_once("[").unwrap();
+                        name = name.trim();
+                        if let Some(version) = all_port_versions.get(name) {
+                            deps[index] = format!("{name}-{version}[{features_and_platform}");
+                        }
+                    } else if dep.contains("(") && dep.contains(")") {
+                        let (mut name, platform) = dep.split_once("(").unwrap();
+                        name = name.trim();
+                        if let Some(version) = all_port_versions.get(name) {
+                            deps[index] = format!("{name}-{version} ({platform}");
+                        }
+                    } else {
+                        if let Some(version) = all_port_versions.get(dep) {
+                            deps[index] = format!("{dep}-{version}");
+                        }
                     }
                 }
-                lines[no] = features.join(", ");
+                lines[no] = format!("{BUILD_DEPENDS_PREFIX} {}", deps.join(", "));
             }
         }
 
@@ -158,7 +197,7 @@ impl VcpkgPortManifest {
             &data.version_date,
             &data.version_semver,
             &data.version_string,
-            data.port_version,
+            &data.port_version,
         );
         return version;
     }
@@ -169,7 +208,7 @@ impl VcpkgPortManifest {
         version_date: &Option<String>,
         version_semver: &Option<String>,
         version_string: &Option<String>,
-        port_version: u32,
+        port_version: &Option<u32>,
     ) -> (String, String) {
         let mut versions = vec![];
         if let Some(v) = version {
@@ -184,7 +223,11 @@ impl VcpkgPortManifest {
         if let Some(v) = version_string {
             versions.push(v.clone());
         }
-        versions.push(format!("{port_version}"));
+        if let Some(v) = port_version {
+            versions.push(format!("{v}"));
+        } else {
+            versions.push(String::from("0"));
+        }
 
         let v = versions.join("-").replace("_", "-").replace(".", "-");
         return (format!("{name}-{v}"), v);
@@ -208,6 +251,10 @@ impl VcpkgPortManifest {
                 break;
             }
         }
+        if version.len() < 2 {
+            // set default port_version to 0
+            version.push("0");
+        }
 
         return version.join("-").replace("_", "-").replace(".", "-");
     }
@@ -219,6 +266,776 @@ mod tests {
 
     const FFMPEG_CONTROL_COMMIT_ID: &str = "373915929eac1d0219474c18a6e8a3134783dfc5";
     const FFMPEG_VCPKG_JSON_COMMIT_ID: &str = "44e8841e065a1b14340c6c0bb90210b11d7c3d4d";
+
+    const FFMPEG_CONTROL_CONTENT_VERSIONED: &str = r#"Source: ffmpeg-4-3-2-11
+Version: 4.3.2
+Port-Version: 11
+Homepage: https://ffmpeg.org
+Description: a library to decode, encode, transcode, mux, demux, stream, filter and play pretty much anything that humans and machines have created.
+  FFmpeg is the leading multimedia framework, able to decode, encode, transcode, mux, demux, stream, filter and play pretty much anything that humans and machines have created. It supports the most obscure ancient formats up to the cutting edge. No matter if they were designed by some standards committee, the community or a corporation. It is also highly portable: FFmpeg compiles, runs, and passes our testing infrastructure FATE across Linux, Mac OS X, Microsoft Windows, the BSDs, Solaris, etc. under a wide variety of build environments, machine architectures, and configurations.
+Default-Features: avresample, avcodec, avformat, avdevice, avfilter, postproc, swresample, swscale
+
+Feature: ffmpeg
+Build-Depends: ffmpeg-4-3-2-11[core,avcodec,avfilter,avformat]
+Description: Build the ffmpeg application
+
+Feature: ffplay
+Build-Depends: ffmpeg-4-3-2-11[core,avcodec,avfilter,avformat,swscale,swresample,sdl2]
+Description: Build the ffplay application
+
+Feature: ffprobe
+Build-Depends: ffmpeg-4-3-2-11[core,avcodec,avformat]
+Description: Build the ffprobe application
+
+Feature: avcodec
+Description: Build the avcodec library
+
+Feature: avformat
+Build-Depends: ffmpeg-4-3-2-11[core,avcodec]
+Description: Build the avformat library
+
+Feature: avdevice
+Build-Depends: ffmpeg-4-3-2-11[core,avcodec,avformat]
+Description: Build the avdevice library
+
+Feature: avfilter
+Description: Build the avfilter library
+
+Feature: postproc
+Build-Depends: ffmpeg-4-3-2-11[core,gpl]
+Description: Build the postproc library
+
+Feature: swresample
+Description: Build the swresample library
+
+Feature: swscale
+Description: Build the swscale library
+
+Feature: avresample
+Description: Build the avresample library
+
+Feature: nonfree
+Description: Allow use of nonfree code, the resulting libs and binaries will be unredistributable
+
+Feature: gpl
+Description: Allow use of GPL code, the resulting libs and binaries will be under GPL
+
+Feature: version3
+Description: Upgrade (L)GPL to version 3
+
+Feature: all
+Build-Depends: ffmpeg-4-3-2-11[bzip2,iconv,freetype,lzma,mp3lame,openh264,openjpeg,opus,snappy,soxr,speex,theora,vorbis,vpx,webp,zlib], ffmpeg-4-3-2-11[ass] (!(uwp | arm)), ffmpeg-4-3-2-11[dav1d] (!(uwp | arm | x86 | osx)), ffmpeg-4-3-2-11[fontconfig] (!(windows & static) & !(uwp | arm)), ffmpeg-4-3-2-11[fribidi] (!(uwp | arm)), ffmpeg-4-3-2-11[ilbc] (!(arm & uwp)), ffmpeg-4-3-2-11[modplug] (!(windows & static) & !uwp), ffmpeg-4-3-2-11[nvcodec] ((windows | linux) & !uwp & !arm), ffmpeg-4-3-2-11[opencl] (!uwp), ffmpeg-4-3-2-11[ssh] (!(uwp | arm) & !static), ffmpeg-4-3-2-11[opengl] (!uwp & !(windows & arm) & !osx), ffmpeg-4-3-2-11[sdl2] (!osx), ffmpeg-4-3-2-11[tensorflow] (!(x86 | arm | uwp) & !static), ffmpeg-4-3-2-11[tesseract] (!uwp & !(windows & arm) & !static), ffmpeg-4-3-2-11[wavpack] (!arm), ffmpeg-4-3-2-11[xml2] (!static)
+Description: Build with all allowed dependencies selected that are compatible with the lgpl license
+
+Feature: all-gpl
+Build-Depends: ffmpeg-4-3-2-11[gpl,all], ffmpeg-4-3-2-11[avisynthplus] (windows & !arm & !uwp & !static), ffmpeg-4-3-2-11[x264] (!arm), ffmpeg-4-3-2-11[x265] (!arm & !uwp)
+Description: Build with all allowed dependencies selected that are compatible with the gpl license
+
+Feature: all-nonfree
+Build-Depends: ffmpeg-4-3-2-11[nonfree,all-gpl,openssl], ffmpeg-4-3-2-11[fdk-aac] (!arm & !uwp)
+Description: Build with all allowed dependencies selected with a non-redistributable license
+
+Feature: ass
+Build-Depends: libass-0-15-0-1
+Description: Libass subtitles rendering, needed for subtitles and ass filter support in ffmpeg
+
+Feature: avisynthplus
+Build-Depends: avisynthplus-3-7-0-0, ffmpeg-4-3-2-11[core,gpl]
+Description: Reading of AviSynth script files
+
+Feature: bzip2
+Build-Depends: bzip2-1-0-8-1
+Description: Bzip2 support
+
+Feature: dav1d
+Build-Depends: dav1d-0-8-2-0
+Description: AV1 decoding via libdav1d
+
+Feature: iconv
+Build-Depends: libiconv-1-16-8
+Description: Iconv support
+
+Feature: ilbc
+Build-Depends: libilbc-3-0-3-0
+Description: iLBC de/encoding via libilbc
+
+Feature: fdk-aac
+Build-Depends: fdk-aac-2018-07-08-3, ffmpeg-4-3-2-11[core,nonfree]
+Description: AAC de/encoding via libfdk-aac
+
+Feature: fontconfig
+Build-Depends: fontconfig-2-13-1-7
+Description: Useful for drawtext filter
+
+Feature: freetype
+Build-Depends: freetype-2-10-4-0
+Description: Needed for drawtext filter
+
+Feature: fribidi
+Build-Depends: fribidi-1-0-10-2
+Description: Improves drawtext filter
+
+Feature: lzma
+Build-Depends: liblzma-5-2-5-2
+Description: lzma support
+
+Feature: modplug
+Build-Depends: libmodplug-0-8-9-0-7
+Description: ModPlug via libmodplug
+
+Feature: mp3lame
+Build-Depends: mp3lame-3-100-6
+Description: MP3 encoding via libmp3lame
+
+Feature: nvcodec
+Build-Depends: ffnvcodec-10-0-26-0-1
+Description: Nvidia video decoding/encoding acceleration
+
+Feature: opencl
+Build-Depends: opencl-2-2-7
+Description: OpenCL processing
+
+Feature: opengl
+Build-Depends: opengl-0-0-8, opengl-registry-2020-03-25-0
+Description: OpenGL rendering
+
+Feature: openh264
+Build-Depends: openh264-2021-03-16-0
+Description: H.264 de/encoding via openh264
+
+Feature: openjpeg
+Build-Depends: openjpeg-2-3-1-4
+Description: JPEG 2000 de/encoding via OpenJPEG
+
+Feature: openssl
+Build-Depends: openssl-1-1-1k-0, ffmpeg-4-3-2-11[core,nonfree]
+Description: Needed for https support if gnutls, libtls or mbedtls is not used
+
+Feature: opus
+Build-Depends: opus-1-3-1-5
+Description: Opus de/encoding via libopus
+
+Feature: sdl2
+Build-Depends: sdl2-2-0-14-4
+Description: Sdl2 support
+
+Feature: snappy
+Build-Depends: snappy-1-1-8-0
+Description: Snappy compression, needed for hap encoding
+
+Feature: soxr
+Build-Depends: soxr-0-1-3-3, ffmpeg-4-3-2-11[core,swresample]
+Description: Include libsoxr resampling
+
+Feature: speex
+Build-Depends: speex-1-2-0-8
+Description: Speex de/encoding via libspeex
+
+Feature: ssh
+Build-Depends: libssh-0-9-5-3
+Description: SFTP protocol via libssh
+
+Feature: tensorflow
+Build-Depends: tensorflow-2-4-1-0
+Description: TensorFlow as a DNN module backend for DNN based filters like sr
+
+Feature: tesseract
+Build-Depends: tesseract-4-1-1-8
+Description: Tesseract, needed for ocr filter
+
+Feature: theora
+Build-Depends: libtheora-1-2-0alpha1-20170719-2
+Description: Theora encoding via libtheora
+
+Feature: vorbis
+Build-Depends: libvorbis-1-3-7-1
+Description: Vorbis en/decoding via libvorbis, native implementation exists
+
+Feature: vpx
+Build-Depends: libvpx-1-9-0-9
+Description: VP8 and VP9 de/encoding via libvpx
+
+Feature: wavpack
+Build-Depends: wavpack-5-3-0-1
+Description: Wavpack encoding via libwavpack
+
+Feature: webp
+Build-Depends: libwebp-1-1-0-3
+Description: WebP encoding via libwebp
+
+Feature: x264
+Build-Depends: x264-157-303c484ec828ed0-15, ffmpeg-4-3-2-11[core,gpl]
+Description: H.264 encoding via x264
+
+Feature: x265
+Build-Depends: x265-3-4-4, ffmpeg-4-3-2-11[core,gpl]
+Description: HEVC encoding via x265
+
+Feature: xml2
+Build-Depends: libxml2-2-9-10-6
+Description: XML parsing using the C library libxml2, needed for dash demuxing support
+
+Feature: zlib
+Build-Depends: zlib-1-2-11-10
+Description: zlib support
+"#;
+
+    const FFMPEG_VCPKG_JSON_CONTENT_VERSIONED: &str = r#"{
+  "name": "ffmpeg-4-4-0",
+  "version-string": "4.4",
+  "description": [
+    "a library to decode, encode, transcode, mux, demux, stream, filter and play pretty much anything that humans and machines have created.",
+    "FFmpeg is the leading multimedia framework, able to decode, encode, transcode, mux, demux, stream, filter and play pretty much anything that humans and machines have created. It supports the most obscure ancient formats up to the cutting edge. No matter if they were designed by some standards committee, the community or a corporation. It is also highly portable: FFmpeg compiles, runs, and passes our testing infrastructure FATE across Linux, Mac OS X, Microsoft Windows, the BSDs, Solaris, etc. under a wide variety of build environments, machine architectures, and configurations."
+  ],
+  "homepage": "https://ffmpeg.org",
+  "default-features": [
+    "avcodec",
+    "avdevice",
+    "avfilter",
+    "avformat",
+    "postproc",
+    "swresample",
+    "swscale"
+  ],
+  "features": {
+    "all": {
+      "description": "Build with all allowed dependencies selected that are compatible with the lgpl license",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "avresample",
+            "bzip2",
+            "freetype",
+            "iconv",
+            "lzma",
+            "mp3lame",
+            "openh264",
+            "openjpeg",
+            "opus",
+            "snappy",
+            "soxr",
+            "speex",
+            "theora",
+            "vorbis",
+            "vpx",
+            "webp",
+            "zlib"
+          ]
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "sdl2"
+          ],
+          "platform": "!osx"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "opencl"
+          ],
+          "platform": "!uwp"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "xml2"
+          ],
+          "platform": "!static"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "ilbc"
+          ],
+          "platform": "!(arm & uwp)"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "ass"
+          ],
+          "platform": "!(uwp | arm)"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "fribidi"
+          ],
+          "platform": "!(uwp | arm)"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "ssh"
+          ],
+          "platform": "!(uwp | arm) & !static"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "dav1d"
+          ],
+          "platform": "!(uwp | arm | x86 | osx)"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "modplug"
+          ],
+          "platform": "!(windows & static) & !uwp"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "tensorflow"
+          ],
+          "platform": "!(x86 | arm | uwp) & !static"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "opengl"
+          ],
+          "platform": "!uwp & !(windows & arm) & !osx"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "nvcodec"
+          ],
+          "platform": "(windows | linux) & !uwp & !arm"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "tesseract"
+          ],
+          "platform": "!uwp & !(windows & arm) & !static"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "fontconfig"
+          ],
+          "platform": "!(windows & static) & !(uwp | arm)"
+        }
+      ]
+    },
+    "all-gpl": {
+      "description": "Build with all allowed dependencies selected that are compatible with the gpl license",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "all",
+            "gpl"
+          ]
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "x264"
+          ],
+          "platform": "!arm"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "x265"
+          ],
+          "platform": "!arm & !uwp"
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "avisynthplus"
+          ],
+          "platform": "windows & !arm & !uwp & !static"
+        }
+      ]
+    },
+    "all-nonfree": {
+      "description": "Build with all allowed dependencies selected with a non-redistributable license",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "all-gpl",
+            "nonfree",
+            "openssl"
+          ]
+        },
+        {
+          "name": "ffmpeg-4-4-0",
+          "features": [
+            "fdk-aac"
+          ],
+          "platform": "!arm & !uwp"
+        }
+      ]
+    },
+    "ass": {
+      "description": "Libass subtitles rendering, needed for subtitles and ass filter support in ffmpeg",
+      "dependencies": [
+        "libass-0-15-1-0"
+      ]
+    },
+    "avcodec": {
+      "description": "Build the avcodec library"
+    },
+    "avdevice": {
+      "description": "Build the avdevice library",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "avcodec",
+            "avformat"
+          ]
+        }
+      ]
+    },
+    "avfilter": {
+      "description": "Build the avfilter library"
+    },
+    "avformat": {
+      "description": "Build the avformat library",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "avcodec"
+          ]
+        }
+      ]
+    },
+    "avisynthplus": {
+      "description": "Reading of AviSynth script files",
+      "dependencies": [
+        "avisynthplus-3-7-0-0",
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "gpl"
+          ]
+        }
+      ]
+    },
+    "avresample": {
+      "description": "Build the avresample library"
+    },
+    "bzip2": {
+      "description": "Bzip2 support",
+      "dependencies": [
+        "bzip2-1-0-8-1"
+      ]
+    },
+    "dav1d": {
+      "description": "AV1 decoding via libdav1d",
+      "dependencies": [
+        "dav1d-0-8-2-0"
+      ]
+    },
+    "fdk-aac": {
+      "description": "AAC de/encoding via libfdk-aac",
+      "dependencies": [
+        "fdk-aac-2018-07-08-3",
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "nonfree"
+          ]
+        }
+      ]
+    },
+    "ffmpeg": {
+      "description": "Build the ffmpeg application",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "avcodec",
+            "avfilter",
+            "avformat"
+          ]
+        }
+      ]
+    },
+    "ffplay": {
+      "description": "Build the ffplay application",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "avcodec",
+            "avfilter",
+            "avformat",
+            "sdl2",
+            "swresample",
+            "swscale"
+          ]
+        }
+      ]
+    },
+    "ffprobe": {
+      "description": "Build the ffprobe application",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "avcodec",
+            "avformat"
+          ]
+        }
+      ]
+    },
+    "fontconfig": {
+      "description": "Useful for drawtext filter",
+      "dependencies": [
+        "fontconfig-2-13-1-7"
+      ]
+    },
+    "freetype": {
+      "description": "Needed for drawtext filter",
+      "dependencies": [
+        "freetype-2-10-4-0"
+      ]
+    },
+    "fribidi": {
+      "description": "Improves drawtext filter",
+      "dependencies": [
+        "fribidi-1-0-10-2"
+      ]
+    },
+    "gpl": {
+      "description": "Allow use of GPL code, the resulting libs and binaries will be under GPL"
+    },
+    "iconv": {
+      "description": "Iconv support",
+      "dependencies": [
+        "libiconv-1-16-8"
+      ]
+    },
+    "ilbc": {
+      "description": "iLBC de/encoding via libilbc",
+      "dependencies": [
+        "libilbc-3-0-3-0"
+      ]
+    },
+    "lzma": {
+      "description": "lzma support",
+      "dependencies": [
+        "liblzma-5-2-5-2"
+      ]
+    },
+    "modplug": {
+      "description": "ModPlug via libmodplug",
+      "dependencies": [
+        "libmodplug-0-8-9-0-7"
+      ]
+    },
+    "mp3lame": {
+      "description": "MP3 encoding via libmp3lame",
+      "dependencies": [
+        "mp3lame-3-100-6"
+      ]
+    },
+    "nonfree": {
+      "description": "Allow use of nonfree code, the resulting libs and binaries will be unredistributable"
+    },
+    "nvcodec": {
+      "description": "Nvidia video decoding/encoding acceleration",
+      "dependencies": [
+        "ffnvcodec-10-0-26-0-1"
+      ]
+    },
+    "opencl": {
+      "description": "OpenCL processing",
+      "dependencies": [
+        "opencl-2-2-7"
+      ]
+    },
+    "opengl": {
+      "description": "OpenGL rendering",
+      "dependencies": [
+        "opengl-0-0-8",
+        "opengl-registry-2020-03-25-0"
+      ]
+    },
+    "openh264": {
+      "description": "H.264 de/encoding via openh264",
+      "dependencies": [
+        "openh264-2021-03-16-0"
+      ]
+    },
+    "openjpeg": {
+      "description": "JPEG 2000 de/encoding via OpenJPEG",
+      "dependencies": [
+        "openjpeg-2-3-1-4"
+      ]
+    },
+    "openssl": {
+      "description": "Needed for https support if gnutls, libtls or mbedtls is not used",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "nonfree"
+          ]
+        },
+        "openssl-1-1-1k-1"
+      ]
+    },
+    "opus": {
+      "description": "Opus de/encoding via libopus",
+      "dependencies": [
+        "opus-1-3-1-5"
+      ]
+    },
+    "postproc": {
+      "description": "Build the postproc library",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "gpl"
+          ]
+        }
+      ]
+    },
+    "sdl2": {
+      "description": "Sdl2 support",
+      "dependencies": [
+        "sdl2-2-0-14-4"
+      ]
+    },
+    "snappy": {
+      "description": "Snappy compression, needed for hap encoding",
+      "dependencies": [
+        "snappy-1-1-8-0"
+      ]
+    },
+    "soxr": {
+      "description": "Include libsoxr resampling",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "swresample"
+          ]
+        },
+        "soxr-0-1-3-3"
+      ]
+    },
+    "speex": {
+      "description": "Speex de/encoding via libspeex",
+      "dependencies": [
+        "speex-1-2-0-8"
+      ]
+    },
+    "ssh": {
+      "description": "SFTP protocol via libssh",
+      "dependencies": [
+        "libssh-0-9-5-3"
+      ]
+    },
+    "swresample": {
+      "description": "Build the swresample library"
+    },
+    "swscale": {
+      "description": "Build the swscale library"
+    },
+    "tensorflow": {
+      "description": "TensorFlow as a DNN module backend for DNN based filters like sr",
+      "dependencies": [
+        "tensorflow-2-4-1-0"
+      ]
+    },
+    "tesseract": {
+      "description": "Tesseract, needed for ocr filter",
+      "dependencies": [
+        "tesseract-4-1-1-8"
+      ]
+    },
+    "theora": {
+      "description": "Theora encoding via libtheora",
+      "dependencies": [
+        "libtheora-1-2-0alpha1-20170719-2"
+      ]
+    },
+    "version3": {
+      "description": "Upgrade (L)GPL to version 3"
+    },
+    "vorbis": {
+      "description": "Vorbis en/decoding via libvorbis, native implementation exists",
+      "dependencies": [
+        "libvorbis-1-3-7-1"
+      ]
+    },
+    "vpx": {
+      "description": "VP8 and VP9 de/encoding via libvpx",
+      "dependencies": [
+        "libvpx-1-9-0-9"
+      ]
+    },
+    "webp": {
+      "description": "WebP encoding via libwebp",
+      "dependencies": [
+        "libwebp-1-1-0-3"
+      ]
+    },
+    "x264": {
+      "description": "H.264 encoding via x264",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "gpl"
+          ]
+        },
+        "x264-157-303c484ec828ed0-15"
+      ]
+    },
+    "x265": {
+      "description": "HEVC encoding via x265",
+      "dependencies": [
+        {
+          "name": "ffmpeg-4-4-0",
+          "default-features": false,
+          "features": [
+            "gpl"
+          ]
+        },
+        "x265-3-4-4"
+      ]
+    },
+    "xml2": {
+      "description": "XML parsing using the C library libxml2, needed for dash demuxing support",
+      "dependencies": [
+        "libxml2-2-9-10-6"
+      ]
+    },
+    "zlib": {
+      "description": "zlib support",
+      "dependencies": [
+        "zlib-1-2-11-10"
+      ]
+    }
+  }
+}"#;
 
     pub fn get_vcpkg_root_dir() -> String {
         let vcpkg_conf = crate::cli::commands::VcpkgArgs::load_or_default();
@@ -293,9 +1110,11 @@ mod tests {
         let all_port_versions = get_all_port_versions(FFMPEG_CONTROL_COMMIT_ID);
         VcpkgPortManifest::update_control_file(&path, &all_port_versions);
 
-        assert!(false);
+        let is_same = is_file_text_equals(&path, FFMPEG_CONTROL_CONTENT_VERSIONED);
 
-        // std::fs::remove_file(path).unwrap();
+        std::fs::remove_file(path).unwrap();
+
+        assert!(is_same);
     }
 
     #[test]
@@ -303,9 +1122,17 @@ mod tests {
         let path = "ffmpeg.vcpkg.json";
         std::fs::write(path, get_ffmpeg_vcpkg_json().as_bytes()).unwrap();
 
-        // let all_port_versions = get_all_port_versions(FFMPEG_VCPKG_JSON_COMMIT_ID);
-        // VcpkgPortManifest::update_vcpkg_json_file(path, &all_port_versions);
+        let all_port_versions = get_all_port_versions(FFMPEG_VCPKG_JSON_COMMIT_ID);
+        VcpkgPortManifest::update_vcpkg_json_file(path, &all_port_versions);
+
+        let is_same = is_file_text_equals(&path, FFMPEG_VCPKG_JSON_CONTENT_VERSIONED);
 
         std::fs::remove_file(path).unwrap();
+
+        assert!(is_same);
+    }
+
+    fn is_file_text_equals(path: &str, content: &str) -> bool {
+        std::fs::read_to_string(path).unwrap() == content
     }
 }
