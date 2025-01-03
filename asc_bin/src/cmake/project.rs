@@ -28,7 +28,7 @@ static ARCH_MAP: [(&str, &str); 8] = [
     ("aarch64", "arm64"),
 ];
 
-pub fn gen(options: &cli::commands::scan::ScanOptions) {
+pub fn gen(options: &cli::commands::scan::ScanOptions, shared_lib_projects: Vec<String>) {
     let vcpkg_conf = VcpkgArgs::load_or_default();
     let vcpkg_clone_dir = vcpkg_conf.get_public_registry().3;
     if vcpkg_clone_dir.is_empty() {
@@ -51,8 +51,12 @@ pub fn gen(options: &cli::commands::scan::ScanOptions) {
         &vcpkg_host_triplet,
     ];
 
-    if options.shared_lib {
-        args.push("-D BUILD_SHARED_LIBS=1");
+    let mut define_shared_libs = String::new();
+    for project in &shared_lib_projects {
+        define_shared_libs.push_str(&format!("-D BUILD_SHARED_LIBS_{}=1", project.to_uppercase()));
+    }
+    if !shared_lib_projects.is_empty() {
+        args.push(&define_shared_libs);
     }
 
     util::shell::run("cmake", &args, ".", false, false, false).unwrap();

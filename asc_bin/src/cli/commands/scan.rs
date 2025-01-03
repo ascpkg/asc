@@ -66,6 +66,7 @@ impl ScanArgs {
                 util::fs::set_cwd(relative_paths::ASC_PROJECT_DIR_NAME);
 
                 let mut members = vec![];
+                let mut shared_lib_projects = vec![];
                 for bin_entry in &project_conf.bins {
                     members.push(bin_entry.name.clone());
 
@@ -110,6 +111,9 @@ impl ScanArgs {
                     util::fs::set_cwd(&lib_entry.name);
 
                     let is_shared_lib = lib_entry.shared.unwrap();
+                    if is_shared_lib {
+                        shared_lib_projects.push(lib_entry.name.clone());
+                    }
                     self.scan_package(
                         &lib_entry.name,
                         &cwd,
@@ -149,7 +153,7 @@ impl ScanArgs {
                     shared_lib: false,
                     ..Default::default()
                 };
-                cmake::project::gen(&options);
+                cmake::project::gen(&options, shared_lib_projects);
 
                 return true;
             }
@@ -250,7 +254,7 @@ impl ScanArgs {
         let mut has_error = false;
         let mut members = vec![];
         let mut dependencies = BTreeMap::new();
-        let is_shared_lib = false;
+        let mut shared_lib_projects = vec![];
         for member in &project_conf.workspace.as_ref().unwrap().members {
             match config::project::ProjectConfig::load(
                 &format!("{cwd}/{member}/{}", relative_paths::ASC_TOML_FILE_NAME),
@@ -304,6 +308,9 @@ impl ScanArgs {
                         util::fs::set_cwd(&lib_entry.name);
 
                         let is_shared_lib = lib_entry.shared.unwrap();
+                        if is_shared_lib {
+                            shared_lib_projects.push(lib_entry.name.clone());
+                        }
                         self.scan_package(
                             &lib_entry.name,
                             &cwd,
@@ -347,10 +354,10 @@ impl ScanArgs {
         let options = ScanOptions {
             project_dir: format!("{cwd}/{}", relative_paths::ASC_PROJECT_DIR_NAME),
             target_dir: format!("{cwd}/{}", relative_paths::ASC_TARGET_DIR_NAME),
-            shared_lib: is_shared_lib,
+            shared_lib: false,
             ..Default::default()
         };
-        cmake::project::gen(&options);
+        cmake::project::gen(&options, shared_lib_projects);
 
         util::fs::set_cwd(&cwd);
 

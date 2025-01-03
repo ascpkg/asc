@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef BUILD_SHARED_LIBS
+#ifndef BUILD_SHARED_LIBS_TEST_PACKAGE
     #define TEST_PACKAGE_API
 #else
     #ifdef _WIN32

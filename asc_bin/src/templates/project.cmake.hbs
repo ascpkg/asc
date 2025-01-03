@@ -157,8 +157,8 @@ target_link_libraries(
 {{/if}}
 
 # export dynamic library symbols
-if(BUILD_SHARED_LIBS)
-    add_definitions(-DBUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS_{{project_upper}})
+    add_definitions(-DBUILD_SHARED_LIBS_{{project_upper}})
     add_definitions(-D{{project_upper}}_EXPORTS)
 endif()
 
