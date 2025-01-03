@@ -51,7 +51,7 @@ impl VcpkgManager {
             .position(|c| c.0.hash.starts_with(&check_point_hash))
         {
             if !check_point_hash.is_empty() {
-                next_index = index + 1;
+                next_index = index;  // redo last commit because versions dir may not be added and commited
             }
         }
         let total = vcpkg_ports_changed_commits.len() as f32;

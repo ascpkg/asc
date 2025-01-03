@@ -1,6 +1,6 @@
 [package]
 name = "asc_bin"
-version = "2024.12.18"
+version = "2025.1.3"
 edition = "2021"
 description = "An automated C/C++ package manager, source code scanner, and builder that streamlines dependency management, enhances code analysis, and simplifies the build process."
 license = "LGPL-3.0+"

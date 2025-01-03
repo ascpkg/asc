@@ -1,7 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::search::get_port_version_commit_info;
-
 use crate::{
     cli::commands::VcpkgArgs,
     config::{
@@ -10,129 +8,92 @@ use crate::{
         relative_paths::{self, ASC_TOML_FILE_NAME, VCPKG_JSON_FILE_NAME},
         vcpkg::{
             port::{VcpkgDependency, VcpkgDependencyDesc, VcpkgJsonDependency, VcpkgPortJson},
+            port_manifest::VcpkgPortManifest,
             registry_manifest::{VcpkgConfiguration, VcpkgDefaultRegistry, VcpkgRegistry},
             versions_baseline::{VcpkgBaseline, VcpkgPortVersion},
             versions_port::{VcpkgPortTreeVersion, VcpkgPortVersions},
         },
     },
-    git::{self, log::GitCommitInfo},
-    util,
+    git::{
+        self,
+        log::{GitCommitInfo, GIT_LOG_FORMAT_COMMIT_HASH_DATE},
+    },
 };
 
+use super::index::VcpkgSearchIndex;
+
 static VCPKG_PORT_NAME_KEY: &str = "name";
-static VCPKG_PORT_VERSION_KEY: &str = "version";
 static VCPKG_PORT_PLATFORM_KEY: &str = "platform";
 static VCPKG_FEATURE_PLATFORM_DELIMITER: &str = "@";
 static VCPKG_REGISTRY_KIND_GIT: &str = "git";
 
 pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig>) {
-    let mut grouped_names = BTreeMap::new();
-    // ascending date time commits group by registry
-    let mut grouped_commits = BTreeMap::new();
+    // group ports
+    let mut grouped_ports = BTreeMap::new();
 
+    // set dependencies
     let mut vcpkg_data = VcpkgDependency::load(relative_paths::VCPKG_JSON_FILE_NAME, true).unwrap();
     vcpkg_data.dependencies.clear();
     vcpkg_data.overrides.clear();
 
-    for (port_name, desc) in dependencies {
-        let mut dep = VcpkgDependencyDesc::default();
-        dep.name = port_name.clone();
-        if !desc.features.is_empty() {
-            dep.default_features = Some(false);
-        }
-        for f in &desc.features {
-            match f.split_once(VCPKG_FEATURE_PLATFORM_DELIMITER) {
-                None => {
-                    dep.features.push(BTreeMap::from([(
-                        String::from(VCPKG_PORT_NAME_KEY),
-                        f.clone(),
-                    )]));
-                }
-                Some((n, p)) => {
-                    dep.features.push(BTreeMap::from([
-                        (String::from(VCPKG_PORT_NAME_KEY), n.to_string()),
-                        (String::from(VCPKG_PORT_PLATFORM_KEY), p.to_string()),
-                    ]));
-                }
-            };
-        }
-        vcpkg_data.dependencies.push(dep);
-        vcpkg_data.overrides.push(BTreeMap::from([
-            (String::from(VCPKG_PORT_NAME_KEY), port_name.clone()),
-            (String::from(VCPKG_PORT_VERSION_KEY), desc.version.clone()),
-        ]));
-
-        if let Some((registry, commit)) = get_port_version_commit_info(port_name, &desc.version) {
-            grouped_names
-                .entry(registry.clone())
-                .or_insert_with(BTreeSet::new)
-                .insert(port_name.clone());
-            grouped_commits
-                .entry(registry)
-                .or_insert_with(BTreeSet::new)
-                .insert((
-                    commit.date_time,
-                    commit.hash,
-                    port_name,
-                    desc.version.clone(),
-                ));
-        }
-    }
-
-    tracing::info!("baselines: {:#?}", grouped_commits);
-
-    let vcpkg_versions_baseline_json = relative_paths::vcpkg_versions_baseline_json();
+    // set registries
     let vcpkg_args = VcpkgArgs::load_or_default();
-    let cwd = util::fs::get_cwd();
     let mut registry_baseline = BTreeMap::new();
-    for (registry, commits) in &grouped_commits {
-        for (date_time, hash, _, _) in commits {
-            let (_registry, url, branch, vcpkg_root_dir) = vcpkg_args.get_registry(&registry);
-            util::fs::set_cwd(&vcpkg_root_dir);
 
-            let stdout = git::show::commit_file_content(
-                &vcpkg_root_dir,
-                &hash,
-                &vcpkg_versions_baseline_json,
-            );
+    for (registry, url, branch, vcpkg_root_dir) in vcpkg_args.flatten_registry() {
+        let search_index = VcpkgSearchIndex::load(
+            &config::system_paths::DataPath::vcpkg_search_index_json(
+                vcpkg_args.index_directory.as_ref().unwrap(),
+                &registry,
+            ),
+            true,
+        )
+        .unwrap();
 
-            if let Some(baseline_data) = VcpkgBaseline::loads(&stdout, false) {
-                // overwrite versions
-                for desc in vcpkg_data.overrides.iter_mut() {
-                    if let Some(v) = baseline_data
-                        .default
-                        .get(desc.get(VCPKG_PORT_NAME_KEY).unwrap())
-                    {
-                        desc.insert(
-                            String::from(VCPKG_PORT_VERSION_KEY),
-                            v.format_version_text(),
-                        );
+        for (port_name, desc) in dependencies {
+            let mut dep = VcpkgDependencyDesc::default();
+            dep.name = VcpkgPortManifest::normalize_port_name(format!(
+                "{port_name}-{}",
+                desc.version
+            ));
+            if !desc.features.is_empty() {
+                dep.default_features = Some(false);
+            }
+            for f in &desc.features {
+                match f.split_once(VCPKG_FEATURE_PLATFORM_DELIMITER) {
+                    None => {
+                        dep.features.push(BTreeMap::from([(
+                            String::from(VCPKG_PORT_NAME_KEY),
+                            f.clone(),
+                        )]));
                     }
-                }
-
-                // search baseline
-                let mut found = true;
-                let mut versions = vec![];
-                for name in grouped_names.get(registry).unwrap_or(&BTreeSet::new()) {
-                    if let Some(version) = baseline_data.default.get(name) {
-                        versions.push(format!("{name}={}", version.format_version_text()));
-                    } else {
-                        found = false;
-                        tracing::warn!("can't found {} in {hash} @ {date_time}", name);
-                        break;
+                    Some((n, p)) => {
+                        dep.features.push(BTreeMap::from([
+                            (String::from(VCPKG_PORT_NAME_KEY), n.to_string()),
+                            (String::from(VCPKG_PORT_PLATFORM_KEY), p.to_string()),
+                        ]));
                     }
-                }
-                if found {
-                    tracing::info!(
-                        "set baseline to {hash} @ {date_time} ({})",
-                        versions.join(", ")
-                    );
-                    registry_baseline.insert(registry, (url, branch, hash));
+                };
+            }
+            vcpkg_data.dependencies.push(dep);
+
+            if let Some(versions) = search_index.versions.get(port_name) {
+                if versions.contains(&desc.version) {
+                    grouped_ports
+                        .entry(registry.clone())
+                        .or_insert_with(BTreeSet::new)
+                        .insert(VcpkgPortManifest::normalize_port_name(format!(
+                            "{port_name}-{}",
+                            desc.version
+                        )));
                 }
             }
         }
+
+        // set registry
+        let commit = git::log::get_latest_commit(&vcpkg_root_dir, GIT_LOG_FORMAT_COMMIT_HASH_DATE);
+        registry_baseline.insert(registry, (url, branch, commit.hash));
     }
-    util::fs::set_cwd(&cwd);
 
     if vcpkg_data.dependencies.is_empty() {
         tracing::error!("can't found any dependencies in {}", ASC_TOML_FILE_NAME);
@@ -166,8 +127,8 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
                     reference: branch,
                     repository: url,
                     baseline: hash.clone(),
-                    packages: grouped_names
-                        .get(registry)
+                    packages: grouped_ports
+                        .get(&registry)
                         .unwrap()
                         .iter()
                         .map(|s| s.clone())

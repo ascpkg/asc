@@ -8,6 +8,8 @@ use config_file_types;
 
 use crate::util;
 
+use super::versions_baseline::VcpkgPortVersion;
+
 static SOURCE_PREFIX: &str = "Source:";
 static VERSION_PREFIX: &str = "Version:";
 static VERSION_DATE_PREFIX: &str = "Version-Date:";
@@ -253,12 +255,25 @@ impl VcpkgPortManifest {
             versions.push(String::from("0"));
         }
 
-        let s = versions.join("-");
-        let re_invalid_chars = Regex::new(REGEX_PORT_NAME_INVALID_CHARS).unwrap();
-        let s = re_invalid_chars.replace_all(&s, "-");
-        let re_multiple_dashes = Regex::new(REGEX_PORT_NAME_MULTIPLE_DASHES).unwrap();
-        let v = re_multiple_dashes.replace_all(&s, "-").to_string();
+        let v = Self::normalize_port_name(versions.join("-"));
         return (format!("{name}-{v}"), v);
+    }
+
+    pub fn normalize_port_name(name: String) -> String {
+        let re_invalid_chars = Regex::new(REGEX_PORT_NAME_INVALID_CHARS).unwrap();
+        let s = re_invalid_chars.replace_all(&name, "-");
+        let re_multiple_dashes = Regex::new(REGEX_PORT_NAME_MULTIPLE_DASHES).unwrap();
+        return re_multiple_dashes.replace_all(&s, "-").to_string();
+    }
+
+    pub fn remove_verson_suffix(
+        name: &String,
+        version_info: &VcpkgPortVersion,
+    ) -> (String, String) {
+        let v = format!("{}#{}", version_info.baseline, version_info.port_version);
+        let suffix = VcpkgPortManifest::normalize_port_name(format!("-{v}"));
+        let re = Regex::new(&suffix).unwrap();
+        return (re.replacen(&name, 1, "").to_string(), v);
     }
 
     pub fn get_version_from_control_file(text: &str) -> String {
