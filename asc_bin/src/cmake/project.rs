@@ -53,7 +53,10 @@ pub fn gen(options: &cli::commands::scan::ScanOptions, shared_lib_projects: Vec<
 
     let mut define_shared_libs = String::new();
     for project in &shared_lib_projects {
-        define_shared_libs.push_str(&format!("-D BUILD_SHARED_LIBS_{}=1", project.to_uppercase()));
+        define_shared_libs.push_str(&format!(
+            "-D BUILD_SHARED_LIBS_{}=1",
+            project.to_uppercase()
+        ));
     }
     if !shared_lib_projects.is_empty() {
         args.push(&define_shared_libs);

@@ -62,7 +62,7 @@ fn add_for_pakcage(args: &AddArgs, project_conf: &mut config::project::ProjectCo
                 );
                 return false;
             }
-            let v = results[results.len()-1].split_once(']').unwrap().1.trim();
+            let v = results[results.len() - 1].split_once(']').unwrap().1.trim();
             version = v.split_once("  ").unwrap().1.to_string();
         } else {
             let mut found = false;

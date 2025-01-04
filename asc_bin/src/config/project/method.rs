@@ -238,7 +238,7 @@ default = [
             name: String::from("a"),
             source_dir: String::from("src"),
             source_file: String::from("main.cpp"),
-            shared: None,
+            shared: false,
             std_c: String::new(),
             std_cxx: String::new(),
         });

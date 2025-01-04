@@ -110,8 +110,7 @@ impl ScanArgs {
                     // cd lib_entry.name
                     util::fs::set_cwd(&lib_entry.name);
 
-                    let is_shared_lib = lib_entry.shared.unwrap();
-                    if is_shared_lib {
+                    if lib_entry.shared {
                         shared_lib_projects.push(lib_entry.name.clone());
                     }
                     self.scan_package(
@@ -127,8 +126,8 @@ impl ScanArgs {
                         true,
                         &project_conf.dependencies,
                         &project_conf.std_dependencies,
-                        is_shared_lib,
-                        !is_shared_lib,
+                        lib_entry.shared,
+                        !lib_entry.shared,
                         &lib_entry.std_c,
                         &lib_entry.std_cxx,
                     );
@@ -307,8 +306,7 @@ impl ScanArgs {
                         let c = util::fs::get_cwd();
                         util::fs::set_cwd(&lib_entry.name);
 
-                        let is_shared_lib = lib_entry.shared.unwrap();
-                        if is_shared_lib {
+                        if lib_entry.shared {
                             shared_lib_projects.push(lib_entry.name.clone());
                         }
                         self.scan_package(
@@ -327,8 +325,8 @@ impl ScanArgs {
                             true,
                             &project_conf.dependencies,
                             &project_conf.std_dependencies,
-                            is_shared_lib,
-                            !is_shared_lib,
+                            lib_entry.shared,
+                            !lib_entry.shared,
                             &lib_entry.std_c,
                             &lib_entry.std_cxx,
                         );

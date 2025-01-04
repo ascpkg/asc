@@ -23,7 +23,8 @@ pub struct EntryConfig {
     pub name: String,
     pub source_dir: String,
     pub source_file: String,
-    pub shared: Option<bool>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub shared: bool,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub std_c: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
@@ -80,4 +81,8 @@ pub struct InstalledFiles {
 
     #[serde(skip)]
     pub path: String,
+}
+
+fn is_false(x: &bool) -> bool {
+    !*x
 }

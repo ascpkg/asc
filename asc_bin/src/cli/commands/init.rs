@@ -87,7 +87,7 @@ impl InitArgs {
                 name: name.to_string(),
                 source_dir: relative_paths::SRC_DIR_NAME.to_string(),
                 source_file: relative_paths::LIB_CPP_FILE_NAME.to_string(),
-                shared: if self.shared { Some(true) } else { Some(false) },
+                shared: self.shared,
                 std_c: String::new(),
                 std_cxx: String::new(),
             }]);
@@ -96,7 +96,7 @@ impl InitArgs {
                 name: name.to_string(),
                 source_dir: relative_paths::SRC_DIR_NAME.to_string(),
                 source_file: relative_paths::MAIN_CPP_FILE_NAME.to_string(),
-                shared: None,
+                shared: self.shared,
                 std_c: String::new(),
                 std_cxx: String::new(),
             }]);

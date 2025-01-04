@@ -52,10 +52,8 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
 
         for (port_name, desc) in dependencies {
             let mut dep = VcpkgDependencyDesc::default();
-            dep.name = VcpkgPortManifest::normalize_port_name(format!(
-                "{port_name}-{}",
-                desc.version
-            ));
+            dep.name =
+                VcpkgPortManifest::normalize_port_name(format!("{port_name}-{}", desc.version));
             if !desc.features.is_empty() {
                 dep.default_features = Some(false);
             }
