@@ -1112,7 +1112,7 @@ Options:
 
 ## 3.11. uninstall
 ### 3.11.1. 说明
-> asc vcpkg uninstall --help
+> asc uninstall --help
 ```
 uninstall installed executable/headers/libraries
 
@@ -1233,9 +1233,16 @@ std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
 
 ```
 
-
-# 5. 编译
+# 5.1. 安装
 ## 5.1. cargo
+> cargo install asc_bin
+
+## 5.2. pip
+> python3 -m pip install asc-bin
+
+
+# 6. 编译
+## 6.1. cargo
 > git clone
 > cd asc/asc_bin/ast
 > asc vcpkg set
@@ -1246,25 +1253,17 @@ std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
 > cargo build
 
 > cargo build --release
-## 5.2. 依赖环境
-### 5.2.1. libclang
-* install libclang >= 10.0 and add it's bin directory to PATH
-> clang --version
-```
-clang version 18.1.8
-Target: x86_64-pc-windows-msvc
-Thread model: posix
-InstalledDir: D:\Program Files\LLVM\bin
-```
 
-### 5.2.2. git
+## 6.2. 依赖环境
+
+### 6.2.1. git
 * install git >= 2.30 and it's bin directory to PATH
 > git --version
 ```
 git version 2.45.2.windows.1
 ```
 
-### 5.2.3. cmake
+### 6.2.2. cmake
 * install cmake >= 3.20 add it's bin directory to PATH
 > cmake --version
 ```
