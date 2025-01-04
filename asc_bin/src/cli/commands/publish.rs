@@ -15,9 +15,13 @@ pub struct PublishArgs {
     #[clap(long)]
     registry: String,
 
-    /// package or workspace memeber name
+    /// package or workspace member name
     #[clap(long)]
     package: Option<String>,
+
+    /// git push or not
+    #[clap(long, default_value_t = false)]
+    push: bool,
 }
 
 impl PublishArgs {
@@ -93,6 +97,11 @@ impl PublishArgs {
                 if repo_root_dir.is_empty() {
                     return false;
                 }
+
+                // add version suffix to port name
+                let mut pkg = pkg.clone();
+                pkg.name = format!("{}-{}", pkg.name, pkg.version.replace(".", "-"));
+
                 let dir =
                     config::system_paths::DataPath::vcpkg_ports_dir_path(&repo_root_dir, &pkg.name);
                 let action = if util::fs::is_dir_exists(&dir) {
@@ -103,11 +112,11 @@ impl PublishArgs {
 
                 let (mut result, port_version) = vcpkg::json::gen_port_json(
                     &repo_root_dir,
-                    pkg,
+                    &pkg,
                     &project_conf.dependencies,
                     &latest_commit,
                 );
-                result &= vcpkg::cmake::gen_port_file_cmake(&repo_root_dir, pkg, &latest_commit);
+                result &= vcpkg::cmake::gen_port_file_cmake(&repo_root_dir, &pkg, &latest_commit);
                 if result {
                     git::add::run(&vec![dir], &repo_root_dir);
                     git::commit::run(
@@ -143,7 +152,9 @@ impl PublishArgs {
                     );
                     git::commit_amend::run(&repo_root_dir);
 
-                    git::push::run(&repo_root_dir);
+                    if self.push {
+                        git::push::run(&repo_root_dir);
+                    }
                 }
 
                 return result;
