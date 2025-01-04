@@ -86,6 +86,8 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
                             "{port_name}-{}",
                             desc.version
                         )));
+                } else {
+                    tracing::warn!("can't found {port_name} which version = {}", desc.version)
                 }
             }
         }
@@ -129,7 +131,7 @@ pub fn gen_vcpkg_configurations(dependencies: &BTreeMap<String, DependencyConfig
                     baseline: hash.clone(),
                     packages: grouped_ports
                         .get(&registry)
-                        .unwrap()
+                        .unwrap_or(&BTreeSet::new())
                         .iter()
                         .map(|s| s.clone())
                         .collect::<Vec<String>>(),
