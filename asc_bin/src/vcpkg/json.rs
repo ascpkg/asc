@@ -310,20 +310,31 @@ pub fn gen_port_versions(
     .unwrap();
 
     let mut baseline_version = String::new();
-    for vv in [version, version_date, version_semver, version_string] {
-        if let Some(v) = vv {
-            baseline_version = v.clone();
+    for new_version_option in [version, version_date, version_semver, version_string] {
+        if let Some(new_version) = new_version_option {
+            baseline_version = new_version.clone();
             if !versions_data.versions.is_empty() {
-                if versions_data.versions[0].version.as_ref().unwrap() == v
-                    && versions_data.versions[0].port_version == port_version
-                {
-                    tracing::warn!(
-                        message = "the port version was not changed",
-                        name = name,
-                        version = v,
-                        port_version = port_version,
-                    );
-                    versions_data.versions.clear();
+                let old_tree_version = &versions_data.versions[0].clone();
+                for old_version_option in [
+                    &old_tree_version.version,
+                    &old_tree_version.version_date,
+                    &old_tree_version.version_semver,
+                    &old_tree_version.version_string,
+                ] {
+                    if let Some(old_version) = old_version_option {
+                        if old_version == new_version
+                            && old_tree_version.port_version == port_version
+                        {
+                            tracing::warn!(
+                                message = "the port version was not changed",
+                                name = name,
+                                version = new_version,
+                                port_version = port_version,
+                            );
+                            versions_data.versions.clear();
+                            break;
+                        }
+                    }
                 }
             }
         }
