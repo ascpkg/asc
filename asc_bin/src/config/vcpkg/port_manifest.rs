@@ -54,8 +54,8 @@ pub struct VcpkgPortManifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     default_features: Vec<String>,
 
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    features: BTreeMap<String, VcpkgPortFeature>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    features: Option<VcpkgPortFeatures>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
@@ -68,8 +68,18 @@ enum VcpkgPortDescription {
     Multiple(Vec<String>),
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+enum VcpkgPortFeatures {
+    Vector(Vec<VcpkgPortFeature>),
+    Map(BTreeMap<String, VcpkgPortFeature>),
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 struct VcpkgPortFeature {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    name: String,
+
     description: String,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -116,24 +126,53 @@ impl VcpkgPortManifest {
         );
         data.name = name;
 
-        for (_feature_name, feature_desc) in &mut data.features {
-            let mut deps = feature_desc.dependencies.clone();
-            for index in 0..deps.len() {
-                match deps[index].clone() {
-                    VcpkgPortDependency::Simple(d) => {
-                        if let Some(version) = all_port_versions.get(&d) {
-                            deps[index] = VcpkgPortDependency::Simple(format!("{d}-{version}"));
+        if let Some(features) = &mut data.features {
+            match features {
+                VcpkgPortFeatures::Vector(vec_of_features) => {
+                    for feature_desc in vec_of_features {
+                        let mut deps = feature_desc.dependencies.clone();
+                        for index in 0..deps.len() {
+                            match deps[index].clone() {
+                                VcpkgPortDependency::Simple(d) => {
+                                    if let Some(version) = all_port_versions.get(&d) {
+                                        deps[index] =
+                                            VcpkgPortDependency::Simple(format!("{d}-{version}"));
+                                    }
+                                }
+                                VcpkgPortDependency::Complex(mut d) => {
+                                    if let Some(version) = all_port_versions.get(&d.name) {
+                                        d.name = format!("{}-{version}", d.name);
+                                        deps[index] = VcpkgPortDependency::Complex(d);
+                                    }
+                                }
+                            }
                         }
+                        feature_desc.dependencies = deps;
                     }
-                    VcpkgPortDependency::Complex(mut d) => {
-                        if let Some(version) = all_port_versions.get(&d.name) {
-                            d.name = format!("{}-{version}", d.name);
-                            deps[index] = VcpkgPortDependency::Complex(d);
+                }
+                VcpkgPortFeatures::Map(map_of_features) => {
+                    for (_feature_name, feature_desc) in map_of_features {
+                        let mut deps = feature_desc.dependencies.clone();
+                        for index in 0..deps.len() {
+                            match deps[index].clone() {
+                                VcpkgPortDependency::Simple(d) => {
+                                    if let Some(version) = all_port_versions.get(&d) {
+                                        deps[index] =
+                                            VcpkgPortDependency::Simple(format!("{d}-{version}"));
+                                    }
+                                }
+                                VcpkgPortDependency::Complex(mut d) => {
+                                    if let Some(version) = all_port_versions.get(&d.name) {
+                                        d.name = format!("{}-{version}", d.name);
+                                        deps[index] = VcpkgPortDependency::Complex(d);
+                                    }
+                                }
+                            }
                         }
+                        feature_desc.dependencies = deps;
                     }
                 }
             }
-            feature_desc.dependencies = deps;
         }
 
         data.dump(true, false);
