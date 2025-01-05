@@ -40,7 +40,7 @@ pub struct VcpkgPortManifest {
     pub version_string: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub port_version: Option<u32>,
+    pub port_version: Option<VcpkgPortVersionField>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<VcpkgPortDescription>,
@@ -59,6 +59,13 @@ pub struct VcpkgPortManifest {
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum VcpkgPortVersionField {
+    Int(u32),
+    Str(String),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -116,13 +123,14 @@ impl VcpkgPortManifest {
 
         let mut data = Self::load(path, false).unwrap();
 
+        let port_version = Self::parse_port_version(&data.port_version);
         let (name, version) = Self::build_version_suffix_name(
             &data.name,
             &data.version,
             &data.version_date,
             &data.version_semver,
             &data.version_string,
-            &data.port_version,
+            &port_version,
         );
         data.name = name;
 
@@ -178,6 +186,21 @@ impl VcpkgPortManifest {
         data.dump(true, false);
 
         return version;
+    }
+
+    fn parse_port_version(value: &Option<VcpkgPortVersionField>) -> Option<u32> {
+        let mut port_version = Some(0);
+        if let Some(v) = value {
+            match v {
+                VcpkgPortVersionField::Int(vv) => {
+                    port_version = Some(vv.clone());
+                }
+                VcpkgPortVersionField::Str(vv) => {
+                    port_version = Some(vv.parse::<u32>().unwrap_or(0));
+                }
+            }
+        }
+        return port_version;
     }
 
     pub fn update_control_file(path: &str, all_port_versions: &BTreeMap<String, String>) -> String {
@@ -237,13 +260,14 @@ impl VcpkgPortManifest {
     pub fn get_version_from_vcpkg_json_file(text: &str) -> String {
         let data = VcpkgPortManifest::loads(text, false).unwrap();
 
+        let port_version = Self::parse_port_version(&data.port_version);
         let (_name, version) = Self::build_version_suffix_name(
             &data.name,
             &data.version,
             &data.version_date,
             &data.version_semver,
             &data.version_string,
-            &data.port_version,
+            &port_version,
         );
         return version;
     }
@@ -258,12 +282,13 @@ impl VcpkgPortManifest {
         u32,
     ) {
         let data = VcpkgPortManifest::loads(text, false).unwrap();
+        let port_version = Self::parse_port_version(&data.port_version);
         return (
             data.version,
             data.version_date,
             data.version_semver,
             data.version_string,
-            data.port_version.unwrap_or(0),
+            port_version.unwrap_or(0),
         );
     }
 
