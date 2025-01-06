@@ -406,7 +406,7 @@ impl VcpkgPortManifest {
                     .1
                     .trim()
                     .parse::<u32>()
-                    .unwrap();
+                    .unwrap_or(0);
             }
             if versions == 2 {
                 break;
