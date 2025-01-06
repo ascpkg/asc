@@ -153,7 +153,7 @@ impl PublishArgs {
                     git::commit_amend::run(&repo_root_dir);
 
                     if self.push {
-                        git::push::run(&repo_root_dir);
+                        git::push::run(&repo_root_dir, false);
                     }
                 }
 

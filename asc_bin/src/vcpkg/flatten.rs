@@ -51,7 +51,7 @@ impl VcpkgManager {
             .position(|c| c.0.hash.starts_with(&check_point_hash))
         {
             if !check_point_hash.is_empty() {
-                next_index = index; // redo last commit because versions dir may not be added and commited
+                next_index = index; // redo last commit because versions dir may not be added and committed
             }
         }
         let total = vcpkg_ports_changed_commits.len() as f32;
@@ -121,6 +121,11 @@ impl VcpkgManager {
                 &asc_registry_dir,
             );
             git::commit_amend::run(&asc_registry_dir);
+
+            // git push
+            if self.args.push && (index > 0 && index % 10 == 0) {
+                git::push::run(&asc_registry_dir, true);
+            }
         }
 
         // remove tmp dir
