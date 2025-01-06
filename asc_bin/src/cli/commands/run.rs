@@ -81,26 +81,36 @@ impl RunArgs {
             );
             return false;
         }
-        return util::shell::run(
-            &format!(
-                "{}/{}/{}/{}",
+
+        let dirs = [
+            format!(
+                "{}/{}/{}",
                 relative_paths::ASC_TARGET_DIR_NAME,
                 bin_name,
-                ConfigType::from(self.release).as_ref(),
-                bin_name
+                ConfigType::from(self.release).as_ref()
             ),
-            &self
-                .args
-                .as_ref()
-                .unwrap_or(&vec![])
-                .iter()
-                .map(|s| s.as_str())
-                .collect(),
-            ".",
-            false,
-            false,
-            false,
-        )
-        .is_ok();
+            format!("{}/{}", relative_paths::ASC_TARGET_DIR_NAME, bin_name),
+        ];
+        for dir in dirs {
+            if !util::fs::is_dir_exists(&dir) {
+                continue;
+            }
+            return util::shell::run(
+                &format!("{dir}/{bin_name}",),
+                &self
+                    .args
+                    .as_ref()
+                    .unwrap_or(&vec![])
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect(),
+                ".",
+                false,
+                false,
+                false,
+            )
+            .is_ok();
+        }
+        return false;
     }
 }
