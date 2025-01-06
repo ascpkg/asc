@@ -1208,7 +1208,7 @@ name = "ast"
 version = "2024.11.20"
 edition = "2024"
 description = "scan necessary source files"
-license = "LGPL-3.0+"
+license = "GPL-3.0-or-later"
 repository = ""
 branch = "main"
 
@@ -1235,18 +1235,11 @@ std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
 > cargo install asc_bin
 
 ## 5.2. pip
-> python3 -m pip install asc-bin
+> python3 -m pip install asc_bin
 
 # 6. build
 ## 6.1. cargo
 > git clone
-> cd asc/asc_bin/ast
-> asc vcpkg set
-> asc vcpkg update
-> asc vcpkg index
-> asc scan
-> asc build
-> cargo build
 
 > cargo build --release
 
@@ -1256,7 +1249,7 @@ std_cxx_fs = { name = "stdc++fs", check = "NOT HAVE_STD_CXX_FS_LIBRARY"}
 * install git >= 2.30 and it's bin directory to PATH
 > git --version
 ```
-git version 2.45.2.windows.1
+git version 2.45.2
 ```
 
 ### 6.2.2. cmake

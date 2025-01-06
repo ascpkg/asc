@@ -1,9 +1,9 @@
 [package]
 name = "config_file_types"
-version = "2024.12.11"
+version = "2025.1.6"
 edition = "2021"
 description = "Automatically generate file configuration wrapper"
-license = "LGPL-3.0+"
+license = "GPL-3.0-or-later"
 categories = ["config", "encoding"]
 keywords = ["serialization", "serde", "hcl", "json", "toml"]
 repository = "https://github.com/ascpkg/asc/tree/main/config_file_types"
@@ -17,7 +17,7 @@ xml = ["dep:quick-xml"]
 yml = ["dep:serde_yml"]
 
 [dependencies]
-config_file_macros = { version = "2024.12.11", path = "../config_file_macros" }
+config_file_macros = { version = "2025.1.6", path = "../config_file_macros" }
 
 hcl-rs = { version = "0.18.2", optional = true }
 quick-xml = { version = "0.37.1", features = ["serialize"], optional = true }

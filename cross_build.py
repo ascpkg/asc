@@ -1,6 +1,8 @@
 import argparse
+import base64
 import collections
 import glob
+import hashlib
 import http.client
 import inspect
 import json
@@ -11,6 +13,7 @@ import platform
 import shutil
 import subprocess
 import urllib.parse
+import zipfile
 
 
 ALL = "all"
@@ -21,7 +24,12 @@ CROSS_BUILD_DIR_NAME = "cross_build"
 
 PLATFORM_SYSTEM_WINDOWS = "Windows"
 
+RUST_ARCH_AMD64 = 'x86_64'
+RUST_ARCH_ARM64 = 'aarch64'
+
 RUST_TARGET_WINDOWS_PATTERN = "-windows-"
+RUST_TARGET_LINUX_PATTERN = '-linux-'
+RUST_TARGET_DARWIN_PATTERN = '-apple-darwin'
 RUST_TARGET_WINDOWS_MSVC_PATTERN = "-windows-msvc"
 
 HTTP = "http"
@@ -36,8 +44,24 @@ IP_INFO_IO_HOST = "ipinfo.io"
 
 WSL_DISTRO_NAME = "WSL_DISTRO_NAME"
 
-VERSION = "version"
+README_MD_PATH = "asc_bin/README.md"
+
 CARGO_TOML_PATH = "asc_bin/Cargo.toml"
+CARGO_TOML_PACKAGE_NAME = "name"
+CARGO_TOML_PACKAGE_VERSION = "version"
+CARGO_TOML_PACKAGE_DESCRIPTION = "description"
+CARGO_TOML_PACKAGE_KEYWORDS = "keywords"
+CARGO_TOML_PACKAGE_LICENSE = "license"
+CARGO_TOML_PACKAGE_REPOSITORY = "repository"
+
+PYTHON_WHEEL_METADATA_HEADER = ("Metadata-Version:", "2.4")
+PYTHON_WHEEL_METADATA_NAME = "Name:"
+PYTHON_WHEEL_METADATA_VERSION = "Version:"
+PYTHON_WHEEL_METADATA_SUMMARY = "Summary:"
+PYTHON_WHEEL_METADATA_KEYWORDS = "Keywords:"
+PYTHON_WHEEL_METADATA_LICENSE = "License:"
+PYTHON_WHEEL_METADATA_DESCRIPTION_CONTENT_TYPE =  ("Description-Content-Type:", "text/markdown; charset=UTF-8; variant=GFM")
+PYTHON_WHEEL_METADATA_PROJECT_URL = "Project-URL: Source Code,"
 
 PATH = "PATH"
 ZIG = "ZIG"
@@ -281,7 +305,7 @@ class PrepareRequirements:
 class BuildRustTargets:
     def __init__(self, target):
         self.target = target
-        self.version = self.get_package_version()
+        self.name, self.version, self.description, self.keywords, self.license, self.repository = self.get_package_info()
 
     def add_rust_targets(self):
         logging.info(f"{inspect.currentframe().f_code.co_name}")
@@ -340,6 +364,14 @@ class BuildRustTargets:
         for target in self.get_rust_targets(target_pattern=self.target):
             self.package(target=target)
 
+    def build_python_dist(self):
+        logging.info(f"{inspect.currentframe().f_code.co_name}")
+
+        self.build_python_tar_gz()
+
+        for target in self.get_rust_targets(target_pattern=self.target):
+            self.build_python_wheel(target=target)
+
     @staticmethod
     def get_rust_targets(target_pattern: str = "", glibc_version: str = ""):
         targets = [
@@ -360,6 +392,129 @@ class BuildRustTargets:
         ]
 
         return [t for t in targets if t.startswith(target_pattern)]
+    
+    def build_python_tar_gz(self):
+        cross_build_dir = os.path.join(TARGET, CROSS_BUILD_DIR_NAME)
+        source_name = f"{self.name}_bin-{self.version}"
+        source_dir = os.path.join(cross_build_dir, source_name)
+        tar_gz_file = f"{source_dir}.tar.gz"
+        if os.path.exists(tar_gz_file):
+            os.remove(tar_gz_file)
+        shutil.rmtree(source_dir, ignore_errors=True)
+        shutil.copytree(f".", source_dir, ignore=shutil.ignore_patterns(".git", ".github", ".gitignore", ".vscode", "runners", "target", "test_sources", "test_source_parser", "*.o", "clang_parse.py", "rfc.c"))
+        shutil.make_archive(source_dir, "gztar", base_dir=source_name, root_dir=cross_build_dir)
+        shutil.rmtree(source_dir)
+
+    def build_python_wheel(self, target):
+        dist_info = self.format_python_wheel_dist_info_dir()
+        data_scripts = self.format_python_wheel_data_scripts_dirs()
+
+        # make dirs
+        cross_build_dir = os.path.join(TARGET, CROSS_BUILD_DIR_NAME)
+        dir_name = f"{target}-{self.version}-wheel"
+        dir_path = os.path.join(cross_build_dir, dir_name)
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path, ignore_errors=True)
+        os.makedirs(dir_path, exist_ok=True)
+        logging.warning(f"makedirs {dir_path}")
+        data_scripts_dir = os.path.join(dir_path, data_scripts)
+        os.makedirs(data_scripts_dir, exist_ok=True)
+        logging.warning(f"makedirs {data_scripts_dir}")
+        dist_info_dir = os.path.join(dir_path, dist_info)
+        os.makedirs(dist_info_dir, exist_ok=True)
+        logging.warning(f"makedirs {dist_info_dir}")
+
+        # copy files
+        asc_file = f'asc{".exe" if RUST_TARGET_WINDOWS_PATTERN in target else ""}'
+        src_asc_path = os.path.join(TARGET, target, RELEASE_DIR_NAME, asc_file)
+        shutil.copy(src_asc_path, data_scripts_dir)
+        logging.warning(f"copy {src_asc_path} to {data_scripts_dir}")
+
+        # write METADATA
+        meta_path = f"{dist_info_dir}/METADATA"
+        with open(meta_path, mode="w", encoding="utf-8") as f:
+            lines = [
+                " ".join(PYTHON_WHEEL_METADATA_HEADER), "\n",
+                f"{PYTHON_WHEEL_METADATA_NAME} {self.name}_bin", "\n",
+                f"{PYTHON_WHEEL_METADATA_VERSION} {self.version}", "\n",
+                f"{PYTHON_WHEEL_METADATA_SUMMARY} {self.description}", "\n",
+                f"{PYTHON_WHEEL_METADATA_KEYWORDS} {self.keywords}", "\n",
+                f"{PYTHON_WHEEL_METADATA_LICENSE} {self.license}", "\n",
+                " ".join(PYTHON_WHEEL_METADATA_DESCRIPTION_CONTENT_TYPE), "\n",
+                f"{PYTHON_WHEEL_METADATA_PROJECT_URL} {self.repository}" "\n",
+            ]
+            with open(README_MD_PATH, encoding="utf-8") as fp:
+                lines.extend(["\n", fp.read()])
+            f.writelines(lines)
+
+        # write WHEEL
+        wheel_path = f"{dist_info_dir}/WHEEL"
+        wheel_name = self.format_python_wheel_name(target)
+        with open(wheel_path, mode="w", encoding="utf-8") as f:
+            tag = wheel_name.replace(self.name + "_bin", "", 1).replace(self.version, "", 1).lstrip("-").rpartition(".")[0]
+            lines = [
+                "Wheel-Version: 1.0", "\n",
+                "Generator: asc-cross-build (2025.1.6)", "\n",
+                "Root-Is-Purelib: false", "\n",
+                f"Tag: {tag}", "\n",
+            ]
+            f.writelines(lines)
+
+        # write RECORD
+        record_path = f"{dist_info_dir}/RECORD"
+        asc_path = f"{data_scripts_dir}/{asc_file}"
+        with open(record_path, mode="w", encoding="utf-8") as f:
+            lines = [
+                f"{dist_info}/METADATA,sha256={self.calculate_sha256(meta_path)},{os.path.getsize(meta_path)}", "\n",
+                f"{dist_info}/WHEEL,sha256={self.calculate_sha256(wheel_path)},{os.path.getsize(wheel_path)}", "\n",
+                f"{data_scripts}/{asc_file},sha256={self.calculate_sha256(asc_path)},{os.path.getsize(asc_path)}", "\n",
+                f"{dist_info}/RECORD,,", "\n",
+            ]
+            f.writelines(lines)
+
+        # compress
+        cwd = os.getcwd()
+        os.chdir(dir_path)
+        with zipfile.ZipFile(f"../{wheel_name}", "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zip_f:
+            for d in (os.path.dirname(data_scripts), dist_info):
+                for folder_name, _, file_names in os.walk(d):
+                    for file_name in file_names:
+                        file_path = os.path.join(folder_name, file_name)
+                        zip_f.write(file_path, os.path.relpath(file_path, os.path.dirname(d)))
+        logging.warning(f"compress {wheel_name}")
+        os.chdir(cwd)
+        shutil.rmtree(dir_path)
+
+    def calculate_sha256(self, file_path):
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        digest = sha256_hash.digest()
+        return base64.urlsafe_b64encode(digest).decode("utf-8").rstrip("=")
+    
+    def format_python_wheel_data_scripts_dirs(self) -> str:
+        return f'{self.name}_bin-{self.version}.data/scripts'
+    
+    def format_python_wheel_dist_info_dir(self) -> str:
+        return f'{self.name}_bin-{self.version}.dist-info'
+    
+    def format_python_wheel_name(self, target) -> str:
+        if RUST_TARGET_WINDOWS_PATTERN in target:
+            if RUST_ARCH_AMD64 in target:
+                return f'{self.name}_bin-{self.version}-py3-none-win_amd64.whl'
+            elif RUST_ARCH_ARM64 in target:
+                return f'{self.name}_bin-{self.version}-py3-none-win_amd64.whl'
+        elif RUST_TARGET_LINUX_PATTERN in target:
+            if RUST_ARCH_AMD64 in target:
+                return f'{self.name}_bin-{self.version}-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+            elif RUST_ARCH_ARM64 in target:
+                return f'{self.name}_bin-{self.version}-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl'
+        elif RUST_TARGET_DARWIN_PATTERN in target:
+            if RUST_ARCH_AMD64 in target:
+                return f'{self.name}_bin-{self.version}-.py3-none-macosx_10_9_x86_64.whl'
+            elif RUST_ARCH_ARM64 in target:
+                return f'{self.name}_bin-{self.version}-.py3-none-macosx_11_0_arm64.whl'
 
     def package(self, target):
         # make dirs
@@ -394,13 +549,25 @@ class BuildRustTargets:
         shutil.rmtree(d)
         os.chdir(cwd)
 
-    def get_package_version(self) -> str:
+    def get_package_info(self) -> list:
         logging.warning(inspect.currentframe().f_code.co_name)
 
-        with open("asc_bin/Cargo.toml") as f:
+        info = ["", "", "", "", "", ""]
+        with open(CARGO_TOML_PATH) as f:
             for line in f:
-                if line.startswith("version"):
-                    return line.partition("=")[-1].strip().strip('"')
+                if line.startswith(CARGO_TOML_PACKAGE_NAME):
+                    info[0] = line.partition("=")[-1].strip().strip('"')
+                elif line.startswith(CARGO_TOML_PACKAGE_VERSION):
+                    info[1] = line.partition("=")[-1].strip().strip('"')
+                elif line.startswith(CARGO_TOML_PACKAGE_DESCRIPTION):
+                    info[2] = line.partition("=")[-1].strip().strip('"')
+                elif line.startswith(CARGO_TOML_PACKAGE_KEYWORDS):
+                    info[3] = line.partition("=")[-1].strip().strip('"[]').replace('", "', ",")
+                elif line.startswith(CARGO_TOML_PACKAGE_LICENSE):
+                    info[4] = line.partition("=")[-1].strip().strip('"')
+                elif line.startswith(CARGO_TOML_PACKAGE_REPOSITORY):
+                    info[5] = line.partition("=")[-1].strip().strip('"')
+        return info
 
 
 class GitUtils:
@@ -473,6 +640,7 @@ class CommandLinesParser:
             BuildRustTargets.add_rust_targets.__name__,
             BuildRustTargets.build_rust_targets.__name__,
             BuildRustTargets.package_rust_targets.__name__,
+            BuildRustTargets.build_python_dist.__name__,
             BuildRustTargets.check_build_results.__name__,
         ),
     )
@@ -564,6 +732,13 @@ class CommandLinesParser:
             choices=[True, False],
         )
         arg_parser.add_argument(
+            f"--{BuildRustTargets.build_python_dist.__name__}",
+            type=bool,
+            default=False,
+            help=f'{BuildRustTargets.build_python_dist.__name__.replace("_", " ")} (default False)',
+            choices=[True, False],
+        )
+        arg_parser.add_argument(
             f"--{BuildRustTargets.check_build_results.__name__}",
             type=bool,
             default=False,
@@ -586,6 +761,7 @@ class CommandLinesParser:
             add_rust_targets=args.add_rust_targets,
             build_rust_targets=args.build_rust_targets,
             package_rust_targets=args.package_rust_targets,
+            build_python_dist=args.build_python_dist,
             check_build_results=args.check_build_results,
         )
 
@@ -635,6 +811,9 @@ if __name__ == "__main__":
 
     if command_lines.all or command_lines.package_rust_targets:
         builder.package_rust_targets()
+
+    if command_lines.all or command_lines.build_python_dist:
+        builder.build_python_dist()
 
     if command_lines.all or command_lines.check_build_results:
         builder.check_build_results()

@@ -1,9 +1,9 @@
 [package]
 name = "rs_container_ffi"
-version = "2024.12.3"
+version = "2025.1.6"
 edition = "2021"
 description = "Wrap Rust Vec, std::collections::{BTreeMap, BTreeSet} for C"
-license = "LGPL-3.0+"
+license = "GPL-3.0-or-later"
 categories = ["api-bindings", "external-ffi-bindings", "development-tools::ffi"]
 keywords = ["ffi", "rust", "c", "container"]
 repository = "https://github.com/ascpkg/asc/tree/main/rs_container_ffi"
