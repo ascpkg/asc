@@ -398,11 +398,30 @@ class BuildRustTargets:
         source_name = f"{self.name}_bin-{self.version}"
         source_dir = os.path.join(cross_build_dir, source_name)
         tar_gz_file = f"{source_dir}.tar.gz"
+
         if os.path.exists(tar_gz_file):
             os.remove(tar_gz_file)
         shutil.rmtree(source_dir, ignore_errors=True)
+
         shutil.copytree(f".", source_dir, ignore=shutil.ignore_patterns(".git", ".github", ".gitignore", ".vscode", "runners", "target", "test_sources", "test_source_parser", "*.o", "clang_parse.py", "rfc.c"))
+        
+        with open(os.path.join(source_dir, "PKG-INFO"), mode="w", encoding="utf-8") as f:
+            lines = [
+                " ".join(PYTHON_WHEEL_METADATA_HEADER), "\n",
+                f"{PYTHON_WHEEL_METADATA_NAME} {self.name}_bin", "\n",
+                f"{PYTHON_WHEEL_METADATA_VERSION} {self.version}", "\n",
+                f"{PYTHON_WHEEL_METADATA_SUMMARY} {self.description}", "\n",
+                f"{PYTHON_WHEEL_METADATA_KEYWORDS} {self.keywords}", "\n",
+                f"{PYTHON_WHEEL_METADATA_LICENSE} {self.license}", "\n",
+                " ".join(PYTHON_WHEEL_METADATA_DESCRIPTION_CONTENT_TYPE), "\n",
+                f"{PYTHON_WHEEL_METADATA_PROJECT_URL} {self.repository}" "\n",
+            ]
+            with open(README_MD_PATH, encoding="utf-8") as fp:
+                lines.extend(["\n", fp.read()])
+            f.writelines(lines)
+
         shutil.make_archive(source_dir, "gztar", base_dir=source_name, root_dir=cross_build_dir)
+        
         shutil.rmtree(source_dir)
 
     def build_python_wheel(self, target):
@@ -475,7 +494,7 @@ class BuildRustTargets:
         # compress
         cwd = os.getcwd()
         os.chdir(dir_path)
-        with zipfile.ZipFile(f"../{wheel_name}", "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zip_f:
+        with zipfile.ZipFile(f"../{wheel_name}", "w", compression=zipfile.ZIP_DEFLATED) as zip_f:
             for d in (os.path.dirname(data_scripts), dist_info):
                 for folder_name, _, file_names in os.walk(d):
                     for file_name in file_names:
@@ -504,7 +523,7 @@ class BuildRustTargets:
             if RUST_ARCH_AMD64 in target:
                 return f'{self.name}_bin-{self.version}-py3-none-win_amd64.whl'
             elif RUST_ARCH_ARM64 in target:
-                return f'{self.name}_bin-{self.version}-py3-none-win_amd64.whl'
+                return f'{self.name}_bin-{self.version}-py3-none-win_arm64.whl'
         elif RUST_TARGET_LINUX_PATTERN in target:
             if RUST_ARCH_AMD64 in target:
                 return f'{self.name}_bin-{self.version}-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
