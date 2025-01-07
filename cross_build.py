@@ -655,7 +655,7 @@ class GitUtils:
         proc = subprocess.run(["git", "tag", "--sort=-creatordate"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         for line in proc.stdout.split("\n"):
             tag = line.strip()
-            if tag != current_tag and re.search(pattern=r"^[0-9]{4}\.[0-9]{2}\.[0-9]{2}", string=line.strip()):
+            if tag != current_tag and re.search(pattern=r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]{1,2}", string=line.strip()):
                 print(tag)
                 break
 
