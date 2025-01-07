@@ -84,13 +84,21 @@ enum VcpkgPortFeatures {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 struct VcpkgPortFeature {
-    #[serde(default, skip_serializing_if = "String::is_empty")]
-    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
 
-    description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<VcpkgFeatureDescription>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+enum VcpkgFeatureDescription {
+    Single(String),
+    Multiple(Vec<String>),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1293,6 +1301,11 @@ Description: zlib support
         std::fs::remove_file(path).unwrap();
 
         assert!(is_same);
+    }
+
+    fn test_load_vcpkg_json_file() {
+        let d = VcpkgPortManifest::load("qt.json", false);
+        assert!(d.is_some());
     }
 
     fn is_file_text_equals(path: &str, content: &str) -> bool {
