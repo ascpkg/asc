@@ -367,7 +367,8 @@ class BuildRustTargets:
     def build_python_dist(self):
         logging.info(f"{inspect.currentframe().f_code.co_name}")
 
-        self.build_python_tar_gz()
+        if platform.system() == PLATFORM_SYSTEM_WINDOWS:
+            self.build_python_tar_gz()
 
         for target in self.get_rust_targets(target_pattern=self.target):
             self.build_python_wheel(target=target)
@@ -406,18 +407,7 @@ class BuildRustTargets:
         shutil.copytree(f".", source_dir, ignore=shutil.ignore_patterns(".git", ".github", ".gitignore", ".vscode", "runners", "target", "test_sources", "test_source_parser", "*.o", "clang_parse.py", "rfc.c"))
         
         with open(os.path.join(source_dir, "PKG-INFO"), mode="w", encoding="utf-8") as f:
-            lines = [
-                " ".join(PYTHON_WHEEL_METADATA_HEADER), "\n",
-                f"{PYTHON_WHEEL_METADATA_NAME} {self.name}_bin", "\n",
-                f"{PYTHON_WHEEL_METADATA_VERSION} {self.version}", "\n",
-                f"{PYTHON_WHEEL_METADATA_SUMMARY} {self.description}", "\n",
-                f"{PYTHON_WHEEL_METADATA_KEYWORDS} {self.keywords}", "\n",
-                f"{PYTHON_WHEEL_METADATA_LICENSE} {self.license}", "\n",
-                " ".join(PYTHON_WHEEL_METADATA_DESCRIPTION_CONTENT_TYPE), "\n",
-                f"{PYTHON_WHEEL_METADATA_PROJECT_URL} {self.repository}" "\n",
-            ]
-            with open(README_MD_PATH, encoding="utf-8") as fp:
-                lines.extend(["\n", fp.read()])
+            lines = self.format_meta_data()
             f.writelines(lines)
 
         shutil.make_archive(source_dir, "gztar", base_dir=source_name, root_dir=cross_build_dir)
@@ -452,18 +442,7 @@ class BuildRustTargets:
         # write METADATA
         meta_path = f"{dist_info_dir}/METADATA"
         with open(meta_path, mode="w", encoding="utf-8") as f:
-            lines = [
-                " ".join(PYTHON_WHEEL_METADATA_HEADER), "\n",
-                f"{PYTHON_WHEEL_METADATA_NAME} {self.name}_bin", "\n",
-                f"{PYTHON_WHEEL_METADATA_VERSION} {self.version}", "\n",
-                f"{PYTHON_WHEEL_METADATA_SUMMARY} {self.description}", "\n",
-                f"{PYTHON_WHEEL_METADATA_KEYWORDS} {self.keywords}", "\n",
-                f"{PYTHON_WHEEL_METADATA_LICENSE} {self.license}", "\n",
-                " ".join(PYTHON_WHEEL_METADATA_DESCRIPTION_CONTENT_TYPE), "\n",
-                f"{PYTHON_WHEEL_METADATA_PROJECT_URL} {self.repository}" "\n",
-            ]
-            with open(README_MD_PATH, encoding="utf-8") as fp:
-                lines.extend(["\n", fp.read()])
+            lines = self.format_meta_data()
             f.writelines(lines)
 
         # write WHEEL
@@ -503,6 +482,21 @@ class BuildRustTargets:
         logging.warning(f"compress {wheel_name}")
         os.chdir(cwd)
         shutil.rmtree(dir_path)
+
+    def format_meta_data(self) -> list:
+        lines = [
+            " ".join(PYTHON_WHEEL_METADATA_HEADER), "\n",
+            f"{PYTHON_WHEEL_METADATA_NAME} {self.name}_bin", "\n",
+            f"{PYTHON_WHEEL_METADATA_VERSION} {self.version}", "\n",
+            f"{PYTHON_WHEEL_METADATA_SUMMARY} {self.description}", "\n",
+            f"{PYTHON_WHEEL_METADATA_KEYWORDS} {self.keywords}", "\n",
+            f"{PYTHON_WHEEL_METADATA_LICENSE} {self.license}", "\n",
+            " ".join(PYTHON_WHEEL_METADATA_DESCRIPTION_CONTENT_TYPE), "\n",
+            f"{PYTHON_WHEEL_METADATA_PROJECT_URL} {self.repository}" "\n",
+        ]
+        with open(README_MD_PATH, encoding="utf-8") as fp:
+            lines.extend(["\n", fp.read()])
+        return lines
 
     def calculate_sha256(self, file_path):
         sha256_hash = hashlib.sha256()
@@ -572,7 +566,7 @@ class BuildRustTargets:
         logging.warning(inspect.currentframe().f_code.co_name)
 
         info = ["", "", "", "", "", ""]
-        with open(CARGO_TOML_PATH) as f:
+        with open(CARGO_TOML_PATH, encoding="utf-8") as f:
             for line in f:
                 if line.startswith(CARGO_TOML_PACKAGE_NAME):
                     info[0] = line.partition("=")[-1].strip().strip('"')
@@ -587,6 +581,64 @@ class BuildRustTargets:
                 elif line.startswith(CARGO_TOML_PACKAGE_REPOSITORY):
                     info[5] = line.partition("=")[-1].strip().strip('"')
         return info
+
+
+class PublishUtils:
+    @staticmethod
+    def publish():
+        output_dir_path = os.path.join(TARGET, CROSS_BUILD_DIR_NAME)
+        
+        name = ""
+        version = ""
+
+        # build
+        if platform.system() == PLATFORM_SYSTEM_WINDOWS:
+            preparer = PrepareRequirements()
+            preparer.prepare_zig()
+            preparer.prepare_cargo_zig_build()
+
+            for target in ("x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"):
+                builder = BuildRustTargets(target)
+                builder.add_rust_targets()
+                builder.build_rust_targets()
+                builder.build_python_tar_gz()
+                builder.build_python_wheel(target)
+                name, version = builder.name, builder.version
+        else:
+            # clean
+            shutil.rmtree(output_dir_path, ignore_errors=True)
+            os.makedirs(output_dir_path, exist_ok=True)
+
+            preparer = PrepareRequirements()
+            preparer.prepare_zig()
+            preparer.prepare_cargo_zig_build()
+            preparer.prepare_mac_os_sdk()
+
+            for target in ("x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"):
+                builder = BuildRustTargets(target)
+                builder.add_rust_targets()
+                builder.build_rust_targets()
+                builder.build_python_wheel(target)
+                name, version = builder.name, builder.version
+
+        # upload
+        PublishUtils.publish_to_rust_crates()
+        PublishUtils.publish_to_python_pypi(output_dir_path=output_dir_path, name=name, version=version)
+
+    @staticmethod
+    def publish_to_rust_crates():
+        if platform.system() == PLATFORM_SYSTEM_WINDOWS:
+            shell(args=["cargo", "publish", "--package=rs_container_ffi", "--no-verify"])
+            shell(args=["cargo", "publish", "--package=c_source_parser_ffi", "--no-verify"])
+            shell(args=["cargo", "publish", "--package=config_file_macros", "--no-verify"])
+            shell(args=["cargo", "publish", "--package=config_file_types", "--no-verify"])
+            shell(args=["cargo", "publish", "--package=config_file_derives", "--no-verify"])
+            shell(args=["cargo", "publish", "--package=asc_bin", "--no-verify"])
+
+    @staticmethod
+    def publish_to_python_pypi(output_dir_path: str, name: str, version: str):
+        if platform.system() == PLATFORM_SYSTEM_WINDOWS:
+            shell(args=["maturin", "upload", "--username", "__token__", f"{output_dir_path}/{name}_bin-{version}*"])
 
 
 class GitUtils:
@@ -661,6 +713,7 @@ class CommandLinesParser:
             BuildRustTargets.package_rust_targets.__name__,
             BuildRustTargets.build_python_dist.__name__,
             BuildRustTargets.check_build_results.__name__,
+            PublishUtils.publish.__name__,
         ),
     )
 
@@ -764,6 +817,13 @@ class CommandLinesParser:
             help=f'{BuildRustTargets.check_build_results.__name__.replace("_", " ")} (default False)',
             choices=[True, False],
         )
+        arg_parser.add_argument(
+            f"--{PublishUtils.publish.__name__}",
+            type=bool,
+            default=False,
+            help=f'{PublishUtils.publish.__name__.replace("_", " ")} (default False)',
+            choices=[True, False],
+        )
 
         args = arg_parser.parse_args()
 
@@ -782,6 +842,7 @@ class CommandLinesParser:
             package_rust_targets=args.package_rust_targets,
             build_python_dist=args.build_python_dist,
             check_build_results=args.check_build_results,
+            publish=args.publish,
         )
 
 
@@ -836,3 +897,6 @@ if __name__ == "__main__":
 
     if command_lines.all or command_lines.check_build_results:
         builder.check_build_results()
+
+    if command_lines.all or command_lines.publish:
+        PublishUtils.publish()
