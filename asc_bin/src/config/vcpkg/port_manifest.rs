@@ -145,18 +145,17 @@ impl VcpkgPortManifest {
         let mut deps: Vec<VcpkgPortDependency> = data.dependencies.clone();
         for index in 0..deps.len() {
             match deps[index].clone() {
-              VcpkgPortDependency::Simple(d) => {
-                  if let Some(version) = all_port_versions.get(&d) {
-                      deps[index] =
-                          VcpkgPortDependency::Simple(format!("{d}-{version}"));
-                  }
-              }
-              VcpkgPortDependency::Complex(mut d) => {
-                  if let Some(version) = all_port_versions.get(&d.name) {
-                      d.name = format!("{}-{version}", d.name);
-                      deps[index] = VcpkgPortDependency::Complex(d);
-                  }
-              }
+                VcpkgPortDependency::Simple(d) => {
+                    if let Some(version) = all_port_versions.get(&d) {
+                        deps[index] = VcpkgPortDependency::Simple(format!("{d}-{version}"));
+                    }
+                }
+                VcpkgPortDependency::Complex(mut d) => {
+                    if let Some(version) = all_port_versions.get(&d.name) {
+                        d.name = format!("{}-{version}", d.name);
+                        deps[index] = VcpkgPortDependency::Complex(d);
+                    }
+                }
             }
         }
         data.dependencies = deps;

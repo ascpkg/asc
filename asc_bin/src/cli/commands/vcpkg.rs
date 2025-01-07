@@ -26,6 +26,11 @@ pub struct VcpkgArgs {
     #[serde(skip, default)]
     pub sync: bool,
 
+    /// threads
+    #[clap(long, default_value_t = 4)]
+    #[serde(skip, default)]
+    pub threads: u32,
+
     /// git push or not
     #[clap(long, default_value_t = false)]
     #[serde(skip, default)]

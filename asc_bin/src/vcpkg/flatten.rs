@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use fs_extra;
+use rayon;
 
 use crate::{
     config::{
@@ -10,7 +11,7 @@ use crate::{
         },
         vcpkg::port_manifest::VcpkgPortManifest,
     },
-    git,
+    git::{self, log::GitCommitInfo},
     util::{self, shell},
     vcpkg,
 };
@@ -37,8 +38,6 @@ impl VcpkgManager {
         let asc_registry_ports_dir = format!("{asc_registry_dir}/{ports}");
         let tar_name = format!("{ports}.tar",);
         let tmp_dir = format!("{asc_registry_dir}/tmp");
-        let tmp_tar_path = format!("{tmp_dir}/{tar_name}");
-        let tmp_ports_path = format!("{tmp_dir}/{ports}");
         util::fs::remove_dirs(&tmp_dir);
         util::fs::create_dirs(&tmp_dir);
 
@@ -54,77 +53,174 @@ impl VcpkgManager {
                 next_index = index; // redo last commit because versions dir may not be added and committed
             }
         }
-        let total = vcpkg_ports_changed_commits.len() as f32;
-        for (index, (commit, changed_files)) in
-            vcpkg_ports_changed_commits[next_index..].iter().enumerate()
-        {
-            tracing::warn!(
-                "========== {} / {total} = {}% ==========",
-                next_index + index,
-                (index + next_index) as f32 * 100.0 / total
-            );
 
-            // get all ports
-            let (all_port_versions, all_ports_manifest) =
-                self.get_all_port_versions(&vcpkg_registry_dir, &commit.hash);
+        // process ports/
+        let threads = self.args.threads as usize;
+        let thread_pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+        let total = vcpkg_ports_changed_commits.len();
+        let runnings = std::sync::Arc::new(std::sync::Mutex::new(0));
+        let (version_task_sender, version_task_receiver) = std::sync::mpsc::channel();
+        let tmp_dir_cloned = tmp_dir.clone();
+        std::thread::spawn(move || {
+            thread_pool.install(|| {
+                let mut index = 0;
+                while index < vcpkg_ports_changed_commits.len() {
+                    // wait until runnings <= threads
+                    let runnings = std::sync::Arc::clone(&runnings);
+                    {
+                        let mut running_count = runnings.lock().unwrap();
+                        if *running_count > threads {
+                            std::thread::sleep(std::time::Duration::from_millis(100));
+                            tracing::warn!("wait until runnings <= threads");
+                            continue;
+                        }
+                        // runnings += 1
+                        *running_count += 1;
+                    }
 
-            // get port git trees
-            let changed_ports = self.get_changed_ports(changed_files);
+                    // clone
+                    let tmp_dir = tmp_dir_cloned.clone();
+                    let tar_name = tar_name.clone();
+                    let ports = ports.clone();
+                    let vcpkg_registry_dir = vcpkg_registry_dir.clone();
+                    let (commit, changed_files) = vcpkg_ports_changed_commits[index].clone();
+                    let version_task_sender = version_task_sender.clone();
 
-            // output git archive
-            self.output_git_archive(
-                &vcpkg_registry_dir,
-                &commit.hash,
-                &tmp_tar_path,
-                &tmp_ports_path,
-            );
+                    // spawn thread
+                    thread_pool.spawn(move || {
+                        let int_index = index + next_index;
+                        let str_index = format!("{:0>8}", int_index);
+                        let tmp_tar_path = format!("{tmp_dir}/{str_index}_{tar_name}");
+                        let tmp_ports_path = format!("{tmp_dir}/{str_index}_{ports}");
 
-            // append version to port name in CONTROL/vcpkg.json
-            for port_name in &changed_ports {
-                self.append_version_to_port_manifest(
-                    format!("{tmp_ports_path}/{port_name}"),
-                    &all_port_versions,
-                );
-            }
+                        // get all ports
+                        let (all_port_versions, all_ports_manifest) =
+                            Self::get_all_port_versions(&vcpkg_registry_dir, &commit.hash);
 
-            // move versioned ports
-            self.move_versioned_ports(
-                &asc_registry_ports_dir,
-                &tmp_ports_path,
-                &changed_ports,
-                &all_port_versions,
-            );
+                        // get port git trees
+                        let changed_ports = Self::get_changed_ports(&changed_files);
 
-            // git add ports
-            git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], &asc_registry_dir);
-            git::commit::run(
-                format!(
-                    "{FLATTEN_PREFIX}{} from {} at {}",
-                    commit.hash.split_at(7).0,
-                    commit.user_email,
-                    commit.date_time
-                ),
-                &asc_registry_dir,
-            );
+                        // output git archive
+                        Self::output_git_archive(
+                            &vcpkg_registry_dir,
+                            &commit.hash,
+                            &tmp_tar_path,
+                            &tmp_ports_path,
+                        );
 
-            // generate manifests
-            self.generate_port_manifests(
-                &asc_registry_dir,
-                &changed_ports,
-                &all_port_versions,
-                &all_ports_manifest,
-            );
+                        // append version to port name in CONTROL/vcpkg.json
+                        for port_name in &changed_ports {
+                            Self::append_version_to_port_manifest(
+                                format!("{tmp_ports_path}/{port_name}"),
+                                &all_port_versions,
+                            );
+                        }
 
-            // git add versions
-            git::add::run(
-                &vec![VCPKG_VERSIONS_DIR_NAME.to_string()],
-                &asc_registry_dir,
-            );
-            git::commit_amend::run(&asc_registry_dir);
+                        tracing::warn!(
+                            "---------- {} / {total} = {}% ----------",
+                            int_index,
+                            int_index as f32 * 100.0 / total as f32
+                        );
 
-            // git push
-            if self.args.push && (index > 0 && index % 10 == 0) {
-                git::push::run(&asc_registry_dir, true);
+                        // send task
+                        version_task_sender
+                            .send((
+                                int_index,
+                                commit.clone(),
+                                tmp_ports_path,
+                                changed_ports,
+                                all_port_versions,
+                                all_ports_manifest,
+                            ))
+                            .unwrap();
+
+                        {
+                            // runnings -= 1
+                            let mut running_count = runnings.lock().unwrap();
+                            *running_count -= 1;
+                        }
+                    });
+
+                    index += 1;
+                }
+            });
+        });
+
+        // process versions/
+        let mut reorder_cache = BTreeMap::new();
+        loop {
+            if let Ok((
+                index,
+                commit,
+                tmp_ports_path,
+                changed_ports,
+                all_port_versions,
+                all_ports_manifest,
+            )) = version_task_receiver.recv()
+            {
+                if index == next_index {
+                    self.process_versions(
+                        index as f32,
+                        total as f32,
+                        &commit,
+                        &asc_registry_dir,
+                        &asc_registry_ports_dir,
+                        &tmp_ports_path,
+                        &changed_ports,
+                        &all_port_versions,
+                        &all_ports_manifest,
+                    );
+                    next_index += 1;
+                    if index == total as usize - 1 {
+                        break;
+                    }
+                } else {
+                    reorder_cache.insert(
+                        index,
+                        (
+                            index,
+                            commit,
+                            tmp_ports_path,
+                            changed_ports,
+                            all_port_versions,
+                            all_ports_manifest,
+                        ),
+                    );
+                    match reorder_cache.get(&next_index) {
+                        None => {
+                            std::thread::sleep(std::time::Duration::from_millis(100));
+                            tracing::warn!("wait index == next_index");
+                            continue;
+                        }
+                        Some((
+                            int_index_,
+                            commit_,
+                            tmp_ports_path_,
+                            changed_ports_,
+                            all_port_versions_,
+                            all_ports_manifest_,
+                        )) => {
+                            self.process_versions(
+                                int_index_.clone() as f32,
+                                total as f32,
+                                &commit_,
+                                &asc_registry_dir,
+                                &asc_registry_ports_dir,
+                                &tmp_ports_path_,
+                                &changed_ports_,
+                                &all_port_versions_,
+                                &all_ports_manifest_,
+                            );
+                            next_index += 1;
+                            if index == total as usize - 1 {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -132,6 +228,65 @@ impl VcpkgManager {
         util::fs::remove_dirs(&tmp_dir);
 
         return true;
+    }
+
+    fn process_versions(
+        &self,
+        index: f32,
+        total: f32,
+        commit: &GitCommitInfo,
+        asc_registry_dir: &String,
+        asc_registry_ports_dir: &String,
+        tmp_ports_path: &String,
+        changed_ports: &BTreeSet<String>,
+        all_port_versions: &BTreeMap<String, String>,
+        all_ports_manifest: &BTreeMap<String, (String, String)>,
+    ) {
+        tracing::warn!(
+            "========== {} / {total} = {}% ==========",
+            index as i32,
+            index * 100.0 / total
+        );
+
+        // move versioned ports
+        self.move_versioned_ports(
+            asc_registry_ports_dir,
+            &tmp_ports_path,
+            &changed_ports,
+            &all_port_versions,
+        );
+
+        // git add ports
+        git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], asc_registry_dir);
+        git::commit::run(
+            format!(
+                "{FLATTEN_PREFIX}{} from {} at {}",
+                commit.hash.split_at(7).0,
+                commit.user_email,
+                commit.date_time
+            ),
+            &asc_registry_dir,
+        );
+
+        // generate manifests
+        self.generate_port_manifests(
+            &asc_registry_dir,
+            &changed_ports,
+            &all_port_versions,
+            &all_ports_manifest,
+        );
+
+        // git add versions
+        git::add::run(
+            &vec![VCPKG_VERSIONS_DIR_NAME.to_string()],
+            &asc_registry_dir,
+        );
+        git::commit_amend::run(&asc_registry_dir);
+
+        // git push
+        if self.args.push {
+            git::push::run(&asc_registry_dir, true);
+        }
     }
 
     pub fn get_registry_dirs(&mut self) -> (String, String) {
@@ -164,7 +319,6 @@ impl VcpkgManager {
     }
 
     pub fn get_all_port_versions(
-        &self,
         vcpkg_registry_dir: &str,
         commit_hash: &str,
     ) -> (BTreeMap<String, String>, BTreeMap<String, (String, String)>) {
@@ -186,7 +340,7 @@ impl VcpkgManager {
         return (all_port_versions, all_ports_manifest);
     }
 
-    pub fn get_changed_ports(&self, changed_files: &Vec<String>) -> BTreeSet<String> {
+    pub fn get_changed_ports(changed_files: &Vec<String>) -> BTreeSet<String> {
         let mut changed_ports = BTreeSet::new();
         for file in changed_files {
             changed_ports.insert(
@@ -202,7 +356,6 @@ impl VcpkgManager {
     }
 
     pub fn output_git_archive(
-        &self,
         vcpkg_registry_dir: &str,
         commit_hash: &str,
         tmp_tar_path: &str,
@@ -232,7 +385,6 @@ impl VcpkgManager {
     }
 
     pub fn append_version_to_port_manifest(
-        &mut self,
         port_manifest_dir: String,
         all_port_versions: &BTreeMap<String, String>,
     ) {
