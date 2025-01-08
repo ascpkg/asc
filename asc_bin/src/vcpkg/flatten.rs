@@ -44,15 +44,10 @@ impl VcpkgManager {
         // get vcpkg registry commits
         let vcpkg_ports_changed_commits =
             git::log::get_changed_commits(&vcpkg_registry_dir, VCPKG_PORTS_DIR_NAME);
-        let mut next_index = 0;
-        if let Some(index) = vcpkg_ports_changed_commits
+        let mut next_index = vcpkg_ports_changed_commits
             .iter()
             .position(|c| c.0.hash.starts_with(&check_point_hash))
-        {
-            if !check_point_hash.is_empty() {
-                next_index = index; // redo last commit because versions dir may not be added and committed
-            }
-        }
+            .unwrap_or(0); // redo last commit because versions dir may not be added and committed
 
         // process ports/
         let threads = self.args.threads as usize;
@@ -60,25 +55,27 @@ impl VcpkgManager {
             .num_threads(threads)
             .build()
             .unwrap();
-        let total = vcpkg_ports_changed_commits.len();
-        let runnings = std::sync::Arc::new(std::sync::Mutex::new(0));
+        let total_count = vcpkg_ports_changed_commits.len();
+        let pending_tasks = std::sync::Arc::new(std::sync::Mutex::new(0));
+        let pending_tasks_cloned = std::sync::Arc::clone(&pending_tasks);
         let (version_task_sender, version_task_receiver) = std::sync::mpsc::channel();
         let tmp_dir_cloned = tmp_dir.clone();
+        let mut start_index = next_index;
         std::thread::spawn(move || {
             thread_pool.install(|| {
-                let mut index = 0;
-                while index < vcpkg_ports_changed_commits.len() {
-                    // wait until runnings <= threads
-                    let runnings = std::sync::Arc::clone(&runnings);
+                let pending_tasks_cloned = std::sync::Arc::clone(&pending_tasks);
+                while start_index < vcpkg_ports_changed_commits.len() {
+                    // wait until pendings <= threads
                     {
-                        let mut running_count = runnings.lock().unwrap();
-                        if *running_count > threads {
-                            std::thread::sleep(std::time::Duration::from_millis(100));
-                            tracing::warn!("wait until runnings <= threads");
+                        let mut pendings_tasks = pending_tasks_cloned.lock().unwrap();
+                        if *pendings_tasks > threads {
+                            drop(pendings_tasks);
+                            std::thread::sleep(std::time::Duration::from_secs(1));
+                            tracing::warn!("wait until pendings <= threads");
                             continue;
                         }
-                        // runnings += 1
-                        *running_count += 1;
+                        // pendings += 1
+                        *pendings_tasks += 1;
                     }
 
                     // clone
@@ -86,15 +83,22 @@ impl VcpkgManager {
                     let tar_name = tar_name.clone();
                     let ports = ports.clone();
                     let vcpkg_registry_dir = vcpkg_registry_dir.clone();
-                    let (commit, changed_files) = vcpkg_ports_changed_commits[index].clone();
+                    let (commit, changed_files) = vcpkg_ports_changed_commits[start_index].clone();
                     let version_task_sender = version_task_sender.clone();
 
                     // spawn thread
+                    let int_index = start_index;
+                    start_index += 1;
                     thread_pool.spawn(move || {
-                        let int_index = index + next_index;
                         let str_index = format!("{:0>8}", int_index);
                         let tmp_tar_path = format!("{tmp_dir}/{str_index}_{tar_name}");
                         let tmp_ports_path = format!("{tmp_dir}/{str_index}_{ports}");
+
+                        tracing::warn!(
+                            "---------- {} / {total_count} = {}% ----------",
+                            int_index,
+                            int_index as f32 * 100.0 / total_count as f32
+                        );
 
                         // get all ports
                         let (all_port_versions, all_ports_manifest) =
@@ -119,12 +123,6 @@ impl VcpkgManager {
                             );
                         }
 
-                        tracing::warn!(
-                            "---------- {} / {total} = {}% ----------",
-                            int_index,
-                            int_index as f32 * 100.0 / total as f32
-                        );
-
                         // send task
                         version_task_sender
                             .send((
@@ -136,21 +134,13 @@ impl VcpkgManager {
                                 all_ports_manifest,
                             ))
                             .unwrap();
-
-                        {
-                            // runnings -= 1
-                            let mut running_count = runnings.lock().unwrap();
-                            *running_count -= 1;
-                        }
                     });
-
-                    index += 1;
                 }
             });
         });
 
         // process versions/
-        let mut reorder_cache = BTreeMap::new();
+        let mut reorder_map = BTreeMap::new();
         loop {
             if let Ok((
                 index,
@@ -161,10 +151,16 @@ impl VcpkgManager {
                 all_ports_manifest,
             )) = version_task_receiver.recv()
             {
+                {
+                    // pendings -= 1
+                    let mut pendings_tasks = pending_tasks_cloned.lock().unwrap();
+                    *pendings_tasks -= 1;
+                }
+
                 if index == next_index {
                     self.process_versions(
                         index as f32,
-                        total as f32,
+                        total_count as f32,
                         &commit,
                         &asc_registry_dir,
                         &asc_registry_ports_dir,
@@ -174,11 +170,11 @@ impl VcpkgManager {
                         &all_ports_manifest,
                     );
                     next_index += 1;
-                    if index == total as usize - 1 {
+                    if index == total_count as usize - 1 {
                         break;
                     }
                 } else {
-                    reorder_cache.insert(
+                    reorder_map.insert(
                         index,
                         (
                             index,
@@ -189,7 +185,7 @@ impl VcpkgManager {
                             all_ports_manifest,
                         ),
                     );
-                    match reorder_cache.get(&next_index) {
+                    match reorder_map.get(&next_index) {
                         None => {
                             std::thread::sleep(std::time::Duration::from_millis(100));
                             tracing::warn!("wait index == next_index");
@@ -205,7 +201,7 @@ impl VcpkgManager {
                         )) => {
                             self.process_versions(
                                 int_index_.clone() as f32,
-                                total as f32,
+                                total_count as f32,
                                 &commit_,
                                 &asc_registry_dir,
                                 &asc_registry_ports_dir,
@@ -215,7 +211,7 @@ impl VcpkgManager {
                                 &all_ports_manifest_,
                             );
                             next_index += 1;
-                            if index == total as usize - 1 {
+                            if index == total_count as usize - 1 {
                                 break;
                             }
                         }
