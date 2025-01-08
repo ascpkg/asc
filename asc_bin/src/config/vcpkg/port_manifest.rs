@@ -1261,58 +1261,57 @@ Description: zlib support
         )
     }
 
-    // #[test]
-    // fn test_get_version_from_control_file() {
-    //     assert_eq!(
-    //         String::from("4-3-2-11"),
-    //         VcpkgPortManifest::get_version_from_control_file(&get_ffmpeg_control())
-    //     );
-    // }
-
-    // #[test]
-    // fn test_get_version_from_vcpkg_json_file() {
-    //     assert_eq!(
-    //         String::from("4-4-0"),
-    //         VcpkgPortManifest::get_version_from_vcpkg_json_file(&get_ffmpeg_vcpkg_json())
-    //     );
-    // }
-
-    // #[test]
-    // fn test_update_control_file() {
-    //     let path = "ffmpeg.CONTROL";
-    //     std::fs::write(path, get_ffmpeg_control().as_bytes()).unwrap();
-
-    //     let all_port_versions = get_all_port_versions(FFMPEG_CONTROL_COMMIT_ID);
-    //     VcpkgPortManifest::update_control_file(&path, &all_port_versions);
-
-    //     let is_same = is_file_text_equals(&path, FFMPEG_CONTROL_CONTENT_VERSIONED);
-
-    //     std::fs::remove_file(path).unwrap();
-
-    //     assert!(is_same);
-    // }
-
-    // #[test]
-    // fn test_update_vcpkg_json_file() {
-    //     let path = "ffmpeg.vcpkg.json";
-    //     std::fs::write(path, get_ffmpeg_vcpkg_json().as_bytes()).unwrap();
-
-    //     let all_port_versions = get_all_port_versions(FFMPEG_VCPKG_JSON_COMMIT_ID);
-    //     VcpkgPortManifest::update_vcpkg_json_file(path, &all_port_versions);
-
-    //     let is_same = is_file_text_equals(&path, FFMPEG_VCPKG_JSON_CONTENT_VERSIONED);
-
-    //     std::fs::remove_file(path).unwrap();
-
-    //     assert!(is_same);
-    // }
-
-    // fn test_load_vcpkg_json_file_qt() {
-    //     let d = VcpkgPortManifest::load("qt.json", false);
-    //     assert!(d.is_some());
-    // }
+    #[test]
+    fn test_get_version_from_control_file() {
+        assert_eq!(
+            String::from("4-3-2-11"),
+            VcpkgPortManifest::get_version_from_control_file(&get_ffmpeg_control())
+        );
+    }
 
     #[test]
+    fn test_get_version_from_vcpkg_json_file() {
+        assert_eq!(
+            String::from("4-4-0"),
+            VcpkgPortManifest::get_version_from_vcpkg_json_file(&get_ffmpeg_vcpkg_json())
+        );
+    }
+
+    #[test]
+    fn test_update_control_file() {
+        let path = "ffmpeg.CONTROL";
+        std::fs::write(path, get_ffmpeg_control().as_bytes()).unwrap();
+
+        let all_port_versions = get_all_port_versions(FFMPEG_CONTROL_COMMIT_ID);
+        VcpkgPortManifest::update_control_file(&path, &all_port_versions);
+
+        let is_same = is_file_text_equals(&path, FFMPEG_CONTROL_CONTENT_VERSIONED);
+
+        std::fs::remove_file(path).unwrap();
+
+        assert!(is_same);
+    }
+
+    #[test]
+    fn test_update_vcpkg_json_file() {
+        let path = "ffmpeg.vcpkg.json";
+        std::fs::write(path, get_ffmpeg_vcpkg_json().as_bytes()).unwrap();
+
+        let all_port_versions = get_all_port_versions(FFMPEG_VCPKG_JSON_COMMIT_ID);
+        VcpkgPortManifest::update_vcpkg_json_file(path, &all_port_versions);
+
+        let is_same = is_file_text_equals(&path, FFMPEG_VCPKG_JSON_CONTENT_VERSIONED);
+
+        std::fs::remove_file(path).unwrap();
+
+        assert!(is_same);
+    }
+
+    fn test_load_vcpkg_json_file_qt() {
+        let d = VcpkgPortManifest::load("qt.json", false);
+        assert!(d.is_some());
+    }
+
     fn test_load_vcpkg_json_file_cpprestsdk() {
         let d = VcpkgPortManifest::load("cpprestsdk.json", false);
         assert!(d.is_some())

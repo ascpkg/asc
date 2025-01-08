@@ -1,8 +1,23 @@
 # C/C++ 包管理和源码树自动编译工具 (类似 Rust Cargo)
 
+```
+   ▄████████    ▄████████  ▄████████         ▄███████▄    ▄█   ▄█▄    ▄██████▄         ▄▄▄▄███▄▄▄▄      ▄████████ ███▄▄▄▄      ▄████████    ▄██████▄     ▄████████    ▄████████ 
+  ███    ███   ███    ███ ███    ███        ███    ███   ███ ▄███▀   ███    ███      ▄██▀▀▀███▀▀▀██▄   ███    ███ ███▀▀▀██▄   ███    ███   ███    ███   ███    ███   ███    ███ 
+  ███    ███   ███    █▀  ███    █▀         ███    ███   ███▐██▀     ███    █▀       ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    █▀    ███    █▀    ███    ███ 
+  ███    ███   ███        ███               ███    ███  ▄█████▀     ▄███             ███   ███   ███   ███    ███ ███   ███   ███    ███  ▄███         ▄███▄▄▄      ▄███▄▄▄▄██▀ 
+▀███████████ ▀███████████ ███             ▀█████████▀  ▀▀█████▄    ▀▀███ ████▄       ███   ███   ███ ▀███████████ ███   ███ ▀███████████ ▀▀███ ████▄  ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   
+  ███    ███          ███ ███    █▄         ███          ███▐██▄     ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    █▄  ▀███████████ 
+  ███    ███    ▄█    ███ ███    ███        ███          ███ ▀███▄   ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    ███   ███    ███ 
+  ███    █▀   ▄████████▀  ████████▀        ▄████▀        ███   ▀█▀   ████████▀        ▀█   ███   █▀    ███    █▀   ▀█   █▀    ███    █▀    ████████▀    ██████████   ███    ███ 
+                                                         ▀                                                                                                           ███    ███ 
+                                                                        
+```
+
 [English](README.md)
 
 [![Crates.io](https://img.shields.io/crates/d/asc_bin.svg)](https://crates.io/crates/asc_bin)
+[![pypi.org](https://img.shields.io/pypi/dm/asc-bin)](https://pypi.org/project/asc-bin)
+[![github.com](https://img.shields.io/github/downloads/ascpkg/asc/total.svg)](https://github.com/ascpkg/asc/releases)
 [![Crates.io](https://img.shields.io/crates/v/asc_bin.svg)](https://crates.io/crates/asc_bin)
 [![release_windows_targets](https://github.com/ascpkg/asc/actions/workflows/release_windows_targets.yml/badge.svg)](https://github.com/ascpkg/asc/actions/workflows/release_windows_targets.yml)
 [![release_linux_darwin_targets](https://github.com/ascpkg/asc/actions/workflows/release_linux_darwin_targets.yml/badge.svg)](https://github.com/ascpkg/asc/actions/workflows/release_linux_darwin_targets.yml)

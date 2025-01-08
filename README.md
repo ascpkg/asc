@@ -1,5 +1,17 @@
-## asc (Cargo like tool for C/C++)
+## C/C++ package manager and auto source builder (like Rust Cargo)
 
+```
+   ▄████████    ▄████████  ▄████████         ▄███████▄    ▄█   ▄█▄    ▄██████▄         ▄▄▄▄███▄▄▄▄      ▄████████ ███▄▄▄▄      ▄████████    ▄██████▄     ▄████████    ▄████████ 
+  ███    ███   ███    ███ ███    ███        ███    ███   ███ ▄███▀   ███    ███      ▄██▀▀▀███▀▀▀██▄   ███    ███ ███▀▀▀██▄   ███    ███   ███    ███   ███    ███   ███    ███ 
+  ███    ███   ███    █▀  ███    █▀         ███    ███   ███▐██▀     ███    █▀       ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    █▀    ███    █▀    ███    ███ 
+  ███    ███   ███        ███               ███    ███  ▄█████▀     ▄███             ███   ███   ███   ███    ███ ███   ███   ███    ███  ▄███         ▄███▄▄▄      ▄███▄▄▄▄██▀ 
+▀███████████ ▀███████████ ███             ▀█████████▀  ▀▀█████▄    ▀▀███ ████▄       ███   ███   ███ ▀███████████ ███   ███ ▀███████████ ▀▀███ ████▄  ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   
+  ███    ███          ███ ███    █▄         ███          ███▐██▄     ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    █▄  ▀███████████ 
+  ███    ███    ▄█    ███ ███    ███        ███          ███ ▀███▄   ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    ███   ███    ███ 
+  ███    █▀   ▄████████▀  ████████▀        ▄████▀        ███   ▀█▀   ████████▀        ▀█   ███   █▀    ███    █▀   ▀█   █▀    ███    █▀    ████████▀    ██████████   ███    ███ 
+                                                         ▀                                                                                                           ███    ███ 
+                                                                        
+```
 
 ### **crates dependency graph**
 ```mermaid
@@ -21,6 +33,8 @@ graph LR;
 [简体中文](asc_bin/README.zh-CN.md)
 
 [![Crates.io](https://img.shields.io/crates/d/asc_bin.svg)](https://crates.io/crates/asc_bin)
+[![pypi.org](https://img.shields.io/pypi/dm/asc-bin)](https://pypi.org/project/asc-bin)
+[![github.com](https://img.shields.io/github/downloads/ascpkg/asc/total.svg)](https://github.com/ascpkg/asc/releases)
 [![Crates.io](https://img.shields.io/crates/v/asc_bin.svg)](https://crates.io/crates/asc_bin)
 
 
