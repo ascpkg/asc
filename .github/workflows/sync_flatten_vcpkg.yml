@@ -1,0 +1,46 @@
+name: sync and flatten vcpkg
+
+on:
+  workflow_dispatch:
+
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    permissions: write-all
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check rust
+        run: |
+          rustc --version
+
+      - name: Download asc
+        run: |
+          url=$(curl -s "https://api.github.com/repos/ascpkg/asc/releases/latest" | grep browser_download_url | grep x86_64-unknown-linux-gnu | awk -F'"' '{print $4}')
+          echo $url
+          curl -L -o "asc.tar.xz" $url
+          tar -Jxf "asc.tar.xz" --strip-components=1
+          mv asc asc-cli
+          ./asc-cli --version
+
+      - name: Configure asc
+        run: |
+          asc_registry_path="asc-registry-repo-dir"
+          vcpkg_registry_path="vcpkg-registry-repo-dir"
+          ./asc-cli vcpkg set --registry="https://github.com/ascpkg/asc-registry?branch=main&directory=$asc_registry_path"
+          ./asc-cli vcpkg set --registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=$vcpkg_registry_path"
+          git clone git@github.com:ascpkg/asc-registry.git $asc_registry_path
+          git clone https://github.com/microsoft/vcpkg.git $vcpkg_registry_path
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run asc
+        run: |
+          git config --global user.name "Capric"
+          git config --global user.email "capric8416@gmail.com"
+          ./asc-cli vcpkg flatten
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

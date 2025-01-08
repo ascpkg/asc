@@ -123,13 +123,13 @@ impl VcpkgArgs {
             }
         }
 
-        tracing::error!(message = "vcpkg regitry was not found", name = name);
+        tracing::error!(message = "vcpkg registry was not found", name = name);
         return (String::new(), String::new(), String::new(), String::new());
     }
 
     pub fn get_private_registry(&self, name: &str) -> (String, String, String, String) {
         if name == config::relative_paths::VCPKG_DIR_NAME {
-            tracing::error!("public vcpkg regitry was not allowed");
+            tracing::error!("public vcpkg registry was not allowed");
             return (String::new(), String::new(), String::new(), String::new());
         }
 
@@ -139,7 +139,7 @@ impl VcpkgArgs {
             }
         }
 
-        tracing::error!(message = "private vcpkg regitry was not found", name = name);
+        tracing::error!(message = "private vcpkg registry was not found", name = name);
         return (String::new(), String::new(), String::new(), String::new());
     }
 
@@ -150,7 +150,7 @@ impl VcpkgArgs {
             }
         }
 
-        tracing::error!(message = "public vcpkg regitry was not found");
+        tracing::error!(message = "public vcpkg registry was not found");
         return (String::new(), String::new(), String::new(), String::new());
     }
 }

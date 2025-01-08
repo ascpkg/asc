@@ -49,7 +49,7 @@ impl VcpkgManager {
             .position(|c| c.0.hash.starts_with(&check_point_hash))
             .unwrap_or(0); // redo last commit because versions dir may not be added and committed
 
-        // process ports/
+        // process ports/ in thread pool
         let threads = self.args.threads as usize;
         let thread_pool = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
@@ -65,17 +65,17 @@ impl VcpkgManager {
             thread_pool.install(|| {
                 let pending_tasks_cloned = std::sync::Arc::clone(&pending_tasks);
                 while start_index < vcpkg_ports_changed_commits.len() {
-                    // wait until pendings <= threads
+                    // wait until pending_task_count <= threads
                     {
-                        let mut pendings_tasks = pending_tasks_cloned.lock().unwrap();
-                        if *pendings_tasks > threads {
-                            drop(pendings_tasks);
+                        let mut pending_task_count = pending_tasks_cloned.lock().unwrap();
+                        if *pending_task_count > threads {
+                            drop(pending_task_count);
                             std::thread::sleep(std::time::Duration::from_secs(1));
-                            tracing::warn!("wait until pendings <= threads");
+                            tracing::warn!("wait until pending_task_count <= threads");
                             continue;
                         }
-                        // pendings += 1
-                        *pendings_tasks += 1;
+                        // pending_task_count += 1
+                        *pending_task_count += 1;
                     }
 
                     // clone
@@ -139,7 +139,7 @@ impl VcpkgManager {
             });
         });
 
-        // process versions/
+        // process versions/ one by one
         let mut reorder_map = BTreeMap::new();
         loop {
             if let Ok((
@@ -152,9 +152,9 @@ impl VcpkgManager {
             )) = version_task_receiver.recv()
             {
                 {
-                    // pendings -= 1
-                    let mut pendings_tasks = pending_tasks_cloned.lock().unwrap();
-                    *pendings_tasks -= 1;
+                    // pending_task_count -= 1
+                    let mut pending_task_count = pending_tasks_cloned.lock().unwrap();
+                    *pending_task_count -= 1;
                 }
 
                 if index == next_index {
