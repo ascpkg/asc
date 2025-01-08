@@ -40,10 +40,10 @@ pub struct VcpkgPortManifest {
     pub version_string: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub port_version: Option<VcpkgPortVersionField>,
+    pub port_version: Option<VcpkgU32OrStrField>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<VcpkgPortDescription>,
+    description: Option<VcpkgStrOrVecStrField>,
 
     #[serde(default, skip_serializing_if = "String::is_empty")]
     homepage: String,
@@ -52,7 +52,7 @@ pub struct VcpkgPortManifest {
     supports: String,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    default_features: Vec<String>,
+    default_features: Vec<VcpkgPortDefaultFeature>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     features: Option<VcpkgPortFeatures>,
@@ -63,23 +63,44 @@ pub struct VcpkgPortManifest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum VcpkgPortVersionField {
-    Int(u32),
+pub enum VcpkgU32OrStrField {
+    U32(u32),
     Str(String),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
-enum VcpkgPortDescription {
-    Single(String),
-    Multiple(Vec<String>),
+enum VcpkgStrOrVecStrField {
+    Str(String),
+    VecStr(Vec<String>),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 enum VcpkgPortFeatures {
-    Vector(Vec<VcpkgPortFeature>),
+    Vec(Vec<VcpkgPortFeature>),
     Map(BTreeMap<String, VcpkgPortFeature>),
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+enum VcpkgPortDependency {
+    Str(String),
+    Map(DependencyDetails),
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+enum VcpkgPortDefaultFeature {
+    Str(String),
+    Map(VcpkgFeatureSummary),
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+struct VcpkgFeatureSummary {
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    platform: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -88,29 +109,15 @@ struct VcpkgPortFeature {
     name: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<VcpkgFeatureDescription>,
+    description: Option<VcpkgStrOrVecStrField>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(untagged)]
-enum VcpkgFeatureDescription {
-    Single(String),
-    Multiple(Vec<String>),
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(untagged)]
-enum VcpkgPortDependency {
-    Simple(String),
-    Complex(ComplexDependency),
-}
-
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
-struct ComplexDependency {
+struct DependencyDetails {
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     default_features: Option<bool>,
@@ -142,67 +149,25 @@ impl VcpkgPortManifest {
         );
         data.name = name;
 
+        // update dependencies
         let mut deps: Vec<VcpkgPortDependency> = data.dependencies.clone();
-        for index in 0..deps.len() {
-            match deps[index].clone() {
-                VcpkgPortDependency::Simple(d) => {
-                    if let Some(version) = all_port_versions.get(&d) {
-                        deps[index] = VcpkgPortDependency::Simple(format!("{d}-{version}"));
-                    }
-                }
-                VcpkgPortDependency::Complex(mut d) => {
-                    if let Some(version) = all_port_versions.get(&d.name) {
-                        d.name = format!("{}-{version}", d.name);
-                        deps[index] = VcpkgPortDependency::Complex(d);
-                    }
-                }
-            }
-        }
+        Self::add_version_suffix_to_deps(&mut deps, all_port_versions);
         data.dependencies = deps;
 
+        // update features' dependencies
         if let Some(features) = &mut data.features {
             match features {
-                VcpkgPortFeatures::Vector(vec_of_features) => {
-                    for feature_desc in vec_of_features {
+                VcpkgPortFeatures::Vec(vec_features) => {
+                    for feature_desc in vec_features {
                         let mut deps = feature_desc.dependencies.clone();
-                        for index in 0..deps.len() {
-                            match deps[index].clone() {
-                                VcpkgPortDependency::Simple(d) => {
-                                    if let Some(version) = all_port_versions.get(&d) {
-                                        deps[index] =
-                                            VcpkgPortDependency::Simple(format!("{d}-{version}"));
-                                    }
-                                }
-                                VcpkgPortDependency::Complex(mut d) => {
-                                    if let Some(version) = all_port_versions.get(&d.name) {
-                                        d.name = format!("{}-{version}", d.name);
-                                        deps[index] = VcpkgPortDependency::Complex(d);
-                                    }
-                                }
-                            }
-                        }
+                        Self::add_version_suffix_to_deps(&mut deps, all_port_versions);
                         feature_desc.dependencies = deps;
                     }
                 }
-                VcpkgPortFeatures::Map(map_of_features) => {
-                    for (_feature_name, feature_desc) in map_of_features {
+                VcpkgPortFeatures::Map(map_features) => {
+                    for (_feature_name, feature_desc) in map_features {
                         let mut deps = feature_desc.dependencies.clone();
-                        for index in 0..deps.len() {
-                            match deps[index].clone() {
-                                VcpkgPortDependency::Simple(d) => {
-                                    if let Some(version) = all_port_versions.get(&d) {
-                                        deps[index] =
-                                            VcpkgPortDependency::Simple(format!("{d}-{version}"));
-                                    }
-                                }
-                                VcpkgPortDependency::Complex(mut d) => {
-                                    if let Some(version) = all_port_versions.get(&d.name) {
-                                        d.name = format!("{}-{version}", d.name);
-                                        deps[index] = VcpkgPortDependency::Complex(d);
-                                    }
-                                }
-                            }
-                        }
+                        Self::add_version_suffix_to_deps(&mut deps, all_port_versions);
                         feature_desc.dependencies = deps;
                     }
                 }
@@ -214,15 +179,36 @@ impl VcpkgPortManifest {
         return version;
     }
 
-    fn parse_port_version(value: &Option<VcpkgPortVersionField>) -> Option<u32> {
+    fn add_version_suffix_to_deps(
+        deps: &mut Vec<VcpkgPortDependency>,
+        all_port_versions: &BTreeMap<String, String>,
+    ) {
+        for index in 0..deps.len() {
+            match deps[index].clone() {
+                VcpkgPortDependency::Str(str_dep) => {
+                    if let Some(version) = all_port_versions.get(&str_dep) {
+                        deps[index] = VcpkgPortDependency::Str(format!("{str_dep}-{version}"));
+                    }
+                }
+                VcpkgPortDependency::Map(mut map_dep) => {
+                    if let Some(version) = all_port_versions.get(&map_dep.name) {
+                        map_dep.name = format!("{}-{version}", map_dep.name);
+                        deps[index] = VcpkgPortDependency::Map(map_dep);
+                    }
+                }
+            }
+        }
+    }
+
+    fn parse_port_version(value: &Option<VcpkgU32OrStrField>) -> Option<u32> {
         let mut port_version = Some(0);
         if let Some(v) = value {
             match v {
-                VcpkgPortVersionField::Int(vv) => {
-                    port_version = Some(vv.clone());
+                VcpkgU32OrStrField::U32(u32_v) => {
+                    port_version = Some(u32_v.clone());
                 }
-                VcpkgPortVersionField::Str(vv) => {
-                    port_version = Some(vv.parse::<u32>().unwrap_or(0));
+                VcpkgU32OrStrField::Str(str_v) => {
+                    port_version = Some(str_v.parse::<u32>().unwrap_or(0));
                 }
             }
         }
