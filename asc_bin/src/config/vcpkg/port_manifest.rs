@@ -151,14 +151,14 @@ struct VcpkgPortFeature {
 struct DependencyDetails {
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    host: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     default_features: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     features: Vec<VcpkgPortDefaultFeature>,
     /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#platform-expression
     #[serde(skip_serializing_if = "Option::is_none")]
     platform: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    host: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none", rename = "version>=")]
     version_ge: Option<String>,
 }
@@ -229,6 +229,7 @@ impl VcpkgPortManifest {
             }
         }
 
+        std::fs::rename(path, format!("{path}.bak")).unwrap();
         data.dump(true, false);
 
         return version;
@@ -319,6 +320,7 @@ impl VcpkgPortManifest {
             }
         }
 
+        std::fs::rename(path, format!("{path}.bak")).unwrap();
         std::fs::write(path, (lines.join("\n") + "\n").as_bytes()).unwrap();
 
         return version;
@@ -432,7 +434,7 @@ impl VcpkgPortManifest {
         u32,
     ) {
         let mut version = None;
-        let mut vesion_date = None;
+        let mut version_date = None;
         let mut version_semver = None;
         let mut version_string = None;
         let mut port_version = 0u32;
@@ -444,7 +446,7 @@ impl VcpkgPortManifest {
                 version = Some(line.split_at(VERSION_PREFIX.len()).1.trim().to_string());
             } else if line.starts_with(VERSION_DATE_PREFIX) {
                 versions += 1;
-                vesion_date = Some(
+                version_date = Some(
                     line.split_at(VERSION_DATE_PREFIX.len())
                         .1
                         .trim()
@@ -482,7 +484,7 @@ impl VcpkgPortManifest {
 
         return (
             version,
-            vesion_date,
+            version_date,
             version_semver,
             version_string,
             port_version,

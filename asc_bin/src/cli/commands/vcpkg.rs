@@ -36,6 +36,11 @@ pub struct VcpkgArgs {
     #[serde(skip, default)]
     pub push: bool,
 
+    /// don't commit one by one
+    #[clap(long, default_value_t = false)]
+    #[serde(skip, default)]
+    pub process_all: bool,
+
     /// update args
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub args: Vec<String>,
