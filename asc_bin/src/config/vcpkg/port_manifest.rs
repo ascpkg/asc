@@ -21,6 +21,7 @@ static BUILD_DEPENDS_PREFIX: &str = "Build-Depends:";
 const REGEX_PORT_NAME_MULTIPLE_DASHES: &str = r"-+";
 const REGEX_PORT_NAME_INVALID_CHARS: &str = r"[^a-zA-Z0-9\-]";
 
+/// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ConfigFile)]
 #[config_file_ext("json")]
 #[serde(rename_all = "kebab-case")]
@@ -28,8 +29,12 @@ pub struct VcpkgPortManifest {
     #[serde(skip)]
     path: String,
 
+    #[serde(skip_serializing_if = "Option::is_none", rename = "$schema")]
+    schema: Option<String>,
+
     name: String,
 
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#version
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,22 +48,43 @@ pub struct VcpkgPortManifest {
     pub port_version: Option<VcpkgU32OrStrField>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    maintainers: Option<VcpkgStrOrVecStrField>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    summary: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<VcpkgStrOrVecStrField>,
 
     #[serde(default, skip_serializing_if = "String::is_empty")]
     homepage: String,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    documentation: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    license: Option<String>,
+
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#platform-expression
     #[serde(default, skip_serializing_if = "String::is_empty")]
     supports: String,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    dependencies: Vec<VcpkgPortDependency>,
+
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#dependency
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     default_features: Vec<VcpkgPortDefaultFeature>,
 
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#feature-object
     #[serde(skip_serializing_if = "Option::is_none")]
     features: Option<VcpkgPortFeatures>,
 
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    dependencies: Vec<VcpkgPortDependency>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    builtin_baseline: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    overrides: Option<VcpkgVersionOverrides>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -111,10 +137,15 @@ struct VcpkgPortFeature {
     #[serde(skip_serializing_if = "Option::is_none")]
     description: Option<VcpkgStrOrVecStrField>,
 
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#platform-expression
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    supports: String,
+
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     dependencies: Vec<VcpkgPortDependency>,
 }
 
+/// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#dependency
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 struct DependencyDetails {
@@ -122,9 +153,33 @@ struct DependencyDetails {
     #[serde(skip_serializing_if = "Option::is_none")]
     default_features: Option<bool>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    features: Vec<String>,
+    features: Vec<VcpkgPortDefaultFeature>,
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#platform-expression
     #[serde(skip_serializing_if = "Option::is_none")]
     platform: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    host: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "version>=")]
+    version_ge: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+struct VcpkgVersionOverrides {
+    name: String,
+
+    /// https://learn.microsoft.com/en-us/vcpkg/reference/vcpkg-json#version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version_semver: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version_string: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port_version: Option<VcpkgU32OrStrField>,
 }
 
 impl VcpkgPortManifest {
@@ -342,7 +397,7 @@ impl VcpkgPortManifest {
         return re_multiple_dashes.replace_all(&s, "-").to_string();
     }
 
-    pub fn remove_verson_suffix(
+    pub fn remove_version_suffix(
         name: &String,
         version_info: &VcpkgPortVersion,
     ) -> (String, String) {
@@ -438,6 +493,7 @@ impl VcpkgPortManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::relative_paths::{VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_VERSIONS_DIR_NAME};
 
     const FFMPEG_CONTROL_COMMIT_ID: &str = "373915929eac1d0219474c18a6e8a3134783dfc5";
     const FFMPEG_VCPKG_JSON_COMMIT_ID: &str = "44e8841e065a1b14340c6c0bb90210b11d7c3d4d";
@@ -1223,8 +1279,26 @@ Description: zlib support
     }
 
     fn get_all_port_versions(commit_id: &str) -> BTreeMap<String, String> {
-        let mut all_port_versions = BTreeMap::new();
         let vcpkg_root_dir = get_vcpkg_root_dir();
+        let baseline_json_text = crate::git::show::commit_file_content(
+            &vcpkg_root_dir,
+            commit_id,
+            &format!("{VCPKG_VERSIONS_DIR_NAME}/{VCPKG_BASELINE_JSON_FILE_NAME}"),
+        );
+        if let Some(baseline_data) =
+            crate::config::vcpkg::versions_baseline::VcpkgBaseline::loads(&baseline_json_text, true)
+        {
+            let mut all_port_versions = BTreeMap::new();
+            for (k, v) in baseline_data.default {
+                all_port_versions.insert(
+                    k,
+                    VcpkgPortManifest::normalize_port_name(v.format_version_text()),
+                );
+            }
+            return all_port_versions;
+        }
+
+        let mut all_port_versions = BTreeMap::new();
         for (port, (control_file_text, vcpkg_json_file_text)) in
             crate::git::ls_tree::list_ports(commit_id, &vcpkg_root_dir, true)
         {
@@ -1315,6 +1389,26 @@ Description: zlib support
     fn test_load_vcpkg_json_file_cpprestsdk() {
         let d = VcpkgPortManifest::load("cpprestsdk.json", false);
         assert!(d.is_some())
+    }
+
+    #[test]
+    fn test_load_vcpkg_json_file_openvino() {
+        let path: &str = "openvino.json";
+        let commit_hash = "2ad5618";
+        let vcpkg_root_dir = get_vcpkg_root_dir();
+        let text = crate::git::show::commit_file_content(
+            &vcpkg_root_dir,
+            commit_hash,
+            "ports/openvino/vcpkg.json",
+        );
+        std::fs::write(path, text.as_bytes()).unwrap();
+        std::fs::write("openvino.old.json", text.as_bytes()).unwrap();
+
+        let d = VcpkgPortManifest::loads(&text, false);
+        assert!(d.is_some());
+
+        let all_port_versions = get_all_port_versions(commit_hash);
+        VcpkgPortManifest::update_vcpkg_json_file(path, &all_port_versions);
     }
 
     fn is_file_text_equals(path: &str, content: &str) -> bool {

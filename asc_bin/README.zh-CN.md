@@ -1,16 +1,11 @@
-# C/C++ 包管理和源码树自动编译工具 (类似 Rust Cargo)
+# C/C++ 包管理和源码树自动编译工具 (灵感来源于 Rust Cargo)
 
 ```
-   ▄████████    ▄████████  ▄████████         ▄███████▄    ▄█   ▄█▄    ▄██████▄         ▄▄▄▄███▄▄▄▄      ▄████████ ███▄▄▄▄      ▄████████    ▄██████▄     ▄████████    ▄████████ 
-  ███    ███   ███    ███ ███    ███        ███    ███   ███ ▄███▀   ███    ███      ▄██▀▀▀███▀▀▀██▄   ███    ███ ███▀▀▀██▄   ███    ███   ███    ███   ███    ███   ███    ███ 
-  ███    ███   ███    █▀  ███    █▀         ███    ███   ███▐██▀     ███    █▀       ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    █▀    ███    █▀    ███    ███ 
-  ███    ███   ███        ███               ███    ███  ▄█████▀     ▄███             ███   ███   ███   ███    ███ ███   ███   ███    ███  ▄███         ▄███▄▄▄      ▄███▄▄▄▄██▀ 
-▀███████████ ▀███████████ ███             ▀█████████▀  ▀▀█████▄    ▀▀███ ████▄       ███   ███   ███ ▀███████████ ███   ███ ▀███████████ ▀▀███ ████▄  ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   
-  ███    ███          ███ ███    █▄         ███          ███▐██▄     ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    █▄  ▀███████████ 
-  ███    ███    ▄█    ███ ███    ███        ███          ███ ▀███▄   ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    ███   ███    ███ 
-  ███    █▀   ▄████████▀  ████████▀        ▄████▀        ███   ▀█▀   ████████▀        ▀█   ███   █▀    ███    █▀   ▀█   █▀    ███    █▀    ████████▀    ██████████   ███    ███ 
-                                                         ▀                                                                                                           ███    ███ 
-                                                                        
+ █████  ███████  ██████     ██████  ██   ██  ██████  
+██   ██ ██      ██          ██   ██ ██  ██  ██       
+███████ ███████ ██          ██████  █████   ██   ███ 
+██   ██      ██ ██          ██      ██  ██  ██    ██ 
+██   ██ ███████  ██████     ██      ██   ██  ██████  
 ```
 
 [English](README.md)
@@ -573,7 +568,7 @@ Options:
 ### 3.5.1. 说明
 > asc add --help
 ```
-add dependency to package or workspace memeber's asc.toml
+add dependency to package or workspace member's asc.toml
 
 Usage: asc.exe add [OPTIONS] <DEPENDENCY>
 
@@ -702,7 +697,7 @@ spdlog = { version = "1.11.0#1", find_packages = ["spdlog"], include_directories
 ### 3.6.1. 说明
 > asc remove --help
 ```
-remove dependency from package or workspace memeber's asc.toml
+remove dependency from package or workspace member's asc.toml
 
 Usage: asc.exe remove [OPTIONS] <DEPENDENCY>
 
@@ -1035,7 +1030,7 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 ### 3.9.1. 说明
 > asc vcpkg run --help
 ```
-run package or workspace memeber bin
+run package or workspace member bin
 
 Usage: asc.exe run [OPTIONS]
 

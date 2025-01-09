@@ -6,10 +6,10 @@ use rayon;
 use crate::{
     config::{
         relative_paths::{
-            ASC_REGISTRY_DIR_NAME, VCPKG_CONTROL_FILE_NAME, VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME,
-            VCPKG_PORTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
+            ASC_REGISTRY_DIR_NAME, VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_CONTROL_FILE_NAME,
+            VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
         },
-        vcpkg::port_manifest::VcpkgPortManifest,
+        vcpkg::{port_manifest::VcpkgPortManifest, versions_baseline::VcpkgBaseline},
     },
     git::{self, log::GitCommitInfo},
     util::{self, shell},
@@ -102,7 +102,7 @@ impl VcpkgManager {
 
                         // get all ports
                         let (all_port_versions, all_ports_manifest) =
-                            Self::get_all_port_versions(&vcpkg_registry_dir, &commit.hash);
+                            Self::get_all_port_versions(&vcpkg_registry_dir, &commit.hash, false);
 
                         // get port git trees
                         let changed_ports = Self::get_changed_ports(&changed_files);
@@ -317,7 +317,26 @@ impl VcpkgManager {
     pub fn get_all_port_versions(
         vcpkg_registry_dir: &str,
         commit_hash: &str,
+        skip_manifest: bool,
     ) -> (BTreeMap<String, String>, BTreeMap<String, (String, String)>) {
+        if skip_manifest {
+            let baseline_json_text = git::show::commit_file_content(
+                vcpkg_registry_dir,
+                commit_hash,
+                &format!("{VCPKG_VERSIONS_DIR_NAME}/{VCPKG_BASELINE_JSON_FILE_NAME}"),
+            );
+            if let Some(baseline_data) = VcpkgBaseline::loads(&baseline_json_text, true) {
+                let mut all_port_versions = BTreeMap::new();
+                for (k, v) in baseline_data.default {
+                    all_port_versions.insert(
+                        k,
+                        VcpkgPortManifest::normalize_port_name(v.format_version_text()),
+                    );
+                }
+                return (all_port_versions, BTreeMap::new());
+            }
+        }
+
         let mut all_port_versions = BTreeMap::new();
         let all_ports_manifest = git::ls_tree::list_ports(commit_hash, vcpkg_registry_dir, true);
         for (port, (control_file_text, vcpkg_json_file_text)) in &all_ports_manifest {

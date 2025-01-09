@@ -91,7 +91,7 @@ impl VcpkgManager {
                 let mut versions = BTreeMap::new();
                 for (port_name, version_info) in &baseline_data.default {
                     let (n, version) =
-                        VcpkgPortManifest::remove_verson_suffix(port_name, version_info);
+                        VcpkgPortManifest::remove_version_suffix(port_name, version_info);
 
                     search_index.prefix_trie.insert(&n, n.clone());
                     search_index

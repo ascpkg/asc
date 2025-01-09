@@ -1,16 +1,11 @@
-# C/C++ package manager and auto source builder (like Rust Cargo)
+# C/C++ package manager and auto source builder (inspired Rust Cargo)
 
 ```
-   ▄████████    ▄████████  ▄████████         ▄███████▄    ▄█   ▄█▄    ▄██████▄         ▄▄▄▄███▄▄▄▄      ▄████████ ███▄▄▄▄      ▄████████    ▄██████▄     ▄████████    ▄████████ 
-  ███    ███   ███    ███ ███    ███        ███    ███   ███ ▄███▀   ███    ███      ▄██▀▀▀███▀▀▀██▄   ███    ███ ███▀▀▀██▄   ███    ███   ███    ███   ███    ███   ███    ███ 
-  ███    ███   ███    █▀  ███    █▀         ███    ███   ███▐██▀     ███    █▀       ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    █▀    ███    █▀    ███    ███ 
-  ███    ███   ███        ███               ███    ███  ▄█████▀     ▄███             ███   ███   ███   ███    ███ ███   ███   ███    ███  ▄███         ▄███▄▄▄      ▄███▄▄▄▄██▀ 
-▀███████████ ▀███████████ ███             ▀█████████▀  ▀▀█████▄    ▀▀███ ████▄       ███   ███   ███ ▀███████████ ███   ███ ▀███████████ ▀▀███ ████▄  ▀▀███▀▀▀     ▀▀███▀▀▀▀▀   
-  ███    ███          ███ ███    █▄         ███          ███▐██▄     ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    █▄  ▀███████████ 
-  ███    ███    ▄█    ███ ███    ███        ███          ███ ▀███▄   ███    ███      ███   ███   ███   ███    ███ ███   ███   ███    ███   ███    ███   ███    ███   ███    ███ 
-  ███    █▀   ▄████████▀  ████████▀        ▄████▀        ███   ▀█▀   ████████▀        ▀█   ███   █▀    ███    █▀   ▀█   █▀    ███    █▀    ████████▀    ██████████   ███    ███ 
-                                                         ▀                                                                                                           ███    ███ 
-                                                                        
+ █████  ███████  ██████     ██████  ██   ██  ██████  
+██   ██ ██      ██          ██   ██ ██  ██  ██       
+███████ ███████ ██          ██████  █████   ██   ███ 
+██   ██      ██ ██          ██      ██  ██  ██    ██ 
+██   ██ ███████  ██████     ██      ██   ██  ██████  
 ```
 
 [简体中文](README.zh-CN.md)
@@ -43,11 +38,11 @@ Commands:
   init       init directory as package/workspace of binary/static library/shared library
   vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations，supports the mixed use of official and private registries, with private registries being able to depend on the official ones
   search     search package with extractly name or startswith/endswith/contains text
-  add        add dependency to package or workspace memeber's asc.toml
-  remove     remove dependency from package or workspace memeber's asc.toml
+  add        add dependency to package or workspace member's asc.toml
+  remove     remove dependency from package or workspace member's asc.toml
   scan       scan necessary sources, generate cmake and vcpkg configurations
   build      build all, package or workspace member
-  run        run package or workspace memeber bin
+  run        run package or workspace member bin
   clean      clean .asc and target dir
   install    install executable/headers/libraries
   uninstall  uninstall installed executable/headers/libraries
@@ -570,7 +565,7 @@ Options:
 ### 3.5.1. help
 > asc add --help
 ```
-add dependency to package or workspace memeber's asc.toml
+add dependency to package or workspace member's asc.toml
 
 Usage: asc.exe add [OPTIONS] <DEPENDENCY>
 
@@ -699,7 +694,7 @@ spdlog = { version = "1.11.0#1", find_packages = ["spdlog"], include_directories
 ### 3.6.1. help
 > asc remove --help
 ```
-remove dependency from package or workspace memeber's asc.toml
+remove dependency from package or workspace member's asc.toml
 
 Usage: asc.exe remove [OPTIONS] <DEPENDENCY>
 
@@ -1032,7 +1027,7 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 ### 3.9.1. help
 > asc vcpkg run --help
 ```
-run package or workspace memeber bin
+run package or workspace member bin
 
 Usage: asc.exe run [OPTIONS]
 

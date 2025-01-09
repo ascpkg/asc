@@ -139,7 +139,10 @@ impl VcpkgArgs {
             }
         }
 
-        tracing::error!(message = "private vcpkg registry was not found", name = name);
+        tracing::error!(
+            message = "private vcpkg registry was not found",
+            name = name
+        );
         return (String::new(), String::new(), String::new(), String::new());
     }
 

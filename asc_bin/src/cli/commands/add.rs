@@ -3,7 +3,7 @@ use clap::Args;
 use crate::dependency;
 
 #[derive(Args, Debug, Clone)]
-/// add dependency to package or workspace memeber's asc.toml
+/// add dependency to package or workspace member's asc.toml
 pub struct AddArgs {
     /// dependency name
     pub dependency: String,
