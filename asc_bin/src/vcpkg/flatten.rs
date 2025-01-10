@@ -95,9 +95,10 @@ impl VcpkgManager {
                         let tmp_ports_path = format!("{tmp_dir}/{str_index}_{ports}");
 
                         tracing::warn!(
-                            "---------- {} / {total_count} = {}% ----------",
+                            "---------- {} / {total_count} = {}% ({}) ----------",
                             int_index,
-                            int_index as f32 * 100.0 / total_count as f32
+                            int_index as f32 * 100.0 / total_count as f32,
+                            commit.hash.split_at(7).0,
                         );
 
                         // get all ports
@@ -191,7 +192,11 @@ impl VcpkgManager {
                     match reorder_map.get(&next_index) {
                         None => {
                             std::thread::sleep(std::time::Duration::from_millis(100));
-                            tracing::warn!("wait index == next_index");
+                            tracing::warn!(
+                                message = "wait index == next_index",
+                                index = index,
+                                next_index = next_index
+                            );
                             continue;
                         }
                         Some((
@@ -225,6 +230,7 @@ impl VcpkgManager {
         }
 
         if self.args.process_all {
+            let last_commit = GitCommitInfo::default();
             self.process_all(&asc_registry_dir, &last_commit);
         }
 
@@ -256,7 +262,7 @@ impl VcpkgManager {
                         if file_type.is_dir() {
                             let dir_name = entry
                                 .file_name()
-                                .to_ascii_uppercase()
+                                .to_os_string()
                                 .to_str()
                                 .unwrap()
                                 .to_string();
@@ -342,9 +348,10 @@ impl VcpkgManager {
         all_ports_manifest: &BTreeMap<String, (String, String)>,
     ) {
         tracing::warn!(
-            "========== {} / {total} = {}% ==========",
+            "========== {} / {total} = {}% ({}) ==========",
             index as i32,
-            index * 100.0 / total
+            index * 100.0 / total,
+            commit.hash.split_at(7).0,
         );
 
         // move versioned ports
@@ -418,7 +425,7 @@ impl VcpkgManager {
                     .to_string();
             }
         }
-        return String::new();
+        return self.args.check_point_commit.clone();
     }
 
     pub fn get_all_port_versions(
@@ -445,7 +452,7 @@ impl VcpkgManager {
         }
 
         let mut all_port_versions = BTreeMap::new();
-        let all_ports_manifest = git::ls_tree::list_ports(commit_hash, vcpkg_registry_dir, true);
+        let all_ports_manifest = git::ls_tree::list_ports(commit_hash, vcpkg_registry_dir, false);
         for (port, (control_file_text, vcpkg_json_file_text)) in &all_ports_manifest {
             if !control_file_text.is_empty() {
                 all_port_versions.insert(

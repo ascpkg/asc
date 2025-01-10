@@ -41,6 +41,11 @@ pub struct VcpkgArgs {
     #[serde(skip, default)]
     pub process_all: bool,
 
+    /// set fallback check point commit hash
+    #[clap(long, default_value_t = String::new())]
+    #[serde(skip, default)]
+    pub check_point_commit: String,
+
     /// update args
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub args: Vec<String>,

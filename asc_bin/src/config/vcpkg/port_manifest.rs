@@ -29,6 +29,9 @@ pub struct VcpkgPortManifest {
     #[serde(skip)]
     path: String,
 
+    #[serde(skip_serializing_if = "Option::is_none", rename = "$comment")]
+    comment: Option<String>,
+
     #[serde(skip_serializing_if = "Option::is_none", rename = "$schema")]
     schema: Option<String>,
 

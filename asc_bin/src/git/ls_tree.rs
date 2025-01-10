@@ -68,10 +68,10 @@ pub fn list_ports(
             let parts = line.split_whitespace().collect::<Vec<&str>>();
             let text = super::show::tree_file_content(repo_root_dir, parts[2]);
             let name = parts[3]
-                .rsplit_once(VCPKG_PORTS_DIR_NAME)
+                .split_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
                 .1
-                .split_once(&control_file_delimiter)
+                .rsplit_once(&control_file_delimiter)
                 .unwrap()
                 .0
                 .to_string();
@@ -80,10 +80,10 @@ pub fn list_ports(
             let parts = line.split_whitespace().collect::<Vec<&str>>();
             let text = super::show::tree_file_content(repo_root_dir, parts[2]);
             let name = parts[3]
-                .rsplit_once(VCPKG_PORTS_DIR_NAME)
+                .split_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
                 .1
-                .split_once(&vcpkg_json_file_delimiter)
+                .rsplit_once(&vcpkg_json_file_delimiter)
                 .unwrap()
                 .0
                 .to_string();

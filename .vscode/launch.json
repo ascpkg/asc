@@ -234,6 +234,9 @@
             "args": [
                 "vcpkg",
                 "flatten",
+                "--threads=2",
+                "--process-all",
+                "--check-point-commit=be21600",
             ],
             "cwd": "${workspaceFolder}"
         },
