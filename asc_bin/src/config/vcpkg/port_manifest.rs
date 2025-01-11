@@ -30,7 +30,7 @@ pub struct VcpkgPortManifest {
     path: String,
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "$comment")]
-    comment: Option<String>,
+    comment: Option<VcpkgStrOrVecStrField>,
 
     #[serde(skip_serializing_if = "Option::is_none", rename = "$schema")]
     schema: Option<String>,

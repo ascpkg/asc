@@ -27,7 +27,7 @@ pub struct VcpkgArgs {
     pub sync: bool,
 
     /// threads
-    #[clap(long, default_value_t = 4)]
+    #[clap(long, default_value_t = 2)]
     #[serde(skip, default)]
     pub threads: u32,
 

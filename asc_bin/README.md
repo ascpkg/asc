@@ -1,4 +1,4 @@
-# C/C++ package manager and auto source builder (inspired Rust Cargo)
+# C/C++ package manager and auto source builder (inspired by Rust Cargo)
 
 ```
  █████  ███████  ██████     ██████  ██   ██  ██████  

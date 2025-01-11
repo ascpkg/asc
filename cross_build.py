@@ -525,9 +525,9 @@ class BuildRustTargets:
                 return f'{self.name}_bin-{self.version}-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl'
         elif RUST_TARGET_DARWIN_PATTERN in target:
             if RUST_ARCH_AMD64 in target:
-                return f'{self.name}_bin-{self.version}-.py3-none-macosx_10_9_x86_64.whl'
+                return f'{self.name}_bin-{self.version}-py3-none-macosx_10_9_x86_64.whl'
             elif RUST_ARCH_ARM64 in target:
-                return f'{self.name}_bin-{self.version}-.py3-none-macosx_11_0_arm64.whl'
+                return f'{self.name}_bin-{self.version}-py3-none-macosx_11_0_arm64.whl'
 
     def package(self, target):
         # make dirs
