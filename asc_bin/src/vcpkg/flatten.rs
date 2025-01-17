@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use fs_extra;
+use fslock;
 use rayon;
 
 use crate::{
@@ -30,16 +31,19 @@ impl VcpkgManager {
         // get registry dirs
         let (vcpkg_registry_dir, asc_registry_dir) = self.get_registry_dirs();
 
-        // load asc registry check point
-        let check_point_hash = self.load_check_point(&asc_registry_dir);
-
         // prepare dirs
         let ports = VCPKG_PORTS_DIR_NAME.replace("/", "");
         let asc_registry_ports_dir = format!("{asc_registry_dir}/{ports}");
         let tar_name = format!("{ports}.tar",);
         let tmp_dir = format!("{asc_registry_dir}/tmp");
+        let lock_dir = format!("{asc_registry_dir}/lock");
         util::fs::remove_dirs(&tmp_dir);
         util::fs::create_dirs(&tmp_dir);
+        util::fs::create_dirs(&lock_dir);
+        util::fs::create_dirs(&asc_registry_ports_dir);
+
+        // load asc registry check point
+        let check_point_hash = self.load_check_point(&asc_registry_dir);
 
         // get vcpkg registry commits
         let vcpkg_ports_changed_commits =
@@ -60,6 +64,7 @@ impl VcpkgManager {
         let pending_tasks_cloned = std::sync::Arc::clone(&pending_tasks);
         let (version_task_sender, version_task_receiver) = std::sync::mpsc::channel();
         let tmp_dir_cloned = tmp_dir.clone();
+        let lock_dir_cloned = lock_dir.clone();
         let mut start_index = next_index;
         std::thread::spawn(move || {
             thread_pool.install(|| {
@@ -80,6 +85,7 @@ impl VcpkgManager {
 
                     // clone
                     let tmp_dir = tmp_dir_cloned.clone();
+                    let lock_dir = lock_dir_cloned.clone();
                     let tar_name = tar_name.clone();
                     let ports = ports.clone();
                     let vcpkg_registry_dir = vcpkg_registry_dir.clone();
@@ -129,6 +135,7 @@ impl VcpkgManager {
                             .send((
                                 int_index,
                                 commit.clone(),
+                                lock_dir,
                                 tmp_ports_path,
                                 changed_ports,
                                 all_port_versions,
@@ -142,12 +149,11 @@ impl VcpkgManager {
 
         // process versions/ one by one
         let mut reorder_map = BTreeMap::new();
-        #[allow(unused_assignments)]
-        let mut last_commit = GitCommitInfo::default();
         loop {
             if let Ok((
                 index,
                 commit,
+                lock_dir,
                 tmp_ports_path,
                 changed_ports,
                 all_port_versions,
@@ -161,13 +167,13 @@ impl VcpkgManager {
                 }
 
                 if index == next_index {
-                    last_commit = commit.clone();
                     self.process_versions(
                         index as f32,
                         total_count as f32,
                         &commit,
                         &asc_registry_dir,
                         &asc_registry_ports_dir,
+                        &lock_dir,
                         &tmp_ports_path,
                         &changed_ports,
                         &all_port_versions,
@@ -183,6 +189,7 @@ impl VcpkgManager {
                         (
                             index,
                             commit,
+                            lock_dir,
                             tmp_ports_path,
                             changed_ports,
                             all_port_versions,
@@ -202,16 +209,17 @@ impl VcpkgManager {
                         Some((
                             int_index_,
                             commit_,
+                            lock_dir_,
                             tmp_ports_path_,
                             changed_ports_,
                             all_port_versions_,
                             all_ports_manifest_,
                         )) => {
-                            last_commit = commit_.clone();
                             self.process_versions(
                                 int_index_.clone() as f32,
                                 total_count as f32,
                                 &commit_,
+                                &lock_dir_,
                                 &asc_registry_dir,
                                 &asc_registry_ports_dir,
                                 &tmp_ports_path_,
@@ -229,110 +237,12 @@ impl VcpkgManager {
             }
         }
 
-        if self.args.process_all {
-            let last_commit = GitCommitInfo::default();
-            self.process_all(&asc_registry_dir, &last_commit);
-        }
-
+        // remove lock dir
+        util::fs::remove_dirs(&lock_dir);
         // remove tmp dir
         util::fs::remove_dirs(&tmp_dir);
 
         return true;
-    }
-
-    fn process_all(&self, asc_registry_dir: &String, last_commit: &GitCommitInfo) {
-        // git add ports
-        git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], asc_registry_dir);
-        git::commit::run(
-            format!(
-                "{FLATTEN_PREFIX}{} from {} at {}",
-                last_commit.hash.split_at(7).0,
-                last_commit.user_email,
-                last_commit.date_time
-            ),
-            &asc_registry_dir,
-        );
-
-        // generate manifests
-        let ports_dir_path = format!("{asc_registry_dir}/{VCPKG_PORTS_DIR_NAME}");
-        if let Ok(entries) = std::fs::read_dir(&ports_dir_path) {
-            for dir_entry in entries {
-                if let Ok(entry) = dir_entry {
-                    if let Ok(file_type) = entry.file_type() {
-                        if file_type.is_dir() {
-                            let dir_name = entry
-                                .file_name()
-                                .to_os_string()
-                                .to_str()
-                                .unwrap()
-                                .to_string();
-                            let dir_path = format!("{ports_dir_path}/{dir_name}");
-                            let control_file_path = format!("{dir_path}/{VCPKG_CONTROL_FILE_NAME}");
-                            let vcpkg_file_path = format!("{dir_path}/{VCPKG_JSON_FILE_NAME}");
-                            if util::fs::is_file_exists(&control_file_path) {
-                                if let Ok(control_file_text) =
-                                    std::fs::read_to_string(&control_file_path)
-                                {
-                                    let (
-                                        version,
-                                        version_date,
-                                        version_semver,
-                                        version_string,
-                                        port_version,
-                                    ) = VcpkgPortManifest::get_versions_from_control_file(
-                                        &control_file_text,
-                                    );
-                                    vcpkg::json::gen_port_versions(
-                                        asc_registry_dir,
-                                        &dir_name,
-                                        &version,
-                                        &version_date,
-                                        &version_semver,
-                                        &version_string,
-                                        port_version,
-                                    );
-                                }
-                            } else if util::fs::is_file_exists(&vcpkg_file_path) {
-                                if let Ok(vcpkg_json_file_text) =
-                                    std::fs::read_to_string(&vcpkg_file_path)
-                                {
-                                    let (
-                                        version,
-                                        version_date,
-                                        version_semver,
-                                        version_string,
-                                        port_version,
-                                    ) = VcpkgPortManifest::get_versions_from_vcpkg_json_file(
-                                        &vcpkg_json_file_text,
-                                    );
-                                    vcpkg::json::gen_port_versions(
-                                        asc_registry_dir,
-                                        &dir_name,
-                                        &version,
-                                        &version_date,
-                                        &version_semver,
-                                        &version_string,
-                                        port_version,
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // git add versions
-        git::add::run(
-            &vec![VCPKG_VERSIONS_DIR_NAME.to_string()],
-            &asc_registry_dir,
-        );
-        git::commit_amend::run(&asc_registry_dir);
-
-        // git push
-        if self.args.push {
-            git::push::run(&asc_registry_dir, true);
-        }
     }
 
     fn process_versions(
@@ -342,6 +252,7 @@ impl VcpkgManager {
         commit: &GitCommitInfo,
         asc_registry_dir: &String,
         asc_registry_ports_dir: &String,
+        lock_dir: &String,
         tmp_ports_path: &String,
         changed_ports: &BTreeSet<String>,
         all_port_versions: &BTreeMap<String, String>,
@@ -361,10 +272,6 @@ impl VcpkgManager {
             &changed_ports,
             &all_port_versions,
         );
-
-        if self.args.process_all {
-            return;
-        }
 
         // git add ports
         git::add::run(&vec![VCPKG_PORTS_DIR_NAME.to_string()], asc_registry_dir);
