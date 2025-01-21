@@ -36,11 +36,6 @@ pub struct VcpkgArgs {
     #[serde(skip, default)]
     pub push: bool,
 
-    /// don't commit one by one
-    #[clap(long, default_value_t = false)]
-    #[serde(skip, default)]
-    pub process_all: bool,
-
     /// set fallback check point commit hash
     #[clap(long, default_value_t = String::new())]
     #[serde(skip, default)]

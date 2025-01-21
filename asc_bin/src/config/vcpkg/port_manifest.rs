@@ -188,7 +188,16 @@ struct VcpkgVersionOverrides {
 impl VcpkgPortManifest {
     pub fn update_vcpkg_json_file(
         path: &str,
-        all_port_versions: &BTreeMap<String, String>,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
     ) -> String {
         if !util::fs::is_file_exists(&path) {
             return String::new();
@@ -240,18 +249,59 @@ impl VcpkgPortManifest {
 
     fn add_version_suffix_to_deps(
         deps: &mut Vec<VcpkgPortDependency>,
-        all_port_versions: &BTreeMap<String, String>,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
     ) {
         for index in 0..deps.len() {
             match deps[index].clone() {
                 VcpkgPortDependency::Str(str_dep) => {
-                    if let Some(version) = all_port_versions.get(&str_dep) {
-                        deps[index] = VcpkgPortDependency::Str(format!("{str_dep}-{version}"));
+                    if let Some((
+                        version,
+                        version_date,
+                        version_semver,
+                        version_string,
+                        port_version,
+                    )) = all_port_versions.get(&str_dep)
+                    {
+                        let v = Self::build_version_suffix_name(
+                            "",
+                            version,
+                            version_date,
+                            version_semver,
+                            version_string,
+                            &Some(port_version.clone()),
+                        )
+                        .1;
+                        deps[index] = VcpkgPortDependency::Str(format!("{str_dep}-{v}"));
                     }
                 }
                 VcpkgPortDependency::Map(mut map_dep) => {
-                    if let Some(version) = all_port_versions.get(&map_dep.name) {
-                        map_dep.name = format!("{}-{version}", map_dep.name);
+                    if let Some((
+                        version,
+                        version_date,
+                        version_semver,
+                        version_string,
+                        port_version,
+                    )) = all_port_versions.get(&map_dep.name)
+                    {
+                        let v = Self::build_version_suffix_name(
+                            "",
+                            version,
+                            version_date,
+                            version_semver,
+                            version_string,
+                            &Some(port_version.clone()),
+                        )
+                        .1;
+                        map_dep.name = format!("{}-{v}", map_dep.name);
                         deps[index] = VcpkgPortDependency::Map(map_dep);
                     }
                 }
@@ -274,7 +324,19 @@ impl VcpkgPortManifest {
         return port_version;
     }
 
-    pub fn update_control_file(path: &str, all_port_versions: &BTreeMap<String, String>) -> String {
+    pub fn update_control_file(
+        path: &str,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
+    ) -> String {
         if !util::fs::is_file_exists(&path) {
             return String::new();
         }
@@ -304,18 +366,66 @@ impl VcpkgPortManifest {
                     if dep.contains("[") && dep.contains("]") {
                         let (mut name, features_and_platform) = dep.split_once("[").unwrap();
                         name = name.trim();
-                        if let Some(version) = all_port_versions.get(name) {
-                            deps[index] = format!("{name}-{version}[{features_and_platform}");
+                        if let Some((
+                            version,
+                            version_date,
+                            version_semver,
+                            version_string,
+                            port_version,
+                        )) = all_port_versions.get(name)
+                        {
+                            let v = VcpkgPortManifest::build_version_suffix_name(
+                                "",
+                                version,
+                                version_date,
+                                version_semver,
+                                version_string,
+                                &Some(port_version.clone()),
+                            )
+                            .1;
+                            deps[index] = format!("{name}-{v}[{features_and_platform}");
                         }
                     } else if dep.contains("(") && dep.contains(")") {
                         let (mut name, platform) = dep.split_once("(").unwrap();
                         name = name.trim();
-                        if let Some(version) = all_port_versions.get(name) {
-                            deps[index] = format!("{name}-{version} ({platform}");
+                        if let Some((
+                            version,
+                            version_date,
+                            version_semver,
+                            version_string,
+                            port_version,
+                        )) = all_port_versions.get(name)
+                        {
+                            let v = VcpkgPortManifest::build_version_suffix_name(
+                                "",
+                                version,
+                                version_date,
+                                version_semver,
+                                version_string,
+                                &Some(port_version.clone()),
+                            )
+                            .1;
+                            deps[index] = format!("{name}-{v} ({platform}");
                         }
                     } else {
-                        if let Some(version) = all_port_versions.get(dep) {
-                            deps[index] = format!("{dep}-{version}");
+                        if let Some((
+                            version,
+                            version_date,
+                            version_semver,
+                            version_string,
+                            port_version,
+                        )) = all_port_versions.get(dep)
+                        {
+                            let v = VcpkgPortManifest::build_version_suffix_name(
+                                "",
+                                version,
+                                version_date,
+                                version_semver,
+                                version_string,
+                                &Some(port_version.clone()),
+                            )
+                            .1;
+                            deps[index] = format!("{dep}-{v}");
                         }
                     }
                 }
@@ -364,7 +474,7 @@ impl VcpkgPortManifest {
         );
     }
 
-    fn build_version_suffix_name(
+    pub fn build_version_suffix_name(
         name: &str,
         version: &Option<String>,
         version_date: &Option<String>,
@@ -1304,18 +1414,36 @@ Description: zlib support
         }
 
         let mut all_port_versions = BTreeMap::new();
-        for (port, (control_file_text, vcpkg_json_file_text)) in
+        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in
             crate::git::ls_tree::list_ports(commit_id, &vcpkg_root_dir, true)
         {
             if !control_file_text.is_empty() {
+                let versions =
+                    VcpkgPortManifest::get_versions_from_control_file(&control_file_text);
                 all_port_versions.insert(
-                    port,
-                    VcpkgPortManifest::get_version_from_control_file(&control_file_text),
+                    port.clone(),
+                    (
+                        tree_hash.clone(),
+                        versions.0,
+                        versions.1,
+                        versions.2,
+                        versions.3,
+                        versions.4,
+                    ),
                 );
             } else if !vcpkg_json_file_text.is_empty() {
+                let versions =
+                    VcpkgPortManifest::get_versions_from_vcpkg_json_file(&vcpkg_json_file_text);
                 all_port_versions.insert(
-                    port,
-                    VcpkgPortManifest::get_version_from_vcpkg_json_file(&vcpkg_json_file_text),
+                    port.clone(),
+                    (
+                        tree_hash.clone(),
+                        versions.0,
+                        versions.1,
+                        versions.2,
+                        versions.3,
+                        versions.4,
+                    ),
                 );
             }
         }

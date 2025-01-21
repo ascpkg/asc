@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::{
     config::relative_paths::{VCPKG_CONTROL_FILE_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME},
@@ -46,8 +46,12 @@ pub fn run(git_commit_hash: &str, repo_root_dir: &str, silent: bool) -> Vec<(Str
 pub fn list_ports(
     git_commit_hash: &str,
     repo_root_dir: &str,
+    manifest_text_cache: &HashMap<String, String>,
     silent: bool,
-) -> BTreeMap<String, (String, String)> {
+) -> (i32, i32, BTreeMap<String, (String, String, String)>) {
+    let mut caches = 0;
+    let mut missings = 0;
+
     let output = util::shell::run(
         "git",
         &vec!["ls-tree", "-r", git_commit_hash, VCPKG_PORTS_DIR_NAME],
@@ -66,7 +70,17 @@ pub fn list_ports(
     for line in stdout.lines() {
         if line.ends_with(VCPKG_CONTROL_FILE_NAME) {
             let parts = line.split_whitespace().collect::<Vec<&str>>();
-            let text = super::show::tree_file_content(repo_root_dir, parts[2]);
+            let tree_hash = parts[2].trim().to_string();
+            let text = match manifest_text_cache.get(&tree_hash) {
+                Some(t) => {
+                    caches += 1;
+                    t.clone()
+                }
+                None => {
+                    missings += 1;
+                    super::show::tree_file_content(repo_root_dir, &tree_hash)
+                }
+            };
             let name = parts[3]
                 .split_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
@@ -75,10 +89,20 @@ pub fn list_ports(
                 .unwrap()
                 .0
                 .to_string();
-            port_manifest_text.insert(name, (text, String::new()));
+            port_manifest_text.insert(name, (tree_hash, text, String::new()));
         } else if line.ends_with(VCPKG_JSON_FILE_NAME) {
             let parts = line.split_whitespace().collect::<Vec<&str>>();
-            let text = super::show::tree_file_content(repo_root_dir, parts[2]);
+            let tree_hash = parts[2].trim().to_string();
+            let text = match manifest_text_cache.get(&tree_hash) {
+                Some(t) => {
+                    caches += 1;
+                    t.clone()
+                }
+                None => {
+                    missings += 1;
+                    super::show::tree_file_content(repo_root_dir, &tree_hash)
+                }
+            };
             let name = parts[3]
                 .split_once(VCPKG_PORTS_DIR_NAME)
                 .unwrap()
@@ -87,8 +111,8 @@ pub fn list_ports(
                 .unwrap()
                 .0
                 .to_string();
-            port_manifest_text.insert(name, (String::new(), text));
+            port_manifest_text.insert(name, (tree_hash, String::new(), text));
         }
     }
-    return port_manifest_text;
+    return (caches, missings, port_manifest_text);
 }

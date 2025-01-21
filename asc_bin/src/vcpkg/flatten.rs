@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use fs_extra;
 use fslock;
@@ -7,10 +7,10 @@ use rayon;
 use crate::{
     config::{
         relative_paths::{
-            ASC_REGISTRY_DIR_NAME, VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_CONTROL_FILE_NAME,
-            VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
+            ASC_REGISTRY_DIR_NAME, VCPKG_CONTROL_FILE_NAME, VCPKG_DIR_NAME, VCPKG_JSON_FILE_NAME,
+            VCPKG_PORTS_DIR_NAME, VCPKG_VERSIONS_DIR_NAME,
         },
-        vcpkg::{port_manifest::VcpkgPortManifest, versions_baseline::VcpkgBaseline},
+        vcpkg::port_manifest::VcpkgPortManifest,
     },
     git::{self, log::GitCommitInfo},
     util::{self, shell},
@@ -63,12 +63,16 @@ impl VcpkgManager {
         let pending_tasks = std::sync::Arc::new(std::sync::Mutex::new(0));
         let pending_tasks_cloned = std::sync::Arc::clone(&pending_tasks);
         let (version_task_sender, version_task_receiver) = std::sync::mpsc::channel();
+        let manifest_text_cache = std::sync::Arc::new(std::sync::Mutex::new(HashMap::new()));
+        let manifest_version_cache = std::sync::Arc::new(std::sync::Mutex::new(HashMap::new()));
         let tmp_dir_cloned = tmp_dir.clone();
         let lock_dir_cloned = lock_dir.clone();
         let mut start_index = next_index;
         std::thread::spawn(move || {
             thread_pool.install(|| {
                 let pending_tasks_cloned = std::sync::Arc::clone(&pending_tasks);
+                let manifest_text_cache_cloned = std::sync::Arc::clone(&manifest_text_cache);
+                let manifest_version_cache_cloned = std::sync::Arc::clone(&manifest_version_cache);
                 while start_index < vcpkg_ports_changed_commits.len() {
                     // wait until pending_task_count <= threads
                     {
@@ -91,6 +95,8 @@ impl VcpkgManager {
                     let vcpkg_registry_dir = vcpkg_registry_dir.clone();
                     let (commit, changed_files) = vcpkg_ports_changed_commits[start_index].clone();
                     let version_task_sender = version_task_sender.clone();
+                    let text_cache = manifest_text_cache_cloned.clone();
+                    let version_cache = manifest_version_cache_cloned.clone();
 
                     // spawn thread
                     let int_index = start_index;
@@ -108,8 +114,12 @@ impl VcpkgManager {
                         );
 
                         // get all ports
-                        let (all_port_versions, all_ports_manifest) =
-                            Self::get_all_port_versions(&vcpkg_registry_dir, &commit.hash, false);
+                        let (all_port_versions, all_ports_manifest) = Self::get_all_port_versions(
+                            &vcpkg_registry_dir,
+                            &commit.hash,
+                            text_cache,
+                            version_cache,
+                        );
 
                         // get port git trees
                         let changed_ports = Self::get_changed_ports(&changed_files);
@@ -219,12 +229,12 @@ impl VcpkgManager {
                                 int_index_.clone() as f32,
                                 total_count as f32,
                                 &commit_,
-                                &lock_dir_,
                                 &asc_registry_dir,
                                 &asc_registry_ports_dir,
+                                &lock_dir_,
                                 &tmp_ports_path_,
                                 &changed_ports_,
-                                &all_port_versions_,
+                                all_port_versions_,
                                 &all_ports_manifest_,
                             );
                             next_index += 1;
@@ -255,8 +265,17 @@ impl VcpkgManager {
         lock_dir: &String,
         tmp_ports_path: &String,
         changed_ports: &BTreeSet<String>,
-        all_port_versions: &BTreeMap<String, String>,
-        all_ports_manifest: &BTreeMap<String, (String, String)>,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
+        all_ports_manifest: &BTreeMap<String, (String, String, String)>,
     ) {
         tracing::warn!(
             "========== {} / {total} = {}% ({}) ==========",
@@ -338,41 +357,92 @@ impl VcpkgManager {
     pub fn get_all_port_versions(
         vcpkg_registry_dir: &str,
         commit_hash: &str,
-        skip_manifest: bool,
-    ) -> (BTreeMap<String, String>, BTreeMap<String, (String, String)>) {
-        if skip_manifest {
-            let baseline_json_text = git::show::commit_file_content(
-                vcpkg_registry_dir,
-                commit_hash,
-                &format!("{VCPKG_VERSIONS_DIR_NAME}/{VCPKG_BASELINE_JSON_FILE_NAME}"),
-            );
-            if let Some(baseline_data) = VcpkgBaseline::loads(&baseline_json_text, true) {
-                let mut all_port_versions = BTreeMap::new();
-                for (k, v) in baseline_data.default {
-                    all_port_versions.insert(
-                        k,
-                        VcpkgPortManifest::normalize_port_name(v.format_version_text()),
-                    );
+        manifest_text_cache: std::sync::Arc<std::sync::Mutex<HashMap<String, String>>>,
+        manifest_version_cache: std::sync::Arc<
+            std::sync::Mutex<
+                HashMap<
+                    String,
+                    (
+                        Option<String>,
+                        Option<String>,
+                        Option<String>,
+                        Option<String>,
+                        u32,
+                    ),
+                >,
+            >,
+        >,
+    ) -> (
+        BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
+        BTreeMap<String, (String, String, String)>,
+    ) {
+        let text_cache = { manifest_text_cache.lock().unwrap().clone() };
+        let version_cache = { manifest_version_cache.lock().unwrap().clone() };
+
+        let mut t_caches = 0;
+        let mut t_missings = 0;
+        let (v_caches, v_missings, all_ports_manifest) =
+            git::ls_tree::list_ports(commit_hash, vcpkg_registry_dir, &text_cache, false);
+
+        let mut all_port_versions = BTreeMap::new();
+        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in &all_ports_manifest {
+            if !control_file_text.is_empty() {
+                let versions = match version_cache.get(tree_hash) {
+                    Some(v) => {
+                        t_caches += 1;
+                        v.clone()
+                    }
+                    None => {
+                        t_missings += 1;
+                        VcpkgPortManifest::get_versions_from_control_file(control_file_text)
+                    }
+                };
+                all_port_versions.insert(port.clone(), versions.clone());
+                if !text_cache.contains_key(tree_hash) {
+                    let mut cache = manifest_text_cache.lock().unwrap();
+                    cache.insert(tree_hash.clone(), control_file_text.clone());
                 }
-                return (all_port_versions, BTreeMap::new());
+                if !version_cache.contains_key(tree_hash) {
+                    let mut cache = manifest_version_cache.lock().unwrap();
+                    cache.insert(tree_hash.clone(), versions);
+                }
+            } else if !vcpkg_json_file_text.is_empty() {
+                let versions = match version_cache.get(tree_hash) {
+                    Some(v) => {
+                        t_caches += 1;
+                        v.clone()
+                    }
+                    None => {
+                        t_missings += 1;
+                        VcpkgPortManifest::get_versions_from_vcpkg_json_file(vcpkg_json_file_text)
+                    }
+                };
+                all_port_versions.insert(port.clone(), versions.clone());
+                if !text_cache.contains_key(tree_hash) {
+                    let mut cache = manifest_text_cache.lock().unwrap();
+                    cache.insert(tree_hash.clone(), vcpkg_json_file_text.clone());
+                }
+                if !version_cache.contains_key(tree_hash) {
+                    let mut cache = manifest_version_cache.lock().unwrap();
+                    cache.insert(tree_hash.clone(), versions);
+                }
             }
         }
 
-        let mut all_port_versions = BTreeMap::new();
-        let all_ports_manifest = git::ls_tree::list_ports(commit_hash, vcpkg_registry_dir, false);
-        for (port, (control_file_text, vcpkg_json_file_text)) in &all_ports_manifest {
-            if !control_file_text.is_empty() {
-                all_port_versions.insert(
-                    port.clone(),
-                    VcpkgPortManifest::get_version_from_control_file(control_file_text),
-                );
-            } else if !vcpkg_json_file_text.is_empty() {
-                all_port_versions.insert(
-                    port.clone(),
-                    VcpkgPortManifest::get_version_from_vcpkg_json_file(vcpkg_json_file_text),
-                );
-            }
-        }
+        tracing::warn!(
+            "*manifest* cache: {t_caches}, missing: {t_missings}, add: {}, *version* cache: {v_caches}, missing: {v_missings}, add: {}",
+            manifest_text_cache.lock().unwrap().len() - text_cache.len(), manifest_version_cache.lock().unwrap().len() - version_cache.len()
+        );
+
         return (all_port_versions, all_ports_manifest);
     }
 
@@ -422,7 +492,16 @@ impl VcpkgManager {
 
     pub fn append_version_to_port_manifest(
         port_manifest_dir: String,
-        all_port_versions: &BTreeMap<String, String>,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
     ) {
         let control_file = format!("{port_manifest_dir}/{VCPKG_CONTROL_FILE_NAME}");
         let vcpkg_json_file = format!("{port_manifest_dir}/{VCPKG_JSON_FILE_NAME}");
@@ -441,16 +520,37 @@ impl VcpkgManager {
         asc_registry_ports_dir: &str,
         tmp_ports_path: &str,
         changed_ports: &BTreeSet<String>,
-        all_port_versions: &BTreeMap<String, String>,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
     ) {
         let mut versioned_ports = Vec::new();
         for port_name in changed_ports {
-            if let Some(version) = all_port_versions.get(port_name) {
-                let path = format!("{tmp_ports_path}/{port_name}-{version}");
+            if let Some((version, version_date, version_semver, version_string, port_version)) =
+                all_port_versions.get(port_name)
+            {
+                let new_name = VcpkgPortManifest::build_version_suffix_name(
+                    port_name,
+                    version,
+                    version_date,
+                    version_semver,
+                    version_string,
+                    &Some(port_version.clone()),
+                )
+                .0;
+
+                let path = format!("{tmp_ports_path}/{new_name}");
                 if util::fs::is_dir_exists(&path) {
                     versioned_ports.push(path);
                 } else {
-                    tracing::warn!("{port_name} {version} was not found");
+                    tracing::warn!("{new_name} was not found");
                 }
             } else {
                 tracing::warn!("{port_name} version was not found");
@@ -470,18 +570,36 @@ impl VcpkgManager {
         &self,
         asc_registry_dir: &String,
         changed_ports: &BTreeSet<String>,
-        all_port_versions: &BTreeMap<String, String>,
-        all_ports_manifest: &BTreeMap<String, (String, String)>,
+        all_port_versions: &BTreeMap<
+            String,
+            (
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                Option<String>,
+                u32,
+            ),
+        >,
+        all_ports_manifest: &BTreeMap<String, (String, String, String)>,
     ) {
         for port_name in changed_ports {
-            if let Some(version) = all_port_versions.get(port_name) {
-                let new_name = format!("{port_name}-{version}");
-                if let Some((control_file_text, vcpkg_json_file_text)) =
+            if let Some((version, version_date, version_semver, version_string, port_version)) =
+                all_port_versions.get(port_name)
+            {
+                let new_name = VcpkgPortManifest::build_version_suffix_name(
+                    port_name,
+                    version,
+                    version_date,
+                    version_semver,
+                    version_string,
+                    &Some(port_version.clone()),
+                )
+                .0;
+
+                if let Some((_tree_hash, control_file_text, vcpkg_json_file_text)) =
                     all_ports_manifest.get(port_name)
                 {
                     if !control_file_text.is_empty() {
-                        let (version, version_date, version_semver, version_string, port_version) =
-                            VcpkgPortManifest::get_versions_from_control_file(control_file_text);
                         vcpkg::json::gen_port_versions(
                             asc_registry_dir,
                             &new_name,
@@ -489,13 +607,9 @@ impl VcpkgManager {
                             &version_date,
                             &version_semver,
                             &version_string,
-                            port_version,
+                            port_version.clone(),
                         );
                     } else if !vcpkg_json_file_text.is_empty() {
-                        let (version, version_date, version_semver, version_string, port_version) =
-                            VcpkgPortManifest::get_versions_from_vcpkg_json_file(
-                                vcpkg_json_file_text,
-                            );
                         vcpkg::json::gen_port_versions(
                             asc_registry_dir,
                             &new_name,
@@ -503,7 +617,7 @@ impl VcpkgManager {
                             &version_date,
                             &version_semver,
                             &version_string,
-                            port_version,
+                            port_version.clone(),
                         );
                     }
                 }
