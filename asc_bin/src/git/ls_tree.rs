@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::{
     config::relative_paths::{VCPKG_CONTROL_FILE_NAME, VCPKG_JSON_FILE_NAME, VCPKG_PORTS_DIR_NAME},
@@ -43,7 +43,7 @@ pub fn run(git_commit_hash: &str, repo_root_dir: &str, silent: bool) -> Vec<(Str
     return results;
 }
 
-pub fn list_ports(
+pub fn list_all_port_manifests(
     git_commit_hash: &str,
     repo_root_dir: &str,
     manifest_text_cache: &HashMap<String, String>,
@@ -114,5 +114,61 @@ pub fn list_ports(
             port_manifest_text.insert(name, (tree_hash, String::new(), text));
         }
     }
+
     return (caches, missings, port_manifest_text);
+}
+
+pub fn list_all_port_names(
+    git_commit_hash: &str,
+    repo_root_dir: &str,
+    silent: bool,
+) -> HashSet<String> {
+    let output = util::shell::run(
+        "git",
+        &vec![
+            "ls-tree",
+            "--name-only",
+            git_commit_hash,
+            VCPKG_PORTS_DIR_NAME,
+        ],
+        repo_root_dir,
+        true,
+        false,
+        silent,
+    )
+    .unwrap();
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+
+    let mut port_names = HashSet::new();
+    for line in stdout.lines() {
+        let name = line.split_once(VCPKG_PORTS_DIR_NAME).unwrap().1.trim();
+        port_names.insert(name.to_string());
+    }
+
+    return port_names;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    pub fn get_asc_registry_root_dir() -> String {
+        let vcpkg_conf = crate::cli::commands::VcpkgArgs::load_or_default();
+        for (name, _url, _branch, directory) in vcpkg_conf.flatten_registry() {
+            if name == crate::config::relative_paths::ASC_REGISTRY_DIR_NAME {
+                return directory;
+            }
+        }
+        return String::new();
+    }
+
+    #[test]
+    fn test_list_all_port_manifests() {
+        let cache = HashMap::new();
+        let registry_dir = get_asc_registry_root_dir();
+        let results = list_all_port_manifests("66f0eb04a", &registry_dir, &cache, false);
+        println!("{:#?}", results);
+        assert!(false);
+    }
 }

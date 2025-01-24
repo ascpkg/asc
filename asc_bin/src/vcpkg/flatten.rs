@@ -1,7 +1,7 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use fs_extra;
-use fslock;
+// use fslock;
 use rayon;
 
 use crate::{
@@ -39,7 +39,7 @@ impl VcpkgManager {
         let lock_dir = format!("{asc_registry_dir}/lock");
         util::fs::remove_dirs(&tmp_dir);
         util::fs::create_dirs(&tmp_dir);
-        util::fs::create_dirs(&lock_dir);
+        // util::fs::create_dirs(&lock_dir);
         util::fs::create_dirs(&asc_registry_ports_dir);
 
         // load asc registry check point
@@ -110,11 +110,11 @@ impl VcpkgManager {
                             "---------- {} / {total_count} = {}% ({}) ----------",
                             int_index,
                             int_index as f32 * 100.0 / total_count as f32,
-                            commit.hash.split_at(7).0,
+                            commit.hash.split_at(9).0,
                         );
 
                         // get all ports
-                        let (all_port_versions, all_ports_manifest) = Self::get_all_port_versions(
+                        let (all_port_versions, all_port_manifests) = Self::get_all_port_versions(
                             &vcpkg_registry_dir,
                             &commit.hash,
                             text_cache,
@@ -149,97 +149,101 @@ impl VcpkgManager {
                                 tmp_ports_path,
                                 changed_ports,
                                 all_port_versions,
-                                all_ports_manifest,
+                                all_port_manifests,
                             ))
                             .unwrap();
                     });
                 }
+
+                drop(version_task_sender);
             });
         });
 
         // process versions/ one by one
+        let mut process_count = 0;
         let mut reorder_map = BTreeMap::new();
-        loop {
-            if let Ok((
-                index,
-                commit,
-                lock_dir,
-                tmp_ports_path,
-                changed_ports,
-                all_port_versions,
-                all_ports_manifest,
-            )) = version_task_receiver.recv()
-            {
-                {
-                    // pending_task_count -= 1
-                    let mut pending_task_count = pending_tasks_cloned.lock().unwrap();
-                    *pending_task_count -= 1;
+        while process_count < total_count {
+            match version_task_receiver.recv() {
+                Err(e) => {
+                    tracing::warn!("version_task_receiver.recv error, e: {:#?}", e);
+                    break;
                 }
-
-                if index == next_index {
-                    self.process_versions(
-                        index as f32,
-                        total_count as f32,
-                        &commit,
-                        &asc_registry_dir,
-                        &asc_registry_ports_dir,
-                        &lock_dir,
-                        &tmp_ports_path,
-                        &changed_ports,
-                        &all_port_versions,
-                        &all_ports_manifest,
-                    );
-                    next_index += 1;
-                    if index == total_count as usize - 1 {
-                        break;
+                Ok((
+                    index,
+                    commit,
+                    lock_dir,
+                    tmp_ports_path,
+                    changed_ports,
+                    all_port_versions,
+                    all_port_manifests,
+                )) => {
+                    {
+                        // pending_task_count -= 1
+                        let mut pending_task_count = pending_tasks_cloned.lock().unwrap();
+                        *pending_task_count -= 1;
                     }
-                } else {
-                    reorder_map.insert(
-                        index,
-                        (
+
+                    if index == next_index {
+                        self.process_versions(
+                            index as f32,
+                            total_count as f32,
+                            &commit,
+                            &asc_registry_dir,
+                            &asc_registry_ports_dir,
+                            &lock_dir,
+                            &tmp_ports_path,
+                            &changed_ports,
+                            &all_port_versions,
+                            &all_port_manifests,
+                        );
+                        next_index += 1;
+                        process_count += 1;
+                    } else {
+                        reorder_map.insert(
                             index,
-                            commit,
-                            lock_dir,
-                            tmp_ports_path,
-                            changed_ports,
-                            all_port_versions,
-                            all_ports_manifest,
-                        ),
-                    );
-                    match reorder_map.get(&next_index) {
-                        None => {
-                            std::thread::sleep(std::time::Duration::from_millis(100));
-                            tracing::warn!(
-                                message = "wait index == next_index",
-                                index = index,
-                                next_index = next_index
-                            );
-                            continue;
-                        }
-                        Some((
-                            int_index_,
-                            commit_,
-                            lock_dir_,
-                            tmp_ports_path_,
-                            changed_ports_,
-                            all_port_versions_,
-                            all_ports_manifest_,
-                        )) => {
-                            self.process_versions(
-                                int_index_.clone() as f32,
-                                total_count as f32,
-                                &commit_,
-                                &asc_registry_dir,
-                                &asc_registry_ports_dir,
-                                &lock_dir_,
-                                &tmp_ports_path_,
-                                &changed_ports_,
+                            (
+                                index,
+                                commit,
+                                lock_dir,
+                                tmp_ports_path,
+                                changed_ports,
+                                all_port_versions,
+                                all_port_manifests,
+                            ),
+                        );
+                        match reorder_map.get(&next_index) {
+                            None => {
+                                std::thread::sleep(std::time::Duration::from_millis(100));
+                                tracing::warn!(
+                                    message = "wait index == next_index",
+                                    index = index,
+                                    next_index = next_index
+                                );
+                                continue;
+                            }
+                            Some((
+                                int_index_,
+                                commit_,
+                                lock_dir_,
+                                tmp_ports_path_,
+                                changed_ports_,
                                 all_port_versions_,
-                                &all_ports_manifest_,
-                            );
-                            next_index += 1;
-                            if index == total_count as usize - 1 {
-                                break;
+                                all_port_manifests_,
+                            )) => {
+                                self.process_versions(
+                                    int_index_.clone() as f32,
+                                    total_count as f32,
+                                    &commit_,
+                                    &asc_registry_dir,
+                                    &asc_registry_ports_dir,
+                                    &lock_dir_,
+                                    &tmp_ports_path_,
+                                    &changed_ports_,
+                                    all_port_versions_,
+                                    &all_port_manifests_,
+                                );
+                                next_index += 1;
+                                process_count += 1;
                             }
                         }
                     }
@@ -262,7 +266,7 @@ impl VcpkgManager {
         commit: &GitCommitInfo,
         asc_registry_dir: &String,
         asc_registry_ports_dir: &String,
-        lock_dir: &String,
+        _lock_dir: &String,
         tmp_ports_path: &String,
         changed_ports: &BTreeSet<String>,
         all_port_versions: &BTreeMap<
@@ -275,13 +279,13 @@ impl VcpkgManager {
                 u32,
             ),
         >,
-        all_ports_manifest: &BTreeMap<String, (String, String, String)>,
+        all_port_manifests: &BTreeMap<String, (String, String, String)>,
     ) {
         tracing::warn!(
             "========== {} / {total} = {}% ({}) ==========",
             index as i32,
             index * 100.0 / total,
-            commit.hash.split_at(7).0,
+            commit.hash.split_at(9).0,
         );
 
         // move versioned ports
@@ -297,7 +301,7 @@ impl VcpkgManager {
         git::commit::run(
             format!(
                 "{FLATTEN_PREFIX}{} from {} at {}",
-                commit.hash.split_at(7).0,
+                commit.hash.split_at(9).0,
                 commit.user_email,
                 commit.date_time
             ),
@@ -309,7 +313,7 @@ impl VcpkgManager {
             &asc_registry_dir,
             &changed_ports,
             &all_port_versions,
-            &all_ports_manifest,
+            &all_port_manifests,
         );
 
         // git add versions
@@ -390,11 +394,15 @@ impl VcpkgManager {
 
         let mut t_caches = 0;
         let mut t_missings = 0;
-        let (v_caches, v_missings, all_ports_manifest) =
-            git::ls_tree::list_ports(commit_hash, vcpkg_registry_dir, &text_cache, false);
+        let (v_caches, v_missings, all_port_manifests) = git::ls_tree::list_all_port_manifests(
+            commit_hash,
+            vcpkg_registry_dir,
+            &text_cache,
+            false,
+        );
 
         let mut all_port_versions = BTreeMap::new();
-        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in &all_ports_manifest {
+        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in &all_port_manifests {
             if !control_file_text.is_empty() {
                 let versions = match version_cache.get(tree_hash) {
                     Some(v) => {
@@ -443,10 +451,10 @@ impl VcpkgManager {
             manifest_text_cache.lock().unwrap().len() - text_cache.len(), manifest_version_cache.lock().unwrap().len() - version_cache.len()
         );
 
-        return (all_port_versions, all_ports_manifest);
+        return (all_port_versions, all_port_manifests);
     }
 
-    pub fn get_changed_ports(changed_files: &Vec<String>) -> BTreeSet<String> {
+    pub fn get_changed_ports(changed_files: &HashSet<String>) -> BTreeSet<String> {
         let mut changed_ports = BTreeSet::new();
         for file in changed_files {
             changed_ports.insert(
@@ -580,7 +588,7 @@ impl VcpkgManager {
                 u32,
             ),
         >,
-        all_ports_manifest: &BTreeMap<String, (String, String, String)>,
+        all_port_manifests: &BTreeMap<String, (String, String, String)>,
     ) {
         for port_name in changed_ports {
             if let Some((version, version_date, version_semver, version_string, port_version)) =
@@ -597,7 +605,7 @@ impl VcpkgManager {
                 .0;
 
                 if let Some((_tree_hash, control_file_text, vcpkg_json_file_text)) =
-                    all_ports_manifest.get(port_name)
+                    all_port_manifests.get(port_name)
                 {
                     if !control_file_text.is_empty() {
                         vcpkg::json::gen_port_versions(

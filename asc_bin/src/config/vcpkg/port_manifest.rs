@@ -607,6 +607,8 @@ impl VcpkgPortManifest {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use crate::config::relative_paths::{VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_VERSIONS_DIR_NAME};
 
@@ -1413,10 +1415,11 @@ Description: zlib support
             return all_port_versions;
         }
 
+        let cache = HashMap::new();
         let mut all_port_versions = BTreeMap::new();
-        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in
-            crate::git::ls_tree::list_ports(commit_id, &vcpkg_root_dir, true)
-        {
+        let (_v_caches, _v_missings, all_port_manifests) =
+            crate::git::ls_tree::list_all_port_manifests(commit_id, &vcpkg_root_dir, &cache, true);
+        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in &all_port_manifests {
             if !control_file_text.is_empty() {
                 let versions =
                     VcpkgPortManifest::get_versions_from_control_file(&control_file_text);
