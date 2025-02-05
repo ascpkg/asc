@@ -36,14 +36,14 @@ Usage: asc.exe <COMMAND>
 Commands:
   new        new package/workspace of binary/static library/shared library
   init       init directory as package/workspace of binary/static library/shared library
-  vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations，supports the mixed use of official and private registries, with private registries being able to depend on the official ones
-  search     search package with extractly name or startswith/endswith/contains text
+  vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations, supports the mixed use of official and private registries, with private registries being able to depend on the official ones
+  search     search package with exactly matching name or startswith/endswith/contains text
   add        add dependency to package or workspace member's asc.toml
   remove     remove dependency from package or workspace member's asc.toml
   scan       scan necessary sources, generate cmake and vcpkg configurations
   build      build all, package or workspace member
-  run        run package or workspace member bin
-  clean      clean .asc and target dir
+  run        run package or workspace member binary
+  clean      clean .asc and target directory
   install    install executable/headers/libraries
   uninstall  uninstall installed executable/headers/libraries
   publish    publish package to vcpkg registry
@@ -56,6 +56,14 @@ Options:
 
 
 # 3. Command manual
+
+```mermaid
+flowchart TD
+    asc_vcpkg_get[asc vcpkg get]-->asc_vcpkg_update[asc vcpkg update]-->asc_vcpkg_index[asc vcpkg index]-->
+    asc_new_init[asc new, asc init]-->asc_search_add_remove[asc search, asc add, asc remove]-->asc_scan[asc scan]-->asc_build[asc build]-->asc_run[asc run]-->
+    asc_install_uninstall[asc install, asc uninstall, asc clean, asc publish]
+```
+
 ## 3.1. vcpkg
 ### 3.1.1. help
 > asc vcpkg --help
@@ -133,12 +141,12 @@ HEAD is now at d221c5d2c Bot: Close more low quality issues (#41817)
 ### 3.2.1. help
 > asc search --help
 ```
-search package with extractly name or startswith/endswith/contains text
+search package with exactly matching name or startswith/endswith/contains text
 
 Usage: asc.exe search [OPTIONS] <NAME>
 
 Arguments:
-  <NAME>  extractly match (spdlog), startswith (log*), endswith (*log), contains (*log*)
+  <NAME>  exactly matching (spdlog), startswith (log*), endswith (*log), contains (*log*)
 
 Options:
       --list  list all versions
@@ -1027,7 +1035,7 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 ### 3.9.1. help
 > asc vcpkg run --help
 ```
-run package or workspace member bin
+run package or workspace member binary
 
 Usage: asc.exe run [OPTIONS]
 
@@ -1166,7 +1174,7 @@ Options:
 ### 3.12.1. help
 > asc vcpkg clean --help
 ```
-clean .asc and target dir
+clean .asc and target directory
 
 Usage: asc.exe clean
 

@@ -35,15 +35,15 @@ C/C++'s package manager
 Usage: asc.exe <COMMAND>
 
 Commands:
-  new        创建 包含二进制/静态库/动态库的 asc package/workspace
-  init       将现有源码目录初始为化 包含二进制/静态库/动态库的 asc package/workspace
+  new        创建包含二进制/静态库/动态库的 asc package/workspace
+  init       将现有源码目录初始化为包含二进制/静态库/动态库的 asc package/workspace
   vcpkg      更新 vcpkg 源码，构建版本约束索引，修改和查看配置
   search     精确查找或者根据前缀/后缀/子串来查找 package，列出指定 package 所有版本
   add        将依赖添加到 asc package/workspace member 的 asc.toml
   remove     从 asc package/workspace member 的 asc.toml 移除依赖
-  scan       扫描需要参与编译的源码, 生成 cmake 和 vcpkg 配置
-  build      编译所有 package 或都指定 package
-  run        运行指定的 bin
+  scan       扫描需要参与编译的源码，生成 cmake 和 vcpkg 配置
+  build      编译所有 package 或指定 package
+  run        运行指定的二进制文件
   clean      清理自动生成的 .asc 和 target 目录
   install    部署二进制文件、头文件、库文件、依赖等
   uninstall  清理已安装的二进制文件、头文件、库文件、依赖等
@@ -57,6 +57,14 @@ Options:
 
 
 # 3. 子命令指南
+
+```mermaid
+flowchart TD
+    asc_vcpkg_get[asc vcpkg get]-->asc_vcpkg_update[asc vcpkg update]-->asc_vcpkg_index[asc vcpkg index]-->
+    asc_new_init[asc new, asc init]-->asc_search_add_remove[asc search, asc add, asc remove]-->asc_scan[asc scan]-->asc_build[asc build]-->asc_run[asc run]-->
+    asc_install_uninstall[asc install, asc uninstall, asc clean, asc publish]
+```
+
 ## 3.1. vcpkg
 ### 3.1.1. 说明
 > asc vcpkg --help

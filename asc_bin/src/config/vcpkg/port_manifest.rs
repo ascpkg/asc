@@ -610,7 +610,6 @@ mod tests {
     use std::collections::HashMap;
 
     use super::*;
-    use crate::config::relative_paths::{VCPKG_BASELINE_JSON_FILE_NAME, VCPKG_VERSIONS_DIR_NAME};
 
     const FFMPEG_CONTROL_COMMIT_ID: &str = "373915929eac1d0219474c18a6e8a3134783dfc5";
     const FFMPEG_VCPKG_JSON_COMMIT_ID: &str = "44e8841e065a1b14340c6c0bb90210b11d7c3d4d";
@@ -1395,58 +1394,27 @@ Description: zlib support
         return String::new();
     }
 
-    fn get_all_port_versions(commit_id: &str) -> BTreeMap<String, String> {
+    fn get_all_port_versions(commit_id: &str) -> BTreeMap<String, (Option<String>, Option<String>, Option<String>, Option<String>, u32)> {
         let vcpkg_root_dir = get_vcpkg_root_dir();
-        let baseline_json_text = crate::git::show::commit_file_content(
-            &vcpkg_root_dir,
-            commit_id,
-            &format!("{VCPKG_VERSIONS_DIR_NAME}/{VCPKG_BASELINE_JSON_FILE_NAME}"),
-        );
-        if let Some(baseline_data) =
-            crate::config::vcpkg::versions_baseline::VcpkgBaseline::loads(&baseline_json_text, true)
-        {
-            let mut all_port_versions = BTreeMap::new();
-            for (k, v) in baseline_data.default {
-                all_port_versions.insert(
-                    k,
-                    VcpkgPortManifest::normalize_port_name(v.format_version_text()),
-                );
-            }
-            return all_port_versions;
-        }
 
         let cache = HashMap::new();
         let mut all_port_versions = BTreeMap::new();
         let (_v_caches, _v_missings, all_port_manifests) =
             crate::git::ls_tree::list_all_port_manifests(commit_id, &vcpkg_root_dir, &cache, true);
-        for (port, (tree_hash, control_file_text, vcpkg_json_file_text)) in &all_port_manifests {
+        for (port, (_tree_hash, control_file_text, vcpkg_json_file_text)) in &all_port_manifests {
             if !control_file_text.is_empty() {
                 let versions =
                     VcpkgPortManifest::get_versions_from_control_file(&control_file_text);
                 all_port_versions.insert(
                     port.clone(),
-                    (
-                        tree_hash.clone(),
-                        versions.0,
-                        versions.1,
-                        versions.2,
-                        versions.3,
-                        versions.4,
-                    ),
+                    versions
                 );
             } else if !vcpkg_json_file_text.is_empty() {
                 let versions =
                     VcpkgPortManifest::get_versions_from_vcpkg_json_file(&vcpkg_json_file_text);
                 all_port_versions.insert(
                     port.clone(),
-                    (
-                        tree_hash.clone(),
-                        versions.0,
-                        versions.1,
-                        versions.2,
-                        versions.3,
-                        versions.4,
-                    ),
+                    versions
                 );
             }
         }
@@ -1517,11 +1485,13 @@ Description: zlib support
         assert!(is_same);
     }
 
+    #[test]
     fn test_load_vcpkg_json_file_qt() {
         let d = VcpkgPortManifest::load("qt.json", false);
         assert!(d.is_some());
     }
 
+    #[test]
     fn test_load_vcpkg_json_file_cpprestsdk() {
         let d = VcpkgPortManifest::load("cpprestsdk.json", false);
         assert!(d.is_some())

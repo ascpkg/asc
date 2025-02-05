@@ -10,7 +10,7 @@
 
 ### **crates dependency graph**
 ```mermaid
-graph LR;
+graph LR
     asc--depend-->config_file_derives
     asc--depend-->config_file_types
     config_file_types--depend-->config_file_macros
