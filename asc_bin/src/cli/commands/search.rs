@@ -3,7 +3,7 @@ use clap::Args;
 use crate::vcpkg;
 
 #[derive(Args, Debug, Clone)]
-/// search package with extractly name or startswith/endswith/contains text
+/// search package with exactly matching name or startswith/endswith/contains text
 pub struct SearchArgs {
     /// extractly match (spdlog), startswith (log*), endswith (*log), contains (*log*)
     pub name: String,

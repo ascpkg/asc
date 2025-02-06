@@ -1394,7 +1394,18 @@ Description: zlib support
         return String::new();
     }
 
-    fn get_all_port_versions(commit_id: &str) -> BTreeMap<String, (Option<String>, Option<String>, Option<String>, Option<String>, u32)> {
+    fn get_all_port_versions(
+        commit_id: &str,
+    ) -> BTreeMap<
+        String,
+        (
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            u32,
+        ),
+    > {
         let vcpkg_root_dir = get_vcpkg_root_dir();
 
         let cache = HashMap::new();
@@ -1405,17 +1416,11 @@ Description: zlib support
             if !control_file_text.is_empty() {
                 let versions =
                     VcpkgPortManifest::get_versions_from_control_file(&control_file_text);
-                all_port_versions.insert(
-                    port.clone(),
-                    versions
-                );
+                all_port_versions.insert(port.clone(), versions);
             } else if !vcpkg_json_file_text.is_empty() {
                 let versions =
                     VcpkgPortManifest::get_versions_from_vcpkg_json_file(&vcpkg_json_file_text);
-                all_port_versions.insert(
-                    port.clone(),
-                    versions
-                );
+                all_port_versions.insert(port.clone(), versions);
             }
         }
         return all_port_versions;

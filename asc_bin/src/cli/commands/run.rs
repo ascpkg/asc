@@ -11,7 +11,7 @@ use super::ConfigType;
 use clap::Args;
 
 #[derive(Args, Debug, Default, Clone)]
-/// run package or workspace member bin
+/// run package or workspace member binary
 pub struct RunArgs {
     /// binary name
     #[clap(long)]

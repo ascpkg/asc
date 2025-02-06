@@ -36,7 +36,7 @@ Usage: asc.exe <COMMAND>
 Commands:
   new        new package/workspace of binary/static library/shared library
   init       init directory as package/workspace of binary/static library/shared library
-  vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations, supports the mixed use of official and private registries, with private registries being able to depend on the official ones
+  vcpkg      update vcpkg source, build vcpkg versions index, set/get vcpkg configurations
   search     search package with exactly matching name or startswith/endswith/contains text
   add        add dependency to package or workspace member's asc.toml
   remove     remove dependency from package or workspace member's asc.toml
@@ -73,16 +73,30 @@ update vcpkg source, build vcpkg versions index, set/get vcpkg configurations
 Usage: asc.exe vcpkg [OPTIONS] <ACTION> [ARGS]...
 
 Arguments:
-  <ACTION>   update/index/set/get [possible values: update, set, get, index]
+  <ACTION>   update/index/set/get [possible values: update, set, get, index, flatten]
   [ARGS]...  update args
 
 Options:
-      --registry <REGISTRY>                                  vcpkg registry url?branch=&directory=
-      --index-directory <INDEX_DIRECTORY>                    vcpkg.index path
-      --env-downloads <ENV_DOWNLOADS>                        vcpkg.downloads path
-      --env-default-binary-cache <ENV_DEFAULT_BINARY_CACHE>  vcpkg.archives path
-      --path <PATH>                                          [default: ]
-  -h, --help                                                 Print help
+      --sync
+          sync registries
+      --threads <THREADS>
+          threads [default: 2]
+      --push
+          git push or not
+      --check-point-commit <CHECK_POINT_COMMIT>
+          set fallback check point commit hash [default: ]
+      --registry <REGISTRY>
+          vcpkg registry url?branch=&directory=
+      --index-directory <INDEX_DIRECTORY>
+          vcpkg.index path
+      --env-downloads <ENV_DOWNLOADS>
+          vcpkg.downloads path
+      --env-default-binary-cache <ENV_DEFAULT_BINARY_CACHE>
+          vcpkg.archives path
+      --path <PATH>
+          [default: ]
+  -h, --help
+          Print help
 ```
 ### 3.1.2. configure vcpkg
 > asc vcpkg set --registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg" --index-directory="D:/asc/data/vcpkg.index" --env-downloads="D:/asc/data/vcpkg.downloads" --env-default-binary-cache="D:/asc/data/vcpkg.archives"
@@ -146,7 +160,7 @@ search package with exactly matching name or startswith/endswith/contains text
 Usage: asc.exe search [OPTIONS] <NAME>
 
 Arguments:
-  <NAME>  exactly matching (spdlog), startswith (log*), endswith (*log), contains (*log*)
+  <NAME>  extractly match (spdlog), startswith (log*), endswith (*log), contains (*log*)
 
 Options:
       --list  list all versions
@@ -955,7 +969,7 @@ Usage: asc.exe build [OPTIONS]
 
 Options:
       --target <TARGET>  build single target (default all)
-      --config <CONFIG>  cmake config [default: Debug] [possible values: Debug, Release]
+      --release          release mode (default false)
   -h, --help             Print help
 ```
 ### 3.8.2. build package
@@ -964,7 +978,7 @@ Options:
 > asc build
 ```
 2024-11-01 14:34:16.0123129  INFO asc::cli::commands::build: 16: build name="test_package"
-2024-11-01 14:34:16.0132969  INFO asc::util::shell: 9: command: cmake, args: --build target --config Debug
+2024-11-01 14:34:16.0132969  INFO asc::util::shell: 9: command: cmake, args: --build target
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -986,7 +1000,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
 > asc build
 ```
 2024-11-01 14:34:59.9977919  INFO asc::cli::commands::build: 16: build name="test_workspace"
-2024-11-01 14:34:59.9983509  INFO asc::util::shell: 9: command: cmake, args: --build target --config Debug
+2024-11-01 14:34:59.9983509  INFO asc::util::shell: 9: command: cmake, args: --build target
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -1011,7 +1025,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
 > asc build --config=Release
 ```
 2024-11-01 14:35:47.3051576  INFO asc::cli::commands::build: 16: build name="test_workspace"
-2024-11-01 14:35:47.3056953  INFO asc::util::shell: 9: command: cmake, args: --build target --config Release
+2024-11-01 14:35:47.3056953  INFO asc::util::shell: 9: command: cmake, args: --build target --release
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -1040,10 +1054,10 @@ run package or workspace member binary
 Usage: asc.exe run [OPTIONS]
 
 Options:
-      --bin <BIN>        binary name
-      --args <ARGS>      command line arguments
-      --config <CONFIG>  cmake config [default: Debug] [possible values: Debug, Release]
-  -h, --help             Print help
+      --bin <BIN>    binary name
+      --args <ARGS>  command line arguments
+      --release      release mode (default false)
+  -h, --help         Print help
 ```
 ### 3.9.2. run package target
 > asc run --config=Debug
@@ -1078,15 +1092,16 @@ install executable/headers/libraries
 Usage: asc.exe install [OPTIONS]
 
 Options:
-      --prefix <PREFIX>  install prefix [default: target/installed]
-      --config <CONFIG>  cmake config [default: Debug] [possible values: Debug, Release]
-  -h, --help             Print help
+      --prefix <PREFIX>      install prefix [default: target/installed]
+      --release              release mode (default false)
+      --pack-cli <PACK_CLI>  package cli (7z, tar, iscc, auto .7z on windows .tar.xz on others) [default: ]
+  -h, --help                 Print help
 ```
 ### 3.10.2. install files to default directory
 > asc install
 ```
 2024-11-01 14:43:13.4602646  INFO asc::cli::commands::install: 17: install name="test_workspace"
-2024-11-01 14:43:13.460973  INFO asc::util::shell: 9: command: cmake, args: --install target --config Debug --prefix target/installed/x64-windows-static
+2024-11-01 14:43:13.460973  INFO asc::util::shell: 9: command: cmake, args: --install target --prefix target/installed/x64-windows-static
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/lib/a.lib
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/bin/a.dll
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/include/a/export.h
@@ -1107,7 +1122,7 @@ Options:
 > asc install --prefix=d:/test_dir
 ```
 2024-11-01 14:44:34.2393421  INFO asc::cli::commands::install: 17: install name="test_workspace"
-2024-11-01 14:44:34.2400124  INFO asc::util::shell: 9: command: cmake, args: --install target --config Debug --prefix d:/test_dir/x64-windows-static
+2024-11-01 14:44:34.2400124  INFO asc::util::shell: 9: command: cmake, args: --install target --prefix d:/test_dir/x64-windows-static
 -- Installing: d:/test_dir/x64-windows-static/lib/a.lib
 -- Installing: d:/test_dir/x64-windows-static/bin/a.dll
 -- Installing: d:/test_dir/x64-windows-static/include/a/export.h

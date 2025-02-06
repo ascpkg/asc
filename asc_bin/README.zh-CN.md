@@ -46,7 +46,7 @@ Commands:
   run        运行指定的二进制文件
   clean      清理自动生成的 .asc 和 target 目录
   install    部署二进制文件、头文件、库文件、依赖等
-  uninstall  清理已安装的二进制文件、头文件、库文件、依赖等
+  uninstall  清理已部署的二进制文件、头文件、库文件、依赖
   publish    将 package 发布到自定义 vcpkg registry
   help       帮助说明
 
@@ -74,18 +74,30 @@ update vcpkg source, build vcpkg versions index, set/get vcpkg configurations
 Usage: asc.exe vcpkg [OPTIONS] <ACTION> [ARGS]...
 
 Arguments:
-  <ACTION>   update/index/set/get [possible values: update, set, get, index]
+  <ACTION>   update/index/set/get [possible values: update, set, get, index, flatten]
   [ARGS]...  update args
 
 Options:
-      --repo <REPO>                                          vcpkg repo url
-      --branch <BRANCH>                                      vcpkg repo branch
-      --directory <DIRECTORY>                                vcpkg path
-      --index-directory <INDEX_DIRECTORY>                    vcpkg.index path
-      --env-downloads <ENV_DOWNLOADS>                        vcpkg.downloads path
-      --env-default-binary-cache <ENV_DEFAULT_BINARY_CACHE>  vcpkg.archives path
-      --path <PATH>                                          [default: ]
-  -h, --help                                                 Print help
+      --sync
+          sync registries
+      --threads <THREADS>
+          threads [default: 2]
+      --push
+          git push or not
+      --check-point-commit <CHECK_POINT_COMMIT>
+          set fallback check point commit hash [default: ]
+      --registry <REGISTRY>
+          vcpkg registry url?branch=&directory=
+      --index-directory <INDEX_DIRECTORY>
+          vcpkg.index path
+      --env-downloads <ENV_DOWNLOADS>
+          vcpkg.downloads path
+      --env-default-binary-cache <ENV_DEFAULT_BINARY_CACHE>
+          vcpkg.archives path
+      --path <PATH>
+          [default: ]
+  -h, --help
+          Print help
 ```
 ### 3.1.2. 配置 vcpkg
 > asc vcpkg set --registry="https://github.com/microsoft/vcpkg.git?branch=master&directory=D:/asc/data/vcpkg" --index-directory="D:/asc/data/vcpkg.index" --env-downloads="D:/asc/data/vcpkg.downloads" --env-default-binary-cache="D:/asc/data/vcpkg.archives"
@@ -144,7 +156,7 @@ HEAD is now at d221c5d2c Bot: Close more low quality issues (#41817)
 ### 3.2.1. help
 > asc search --help
 ```
-search package with extractly name or startswith/endswith/contains text
+search package with exactly matching name or startswith/endswith/contains text
 
 Usage: asc.exe search [OPTIONS] <NAME>
 
@@ -958,7 +970,7 @@ Usage: asc.exe build [OPTIONS]
 
 Options:
       --target <TARGET>  build single target (default all)
-      --config <CONFIG>  cmake config [default: Debug] [possible values: Debug, Release]
+      --release          release mode (default false)
   -h, --help             Print help
 ```
 ### 3.8.2. 编译包
@@ -967,7 +979,7 @@ Options:
 > asc build
 ```
 2024-11-01 14:34:16.0123129  INFO asc::cli::commands::build: 16: build name="test_package"
-2024-11-01 14:34:16.0132969  INFO asc::util::shell: 9: command: cmake, args: --build target --config Debug
+2024-11-01 14:34:16.0132969  INFO asc::util::shell: 9: command: cmake, args: --build target
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -989,7 +1001,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
 > asc build
 ```
 2024-11-01 14:34:59.9977919  INFO asc::cli::commands::build: 16: build name="test_workspace"
-2024-11-01 14:34:59.9983509  INFO asc::util::shell: 9: command: cmake, args: --build target --config Debug
+2024-11-01 14:34:59.9983509  INFO asc::util::shell: 9: command: cmake, args: --build target
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -1014,7 +1026,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
 > asc build --config=Release
 ```
 2024-11-01 14:35:47.3051576  INFO asc::cli::commands::build: 16: build name="test_workspace"
-2024-11-01 14:35:47.3056953  INFO asc::util::shell: 9: command: cmake, args: --build target --config Release
+2024-11-01 14:35:47.3056953  INFO asc::util::shell: 9: command: cmake, args: --build target --release
 MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 
   1>Checking Build System
@@ -1038,15 +1050,15 @@ MSBuild version 17.11.9+a69bbaaf5 for .NET Framework
 ### 3.9.1. 说明
 > asc vcpkg run --help
 ```
-run package or workspace member bin
+run package or workspace member binary
 
 Usage: asc.exe run [OPTIONS]
 
 Options:
-      --bin <BIN>        binary name
-      --args <ARGS>      command line arguments
-      --config <CONFIG>  cmake config [default: Debug] [possible values: Debug, Release]
-  -h, --help             Print help
+      --bin <BIN>    binary name
+      --args <ARGS>  command line arguments
+      --release      release mode (default false)
+  -h, --help         Print help
 ```
 ### 3.9.2. 运行包
 > asc run --config=Debug
@@ -1081,15 +1093,16 @@ install executable/headers/libraries
 Usage: asc.exe install [OPTIONS]
 
 Options:
-      --prefix <PREFIX>  install prefix [default: target/installed]
-      --config <CONFIG>  cmake config [default: Debug] [possible values: Debug, Release]
-  -h, --help             Print help
+      --prefix <PREFIX>      install prefix [default: target/installed]
+      --release              release mode (default false)
+      --pack-cli <PACK_CLI>  package cli (7z, tar, iscc, auto .7z on windows .tar.xz on others) [default: ]
+  -h, --help                 Print help
 ```
 ### 3.10.2. 安装到默认路径
 > asc install
 ```
 2024-11-01 14:43:13.4602646  INFO asc::cli::commands::install: 17: install name="test_workspace"
-2024-11-01 14:43:13.460973  INFO asc::util::shell: 9: command: cmake, args: --install target --config Debug --prefix target/installed/x64-windows-static
+2024-11-01 14:43:13.460973  INFO asc::util::shell: 9: command: cmake, args: --install target --prefix target/installed/x64-windows-static
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/lib/a.lib
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/bin/a.dll
 -- Installing: D:/sources/asc/test_workspace/target/installed/x64-windows-static/include/a/export.h
@@ -1110,7 +1123,7 @@ Options:
 > asc install --prefix=d:/test_dir
 ```
 2024-11-01 14:44:34.2393421  INFO asc::cli::commands::install: 17: install name="test_workspace"
-2024-11-01 14:44:34.2400124  INFO asc::util::shell: 9: command: cmake, args: --install target --config Debug --prefix d:/test_dir/x64-windows-static
+2024-11-01 14:44:34.2400124  INFO asc::util::shell: 9: command: cmake, args: --install target --prefix d:/test_dir/x64-windows-static
 -- Installing: d:/test_dir/x64-windows-static/lib/a.lib
 -- Installing: d:/test_dir/x64-windows-static/bin/a.dll
 -- Installing: d:/test_dir/x64-windows-static/include/a/export.h
@@ -1177,7 +1190,7 @@ Options:
 ### 3.12.1. 说明
 > asc vcpkg clean --help
 ```
-clean .asc and target dir
+clean .asc and target directory
 
 Usage: asc.exe clean
 

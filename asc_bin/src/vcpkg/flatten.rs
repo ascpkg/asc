@@ -242,6 +242,7 @@ impl VcpkgManager {
                                     all_port_versions_,
                                     &all_port_manifests_,
                                 );
+                                reorder_map.remove(&next_index).unwrap();
                                 next_index += 1;
                                 process_count += 1;
                             }
@@ -249,6 +250,33 @@ impl VcpkgManager {
                     }
                 }
             }
+        }
+
+        // process againuntil reorder_map is empty
+        while !reorder_map.is_empty() {
+            let (
+                index,
+                commit,
+                lock_dir,
+                tmp_ports_path,
+                changed_ports,
+                all_port_versions,
+                all_port_manifests,
+            ) = reorder_map.remove(&next_index).unwrap();
+            self.process_versions(
+                index as f32,
+                total_count as f32,
+                &commit,
+                &asc_registry_dir,
+                &asc_registry_ports_dir,
+                &lock_dir,
+                &tmp_ports_path,
+                &changed_ports,
+                &all_port_versions,
+                &all_port_manifests,
+            );
+            next_index += 1;
+            process_count += 1;
         }
 
         // remove lock dir

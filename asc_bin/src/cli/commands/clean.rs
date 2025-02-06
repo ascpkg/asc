@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Args, Debug, Clone)]
-/// clean .asc and target dir
+/// clean .asc and target directory
 pub struct CleanArgs {}
 
 impl CleanArgs {
