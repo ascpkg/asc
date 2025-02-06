@@ -1023,7 +1023,7 @@ LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/OPT:ICF' specification 
   Building Custom Rule D:/sources/asc/test_workspace/CMakeLists.txt
 ```
 ### 3.8.4. release 模式编译工作区
-> asc build --config=Release
+> asc build --release
 ```
 2024-11-01 14:35:47.3051576  INFO asc::cli::commands::build: 16: build name="test_workspace"
 2024-11-01 14:35:47.3056953  INFO asc::util::shell: 9: command: cmake, args: --build target --release
@@ -1061,7 +1061,7 @@ Options:
   -h, --help         Print help
 ```
 ### 3.9.2. 运行包
-> asc run --config=Debug
+> asc run
 ```
 2024-11-01 14:37:41.1921068  INFO asc::cli::commands::run: 19: run
 2024-11-01 14:37:41.1933882  INFO asc::util::shell: 9: command: target/Debug/test_package, args:
@@ -1077,7 +1077,7 @@ NOT HAVE_GETTIMEOFDAY
 
 > asc build
 
-> asc run --bin a --confg=Debug
+> asc run --bin a
 ```
 2024-11-01 14:41:39.6262125  INFO asc::cli::commands::run: 19: run
 2024-11-01 14:41:39.6272723  INFO asc::util::shell: 9: command: target/a/Debug/a, args:
